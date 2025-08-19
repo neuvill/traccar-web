@@ -126,6 +126,19 @@ export const getStatusColor = (status) => {
   }
 };
 
+export const getIconStatusColor = (status) => {
+  switch (status) {
+    case 'moving':
+      return 'success';
+    case 'parked':
+      return 'error';
+    case 'idling':
+      return 'info';
+    default:
+      return 'neutral';
+  }
+};
+
 export const getBatteryStatus = (batteryLevel) => {
   if (batteryLevel >= 70) {
     return 'success';

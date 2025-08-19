@@ -22,6 +22,7 @@ import { mapIconKey, mapIcons } from '../map/core/preloadImages';
 import { useAdministrator } from '../common/util/permissions';
 import EngineIcon from '../resources/images/data/engine.svg?react';
 import { useAttributePreference } from '../common/util/preferences';
+import { grey } from '@mui/material/colors';
 
 dayjs.extend(relativeTime);
 
@@ -29,7 +30,7 @@ const useStyles = makeStyles()((theme) => ({
   icon: {
     width: '25px',
     height: '25px',
-    filter: 'brightness(0) invert(1)',
+    //filter: 'brightness(0) invert(1)',
   },
   batteryText: {
     fontSize: '0.75rem',
@@ -65,12 +66,12 @@ const DeviceRow = ({ data, index, style }) => {
   const position = useSelector((state) => state.session.positions[item.id]);
 
   const devicePrimary = useAttributePreference('devicePrimary', 'name');
-  const deviceSecondary = useAttributePreference('deviceSecondary', '');
-
-  let dynamicStatus = item.category; //creating a variable for dynamic Status
+  //const deviceSecondary = useAttributePreference('deviceSecondary', '');
+  const dynamicStatus = position ? position.attributes.dynamicStatus : 'default';
+  /*let dynamicStatus = item.category; //creating a variable for dynamic Status
   if (item.category === 'dynamic') {
     dynamicStatus = position ? position.attributes.dynamicStatus : 'default';
-  }
+  }*/
 
   const secondaryText = () => {
     let status;
@@ -82,11 +83,14 @@ const DeviceRow = ({ data, index, style }) => {
     return (
       <>
         {/* displaying address as secondary text if available */}
-        {deviceSecondary && position && (item[deviceSecondary] || position[deviceSecondary]) && `${item[deviceSecondary] || position[deviceSecondary].slice(0, 22)} • `}
+        {/*deviceSecondary && position && (item[deviceSecondary] || position[deviceSecondary]) && `${item[deviceSecondary] || position[deviceSecondary].slice(0, 22)} • `*/}
+        {(position && position.address) ? position.address.slice(0, 35) : ''}
+        <br />
         <span className={classes[getStatusColor(item.status)]}>{status}</span>
       </>
     );
   };
+  //console.log(position);
 
   return (
     <div style={style}>
@@ -98,10 +102,25 @@ const DeviceRow = ({ data, index, style }) => {
         className={selectedDeviceId === item.id ? classes.selected : null}
       >
         <ListItemAvatar>
-          <Avatar>
-            {/*displaying dynamic icon*/}
-            <img className={classes.icon} src={mapIcons[mapIconKey(dynamicStatus)]} alt="" />
-          </Avatar>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Avatar>
+              {/*displaying dynamic icon*/}
+              <img className={classes.icon} src={mapIcons[mapIconKey(dynamicStatus)]} alt="" />
+            </Avatar>
+            <Typography
+              variant="caption"
+              style={{
+                marginTop: 1,
+                color: grey[500],
+                fontWeight: 'bold',
+                //color: (position.attributes.dynamicStatus === 'moving') ? 'lightgreen' : position.attributes.dynamicStatus === 'idling' ? 'blue' : 'red',
+              }}
+            >
+              {/* Replace with your desired text, e.g., device category or status */}
+              {position ? position.attributes.dynamicStatus : 'Unk'}
+              {/*dayjs().diff(position.fixTime, 'minute')} minutes ago*/}
+            </Typography>
+          </div>
         </ListItemAvatar>
         <ListItemText
           primary={item[devicePrimary]}
@@ -113,6 +132,9 @@ const DeviceRow = ({ data, index, style }) => {
           slotProps={{
             primary: { noWrap: true },
             secondary: { noWrap: true },
+          }}
+          style={{
+            marginLeft: '5%',
           }}
         />
         {position && (

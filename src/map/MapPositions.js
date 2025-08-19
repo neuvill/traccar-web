@@ -3,11 +3,12 @@ import { useSelector } from 'react-redux';
 import { useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { map } from './core/MapView';
-import { formatTime, getStatusColor } from '../common/util/formatter';
+import { formatTime, getStatusColor, getIconStatusColor } from '../common/util/formatter';
 import { mapIconKey } from './core/preloadImages';
 import { useAttributePreference } from '../common/util/preferences';
 import { useCatchCallback } from '../reactHelper';
 import { findFonts } from './core/mapUtil';
+import { Color } from 'maplibre-gl';
 
 const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, selectedPosition, titleField }) => {
   const id = useId();
@@ -43,11 +44,13 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
       deviceId: position.deviceId,
       name: device.name,
       fixTime: formatTime(position.fixTime, 'seconds'),
-      category: device.category === 'dynamic' ? mapIconKey(position.attributes.dynamicStatus) : mapIconKey(device.category), // Map icon depending on device category
-      color: showStatus ? position.attributes.color || getStatusColor(device.status) : 'neutral',
+      category: position ? mapIconKey(position.attributes.dynamicStatus) : mapIconKey(device.category), // Map icon depending on device category
+      //color: showStatus ? position.attributes.color || getStatusColor(device.status) : 'neutral',
+      color: position ? getIconStatusColor(position.attributes.dynamicStatus) : 'neutral',
+      //Color: 'info',
       rotation: position.course,
       direction: showDirection,
-      dynamicDirection: (position.attributes.dynamicStatus === 'moving' && device.category === 'dynamic'), //show direction for the moving icone and hide the direction layer
+      dynamicDirection: (position.attributes.dynamicStatus === 'moving'), //show direction for the moving icone and hide the direction layer
     };
   };
 
@@ -127,7 +130,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
           'text-halo-width': 1,
         },
       });
-      map.addLayer({
+      /*map.addLayer({
         id: `direction-${source}`,
         type: 'symbol',
         source,
@@ -144,7 +147,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
           'icon-rotate': ['get', 'rotation'],
           'icon-rotation-alignment': 'map',
         },
-      });
+      });*/
 
       map.on('mouseenter', source, onMouseEnter);
       map.on('mouseleave', source, onMouseLeave);
