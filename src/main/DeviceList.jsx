@@ -28,7 +28,7 @@ const OuterElement = forwardRef(function OuterElement(props, ref) {
       className={className}
       style={{
         ...style,
-        direction: theme.direction, 
+        direction: theme.direction,
       }}
       {...rest}
     />
@@ -61,7 +61,7 @@ const DeviceList = ({ devices }) => {
           height={height}
           itemCount={devices.length}
           itemData={devices}
-          itemSize={72}
+          itemSize={82}
           overscanCount={10}
           outerElementType={OuterElement}
         >

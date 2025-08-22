@@ -123,11 +123,13 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
           'text-anchor': 'bottom',
           'text-offset': [0, -2 * iconScale],
           'text-font': findFonts(map),
-          'text-size': 12,
+          'text-size': 15,
         },
         paint: {
           'text-halo-color': 'white',
-          'text-halo-width': 1,
+          'text-halo-width': 10,
+          'text-halo-color': 'rgba(110, 110, 110, 0.9)',
+          'text-color': 'white',
         },
       });
       /*map.addLayer({
@@ -164,6 +166,11 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
         'text-field': '{point_count_abbreviated}',
         'text-font': findFonts(map),
         'text-size': 14,
+      },
+      paint: {
+        'text-color': 'blue',
+        'text-halo-color': 'rgba(0, 0, 0, 0.3)',
+        'text-halo-width': 1,
       },
     });
 

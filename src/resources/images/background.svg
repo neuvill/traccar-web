@@ -3,8 +3,14 @@
     <filter id="shadow">
       <feDropShadow dx="0" dy="0.1" stdDeviation="0.3" flood-color="grey"/>
     </filter>
+
+    <!-- Gradient for shiny border -->
+    <linearGradient id="blueShinyBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a6d8ff"/> <!-- light shiny blue -->
+      <stop offset="100%" stop-color="#007bff"/> <!-- deeper blue -->
+    </linearGradient>
   </defs>
 
   <circle cx="5" cy="50%" r="4"
-      style="fill:white; filter:url(#shadow);"/>
+      style="fill:white; filter:url(#shadow); stroke:url(#blueShinyBorder); stroke-width:0.4"/>
 </svg>

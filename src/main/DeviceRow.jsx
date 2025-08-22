@@ -103,21 +103,21 @@ const DeviceRow = ({ data, index, style }) => {
       >
         <ListItemAvatar>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Avatar>
+            <Avatar style={{ backgroundColor: grey[200], borderColor: grey[400], borderWidth: 2, borderStyle: 'solid' }}>
               {/*displaying dynamic icon*/}
               <img className={classes.icon} src={mapIcons[mapIconKey(dynamicStatus)]} alt="" />
             </Avatar>
             <Typography
               variant="caption"
               style={{
-                marginTop: 1,
+                marginTop: 5,
                 color: grey[500],
                 fontWeight: 'bold',
                 //color: (position.attributes.dynamicStatus === 'moving') ? 'lightgreen' : position.attributes.dynamicStatus === 'idling' ? 'blue' : 'red',
               }}
             >
               {/* Replace with your desired text, e.g., device category or status */}
-              {position ? position.attributes.dynamicStatus : 'Unk'}
+              {position ? position.attributes.dynamicStatus ? position.attributes.dynamicStatus : 'offline' : 'Offline'}
               {/*dayjs().diff(position.fixTime, 'minute')} minutes ago*/}
             </Typography>
           </div>
@@ -130,7 +130,7 @@ const DeviceRow = ({ data, index, style }) => {
             secondary: Typography,
           }}
           slotProps={{
-            primary: { noWrap: true },
+            primary: { noWrap: true, style: { fontWeight: 500 } },
             secondary: { noWrap: true },
           }}
           style={{
