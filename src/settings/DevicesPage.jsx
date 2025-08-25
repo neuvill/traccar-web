@@ -16,7 +16,7 @@ import CollectionFab from './components/CollectionFab';
 import CollectionActions from './components/CollectionActions';
 import TableShimmer from '../common/components/TableShimmer';
 import SearchHeader, { filterByKeyword } from './components/SearchHeader';
-import { formatTime } from '../common/util/formatter';
+import { formatStatus, formatTime } from '../common/util/formatter';
 import { useDeviceReadonly, useManager } from '../common/util/permissions';
 import useSettingsStyles from './common/useSettingsStyles';
 import DeviceUsersValue from './components/DeviceUsersValue';
@@ -63,7 +63,9 @@ const DevicesPage = () => {
       [t('deviceModel')]: item.model,
       [t('deviceContact')]: item.contact,
       [t('userExpirationTime')]: formatTime(item.expirationTime, 'date'),
-      [t('positionAddress')]: positions[item.id].address,
+      [t('deviceStatus')]: formatStatus(item.status, t),
+      [t('deviceLastUpdate')]: formatTime(item.lastUpdate, 'minutes'),
+      [t('positionAddress')]: positions[item.id]?.address || '',
     }));
 
     const workbook = new ExcelJS.Workbook();
@@ -145,7 +147,7 @@ const DevicesPage = () => {
                   <AddressValue
                     latitude={positions[item.id].latitude}
                     longitude={positions[item.id].longitude}
-                    originalAddress={positions[item.id].address}
+                    originalAddress={positions[item.id]?.address}
                   />
                 )}
               </TableCell>
