@@ -44,13 +44,13 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
       deviceId: position.deviceId,
       name: device.name,
       fixTime: formatTime(position.fixTime, 'seconds'),
-      category: position ? mapIconKey(position.attributes.dynamicStatus) : mapIconKey(device.category), // Map icon depending on device category
+      category: position ? mapIconKey(position.attributes.motionStatus) : mapIconKey(device.category), // Map icon depending on device category
       //color: showStatus ? position.attributes.color || getStatusColor(device.status) : 'neutral',
-      color: position ? getIconStatusColor(position.attributes.dynamicStatus) : 'neutral',
+      color: position ? getIconStatusColor(position.attributes.motionStatus) : 'neutral',
       //Color: 'info',
       rotation: position.course,
       direction: showDirection,
-      dynamicDirection: (position.attributes.dynamicStatus === 'moving'), //show direction for the moving icone and hide the direction layer
+      dynamicDirection: (position.attributes.motionStatus === 'moving'), //show direction for the moving icone and hide the direction layer
     };
   };
 

@@ -15,7 +15,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { devicesActions } from '../store';
 import {
-  formatAlarm, formatBoolean, formatPercentage, formatStatus, getStatusColor,
+  formatAlarm, formatBoolean, formatPercentage, formatStatus, getStatusColor, formatNumericHours
 } from '../common/util/formatter';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import { mapIconKey, mapIcons } from '../map/core/preloadImages';
@@ -67,11 +67,13 @@ const DeviceRow = ({ data, index, style }) => {
 
   const devicePrimary = useAttributePreference('devicePrimary', 'name');
   //const deviceSecondary = useAttributePreference('deviceSecondary', '');
-  const dynamicStatus = position ? position.attributes.dynamicStatus : 'default';
+  const dynamicStatus = position ? position.attributes.motionStatus : 'default';
+  //const dynamicStatus = item.motionStatus ? item.motionStatus : 'default';
   /*let dynamicStatus = item.category; //creating a variable for dynamic Status
   if (item.category === 'dynamic') {
     dynamicStatus = position ? position.attributes.dynamicStatus : 'default';
   }*/
+  //console.log(position);
 
   const secondaryText = () => {
     let status;
@@ -90,7 +92,14 @@ const DeviceRow = ({ data, index, style }) => {
       </>
     );
   };
-  //console.log(position);
+  //console.log(position ? position.attributes : 'No position data');
+
+  function getTimeDiff(startIso, endIso) {
+    const start = new Date(startIso);
+    const end = new Date(endIso);
+    //return Math.floor((end - start) / 60000);
+    return formatNumericHours(end - start, t);
+  }
 
   return (
     <div style={style}>
@@ -117,7 +126,7 @@ const DeviceRow = ({ data, index, style }) => {
               }}
             >
               {/* Replace with your desired text, e.g., device category or status */}
-              {position ? position.attributes.dynamicStatus ? position.attributes.dynamicStatus : 'offline' : 'Offline'}
+              {(position && position.motionStatusChanged) ? getTimeDiff(position.motionStatusChanged, position.fixTime) : 'Offline'}
               {/*dayjs().diff(position.fixTime, 'minute')} minutes ago*/}
             </Typography>
           </div>
