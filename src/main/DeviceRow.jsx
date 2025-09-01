@@ -67,7 +67,7 @@ const DeviceRow = ({ data, index, style }) => {
 
   const devicePrimary = useAttributePreference('devicePrimary', 'name');
   //const deviceSecondary = useAttributePreference('deviceSecondary', '');
-  const dynamicStatus = position ? position.attributes.motionStatus : 'default';
+  const dynamicStatus = (position && position.attributes.motionStatus) ? position.attributes.motionStatus : 'default';
   //const dynamicStatus = item.motionStatus ? item.motionStatus : 'default';
   /*let dynamicStatus = item.category; //creating a variable for dynamic Status
   if (item.category === 'dynamic') {
@@ -97,8 +97,9 @@ const DeviceRow = ({ data, index, style }) => {
   function getTimeDiff(startIso, endIso) {
     const start = new Date(startIso);
     const end = new Date(endIso);
-    //return Math.floor((end - start) / 60000);
-    return formatNumericHours(end - start, t);
+
+    return (end - start >= 0) ? formatNumericHours(end - start, t) : formatNumericHours(0, t);
+
   }
 
   return (
@@ -126,7 +127,7 @@ const DeviceRow = ({ data, index, style }) => {
               }}
             >
               {/* Replace with your desired text, e.g., device category or status */}
-              {(position && position.motionStatusChanged) ? getTimeDiff(position.motionStatusChanged, position.fixTime) : 'Offline'}
+              {(position && position.attributes.motionStatusChanged) ? getTimeDiff(position.attributes.motionStatusChanged, position.deviceTime) : ''}
               {/*dayjs().diff(position.fixTime, 'minute')} minutes ago*/}
             </Typography>
           </div>
