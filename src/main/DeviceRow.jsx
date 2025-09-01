@@ -54,7 +54,7 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-const DeviceRow = ({ data, index, style }) => {
+const DeviceRow = ({ devices, index, style }) => {
   const { classes } = useStyles();
   const dispatch = useDispatch();
   const t = useTranslation();
@@ -62,7 +62,7 @@ const DeviceRow = ({ data, index, style }) => {
   const admin = useAdministrator();
   const selectedDeviceId = useSelector((state) => state.devices.selectedId);
 
-  const item = data[index];
+  const item = devices[index];
   const position = useSelector((state) => state.session.positions[item.id]);
 
   const devicePrimary = useAttributePreference('devicePrimary', 'name');
