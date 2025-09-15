@@ -25,6 +25,7 @@ import ReplayIcon from '@mui/icons-material/Replay';
 import PublishIcon from '@mui/icons-material/Publish';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import HistoryIcon from '@mui/icons-material/History';
 import PendingIcon from '@mui/icons-material/Pending';
 
 import { useTranslation } from './LocalizationProvider';
@@ -255,6 +256,14 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                     <ReplayIcon />
                   </IconButton>
                 </Tooltip>
+                <Tooltip title={t('reportReplay')}>
+                  <IconButton
+                    onClick={() => navigate(`/replay?deviceId=${deviceId}`, { state: { isQuick: true } })}
+                    disabled={disableActions || !position}
+                  >
+                    <HistoryIcon />
+                  </IconButton>
+                </Tooltip>
                 <Tooltip title={t('commandTitle')}>
                   <IconButton
                     onClick={() => navigate(`/settings/device/${deviceId}/command`)}
@@ -271,7 +280,7 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                     <EditIcon />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title={t('sharedRemove')}>
+                {/*<Tooltip title={t('sharedRemove')}>
                   <IconButton
                     color="error"
                     onClick={() => setRemoving(true)}
@@ -279,7 +288,7 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                   >
                     <DeleteIcon />
                   </IconButton>
-                </Tooltip>
+                </Tooltip>*/}
               </CardActions>
             </Card>
           </Rnd>
