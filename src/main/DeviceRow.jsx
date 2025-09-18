@@ -31,7 +31,7 @@ const useStyles = makeStyles()((theme) => ({
   icon: {
     width: '25px',
     height: '25px',
-    //filter: 'brightness(0) invert(1)',
+
   },
   batteryText: {
     fontSize: '0.75rem',
@@ -67,14 +67,8 @@ const DeviceRow = ({ devices, index, style }) => {
   const position = useSelector((state) => state.session.positions[item.id]);
 
   const devicePrimary = useAttributePreference('devicePrimary', 'name');
-  //const deviceSecondary = useAttributePreference('deviceSecondary', '');
+
   const dynamicStatus = (position && position.attributes.motionStatus) ? position.attributes.motionStatus : 'default';
-  //const dynamicStatus = item.motionStatus ? item.motionStatus : 'default';
-  /*let dynamicStatus = item.category; //creating a variable for dynamic Status
-  if (item.category === 'dynamic') {
-    dynamicStatus = position ? position.attributes.dynamicStatus : 'default';
-  }*/
-  //console.log(position);
 
   const secondaryText = () => {
     let status;
@@ -102,7 +96,6 @@ const DeviceRow = ({ devices, index, style }) => {
       </>
     );
   };
-  //console.log(position ? position.attributes : 'No position data');
 
   function getTimeDiff(startIso, endIso) {
     const start = new Date(startIso);
@@ -111,10 +104,9 @@ const DeviceRow = ({ devices, index, style }) => {
     return (end - start >= 0) ? formatNumericHours(end - start, t) : formatNumericHours(0, t);
 
   }
-  //console.log(position);
 
   return (
-    <div style={style}>
+    <div style={{ ...style, borderBottom: '1px solid #e0e0e0' }}>
       <ListItemButton
         key={item.id}
         onClick={() => dispatch(devicesActions.selectId(item.id))}
@@ -128,7 +120,6 @@ const DeviceRow = ({ devices, index, style }) => {
 
 
             <Avatar style={{ backgroundColor: grey[200], borderColor: grey[400], borderWidth: 2, borderStyle: 'solid' }}>
-              {/*displaying dynamic icon*/}
               <img className={classes.icon} src={mapIcons[mapIconKey(dynamicStatus)]} alt="" />
 
             </Avatar>
