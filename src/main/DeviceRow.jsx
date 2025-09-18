@@ -15,7 +15,8 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { devicesActions } from '../store';
 import {
-  formatAlarm, formatBoolean, formatPercentage, formatStatus, getStatusColor, formatNumericHours
+  formatAlarm, formatBoolean, formatPercentage, formatStatus, getStatusColor, formatNumericHours,
+  formatSpeed
 } from '../common/util/formatter';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import { mapIconKey, mapIcons } from '../map/core/preloadImages';
@@ -77,18 +78,27 @@ const DeviceRow = ({ devices, index, style }) => {
 
   const secondaryText = () => {
     let status;
+    let isSpeed = false;
     if (item.status === 'online' || !item.lastUpdate) {
-      status = formatStatus(item.status, t);
+      if (position && position.attributes.motionStatus === 'moving') {
+        status = formatSpeed(position.speed, 'kmh', t);
+        isSpeed = true;
+      } else {
+        status = formatStatus(item.status, t);
+      }
     } else {
-      status = dayjs(item.lastUpdate).fromNow();
+      status = formatStatus(item.status, t);
     }
     return (
       <>
-        {/* displaying address as secondary text if available */}
-        {/*deviceSecondary && position && (item[deviceSecondary] || position[deviceSecondary]) && `${item[deviceSecondary] || position[deviceSecondary].slice(0, 22)} • `*/}
         {(position && position.address) ? position.address.slice(0, 35) : ''}
         <br />
-        <span className={classes[getStatusColor(item.status)]}>{status}</span>
+        <span
+          className={classes[getStatusColor(item.status)]}
+          style={isSpeed ? { color: '#1976d2', fontWeight: 500 } : {}}
+        >
+          {status}
+        </span>
       </>
     );
   };
@@ -101,6 +111,7 @@ const DeviceRow = ({ devices, index, style }) => {
     return (end - start >= 0) ? formatNumericHours(end - start, t) : formatNumericHours(0, t);
 
   }
+  //console.log(position);
 
   return (
     <div style={style}>
@@ -113,9 +124,13 @@ const DeviceRow = ({ devices, index, style }) => {
       >
         <ListItemAvatar>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+
+
+
             <Avatar style={{ backgroundColor: grey[200], borderColor: grey[400], borderWidth: 2, borderStyle: 'solid' }}>
               {/*displaying dynamic icon*/}
               <img className={classes.icon} src={mapIcons[mapIconKey(dynamicStatus)]} alt="" />
+
             </Avatar>
             <Typography
               variant="caption"
@@ -123,12 +138,11 @@ const DeviceRow = ({ devices, index, style }) => {
                 marginTop: 5,
                 color: grey[500],
                 fontWeight: 'bold',
-                //color: (position.attributes.dynamicStatus === 'moving') ? 'lightgreen' : position.attributes.dynamicStatus === 'idling' ? 'blue' : 'red',
               }}
             >
-              {/* Replace with your desired text, e.g., device category or status */}
-              {(position && position.attributes.motionStatusChanged) ? getTimeDiff(position.attributes.motionStatusChanged, position.deviceTime) : ''}
-              {/*dayjs().diff(position.fixTime, 'minute')} minutes ago*/}
+              {
+                position && position.attributes.motionStatusChanged ? getTimeDiff(position.attributes.motionStatusChanged, position.deviceTime) : '-'
+              }
             </Typography>
           </div>
         </ListItemAvatar>
