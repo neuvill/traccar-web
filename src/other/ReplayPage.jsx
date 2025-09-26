@@ -1,11 +1,12 @@
-import {
+import React, {
   useState, useEffect, useRef, useCallback,
 } from 'react';
 import {
-  IconButton, Paper, Slider, Toolbar, Typography, ListItemButton, List, Grid, Box
+  IconButton, Paper, Slider, Toolbar, Typography, ListItemButton, List, Grid, Divider
 } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import TuneIcon from '@mui/icons-material/Tune';
+import RouteIcon from '@mui/icons-material/Route';
 import DownloadIcon from '@mui/icons-material/Download';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -37,6 +38,7 @@ import { useLocation } from 'react-router-dom';
 import SpeedIcon from '@mui/icons-material/Speed';
 
 
+
 const useStyles = makeStyles()((theme) => ({
   root: {
     height: '100%',
@@ -49,7 +51,8 @@ const useStyles = makeStyles()((theme) => ({
     left: 0,
     top: 0,
     margin: theme.spacing(1.5),
-    width: theme.dimensions.drawerWidthDesktop,
+    //width: theme.dimensions.drawerWidthDesktop,
+    width: '28%',
     [theme.breakpoints.down('md')]: {
       width: '100%',
       margin: 0,
@@ -88,6 +91,17 @@ const useStyles = makeStyles()((theme) => ({
     [theme.breakpoints.up('md')]: {
       marginTop: theme.spacing(1),
     },
+  },
+  flashing: {
+    animation: 'flashing 2s infinite',
+    '@keyframes flashing': {
+      '50%, 100%': { opacity: 1 },
+      '50%': { opacity: 0.4 },
+    },
+
+  },
+  replayButton: {
+    marginRight: theme.spacing(2),
   },
 }));
 
@@ -168,8 +182,8 @@ const ReplayPage = () => {
     setLoading(true);
     setSelectedDeviceId(deviceId);
     const query = new URLSearchParams({ deviceId, from, to });
-    console.log(query.toString());
-    if (replay) {
+    //console.log(query.toString());
+    /*if (replay) {
       try {
         const response = await fetchOrThrow(`/api/positions?${query.toString()}`);
         setIndex(0);
@@ -182,7 +196,7 @@ const ReplayPage = () => {
       } finally {
         setLoading(true);
       }
-    }
+    }*/
 
     try {
       console.log('trips started');
@@ -222,6 +236,32 @@ const ReplayPage = () => {
     }
   });
 
+  // Fetch positions whenever `replay` becomes true
+  useEffect(() => {
+    const fetchPositions = async () => {
+      if (replay && selectedDeviceId && from && to) {
+        try {
+          //setLoading(false);
+          const query = new URLSearchParams({ deviceId: selectedDeviceId, from, to });
+          const response = await fetchOrThrow(`/api/positions?${query.toString()}`);
+          setIndex(0);
+          const newPositions = await response.json();
+          setPositions(newPositions);
+          console.log('positions updated after replay toggle');
+
+          if (!newPositions.length) {
+            throw Error(t('sharedNoData'));
+          }
+        } finally {
+          setLoading(true);
+          setShowList(true);
+        }
+      }
+    };
+    //end
+    fetchPositions();
+  }, [replay, selectedDeviceId, from, to, t]);
+
   const handleDownload = () => {
     const query = new URLSearchParams({ deviceId: selectedDeviceId, from, to });
     window.location.assign(`/api/positions/kml?${query.toString()}`);
@@ -246,16 +286,22 @@ const ReplayPage = () => {
       <MapCamera positions={positions} />
 
       <div className={classes.sidebar}>
-        <Paper elevation={3} square>
+        <Paper elevation={3} square sx={{ backgroundColor: '#f5f5f5' }}>
 
           <Toolbar>
             <IconButton edge="start" sx={{ mr: 2 }} onClick={() => navigate(-1)}>
               <BackIcon />
             </IconButton>
 
-            <Typography className={classes.title}>{deviceName}</Typography>
+            <Typography className={classes.title} sx={{ fontWeight: 500 }}>{deviceName}</Typography>
             {loaded && (
               <>
+                {!showList && (
+                  <IconButton className={classes.replayButton} onClick={() => setReplay(true)} >
+                    <RouteIcon sx={{ color: '#1976d2' }} className={classes.flashing} />
+
+                  </IconButton>
+                )}
                 <IconButton onClick={handleDownload}>
                   <DownloadIcon />
                 </IconButton>
@@ -267,14 +313,15 @@ const ReplayPage = () => {
           </Toolbar>
         </Paper>
         {loaded && !showList &&
-          <Paper style={{ maxHeight: '350px', overflowY: 'auto', marginTop: '0px' }}>
+          <Paper style={{ maxHeight: '450px', overflowY: 'auto', marginTop: '0px' }}>
 
             <List>
               {trips.map((trip, index) => {
                 return (
+
                   <ListItemButton key={index}
                     sx={{
-                      borderBottom: '1px solid lightgrey', // Adds a black bottom border
+                      borderBottom: '1px solid #ccccccff', // Adds a black bottom border
                       '&.Mui-selected': {
                         backgroundColor: '#d3d3d3', // Darker background for selected item
                       },
@@ -284,34 +331,30 @@ const ReplayPage = () => {
                     }}
                   >
 
-                    <Grid container alignItems="center" spacing={1}>
+                    <Grid container alignItems="center" spacing={0.5} sx={{ width: '100%' }} >
+                      <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }} >
+                        <Typography variant="subtitle1" align="left" sx={{ display: 'flex', alignItems: 'center', width: '72%', fontWeight: 500 }}>
+                          <AccessTimeRoundedIcon sx={{ mr: 0.5 }} fontSize="small" />
+                          {formatTime(trip.startTime, 'time', t)} - {formatTime(trip.endTime, 'time', t)}
+                        </Typography>
+                        <Typography variant="subtitle1" align="right" sx={{ display: 'flex', alignItems: 'center', width: '28%', fontWeight: 500 }}>
+                          <DirectionsCarIcon fontSize="small" sx={{ mr: 0.5 }} />
+                          {formatDistance(Math.abs(trip.distance), distanceUnit, t)}
+                        </Typography>
 
-                      <Grid container alignItems="center">
-                        <Grid item xs={9}>
-                          <Typography variant="subtitle1" align="left" sx={{ display: 'flex', alignItems: 'center' }}>
-                            <AccessTimeRoundedIcon sx={{ mr: 0.5 }} fontSize="small" />
-                            {formatTime(trip.startTime, 'time', t)} - {formatTime(trip.endTime, 'time', t)}
-                          </Typography>
-                        </Grid>
-
-                        {/* Distance (right) */}
-                        <Grid item xs={3}>
-                          <Typography variant="subtitle1" align="right" sx={{ display: 'flex', alignItems: 'center', marginLeft: '25px' }}>
-                            <DirectionsCarIcon fontSize="small" sx={{ mr: 0.5 }} />
-                            {formatDistance(Math.abs(trip.distance), distanceUnit, t)}
-                          </Typography>
-                        </Grid>
                       </Grid>
 
-                      <Grid item xs={12}>
+                      <Grid item sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                         <Typography variant="body2" sx={{ color: 'text.primary', display: 'flex', alignItems: 'center' }}> <PlayArrowRoundedIcon sx={{ marginRight: '4px', color: '#27cb46' }} /> {trip.startAddress ? `  ${trip.startAddress.slice(0, 40) + "..."}` : ""}</Typography>
                       </Grid>
 
-                      <Grid item xs={12}>
+                      <Grid item sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                         <Typography variant="body2" sx={{ color: 'grey', display: 'flex', alignItems: 'center' }}> <StopRoundedIcon sx={{ marginRight: '4px', color: '#ed2736' }} /> {trip.endAddress ? `${trip.endAddress.slice(0, 40) + "..."}` : ""}</Typography>
                       </Grid>
 
+
                     </Grid>
+
 
                   </ListItemButton>
 
@@ -321,8 +364,9 @@ const ReplayPage = () => {
 
           </Paper>
         }
-        {loaded && showList && (
+        {showList && (
           <>
+
             <Paper className={classes.content} square>
               {replay ? (
                 <>
@@ -363,18 +407,19 @@ const ReplayPage = () => {
             </Paper>
           </>)}
         {loaded && !showList &&
-          <Paper className={classes.content} square>
+          <Paper sx={{ backgroundColor: '#f5f5f5', width: '100%', padding: '10px', marginTop: '1px' }} square>
 
 
             <div className={classes.controls}>
               {summary.length ?
-                <Typography variant="subtitle1" align="left">
-                  <DirectionsCarIcon fontSize='5px' /> {formatDistance(summary[0]['distance'], 'km', t)}
+                <Typography variant="subtitle1" align="left" sx={{ display: 'flex', alignItems: 'center', fontWeight: 500 }}>
+                  <SpeedIcon sx={{ mr: 0.5, color: '#ed2736' }} fontSize='small' /> {formatSpeed(summary[0]['maxSpeed'], 'kmh', t)}
                 </Typography> : null}
               {summary.length ?
-                <Typography variant="subtitle1" align="right">
-                  <SpeedIcon fontSize='5px' /> {formatSpeed(summary[0]['maxSpeed'], 'kmh', t)}
+                <Typography variant="subtitle1" align="right" sx={{ display: 'flex', alignItems: 'center', fontWeight: 500 }}>
+                  <DirectionsCarIcon sx={{ mr: 0.5 }} fontSize='small' /> {formatDistance(summary[0]['distance'], 'km', t)}
                 </Typography> : null}
+
             </div>
 
           </Paper>
