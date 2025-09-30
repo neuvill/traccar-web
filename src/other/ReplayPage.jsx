@@ -210,6 +210,7 @@ const ReplayPage = () => {
       setTrips(trips);
       console.log('trips', trips);
       console.log('isQuick', isQuick2);
+      console.log(query.toString());
 
       if (!trips.length) {
         throw Error(t('sharedNoData'));
@@ -221,8 +222,11 @@ const ReplayPage = () => {
 
     try {
       console.log('summary started');
-      const response = await fetchOrThrow(`/api/reports/summary?${query.toString()}`);
+      const response = await fetchOrThrow(`/api/reports/summary?${query.toString()}`, {
+        headers: { Accept: 'application/json' },
+      });
       setIndex(0);
+      console.log(response);
       const summary = await response.json();
       setSummary(summary);
       console.log('summary', summary);
