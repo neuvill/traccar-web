@@ -209,15 +209,20 @@ const ReplayPage = () => {
       const trips = await response.json();
       setTrips(trips);
       console.log('trips', trips);
-      console.log('isQuick', isQuick2);
-      console.log(query.toString());
+      //console.log('isQuick', isQuick2);
+      //console.log(query.toString());
 
       if (!trips.length) {
+
+
         throw Error(t('sharedNoData'));
+
       }
     } finally {
       setLoading(true);
+
     }
+
 
 
     try {
@@ -232,12 +237,15 @@ const ReplayPage = () => {
       console.log('summary', summary);
 
       if (!summary.length) {
+
         throw Error(t('sharedNoData'));
       }
     } finally {
       setLoading(false);
       setShowList(false);
     }
+    console.log(loading);
+
   });
 
   // Fetch positions whenever `replay` becomes true
