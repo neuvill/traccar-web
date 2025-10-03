@@ -317,7 +317,19 @@ const ReplayPage = () => {
                 <IconButton onClick={handleDownload}>
                   <DownloadIcon />
                 </IconButton>
-                <IconButton edge="end" onClick={() => updateReportParams(searchParams, setSearchParams, 'ignore', [])}>
+                <IconButton edge="end"
+                  onClick={() => {
+                    //setShowList(true);
+                    setLoading(false);
+
+
+                    updateReportParams(searchParams, setSearchParams, 'ignore', []);
+
+
+
+                  }}
+                >
+
                   <TuneIcon />
                 </IconButton>
               </>
