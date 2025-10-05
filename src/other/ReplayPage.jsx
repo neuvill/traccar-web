@@ -124,8 +124,10 @@ const ReplayPage = () => {
   const [index, setIndex] = useState(0);
   const [selectedDeviceId, setSelectedDeviceId] = useState(defaultDeviceId);
   const [showCard, setShowCard] = useState(false);
-  const from = searchParams.get('from');
-  const to = searchParams.get('to');
+  const [from, setFrom] = useState(searchParams.get('from'));
+  //const from = searchParams.get('from');
+  //const to = searchParams.get('to');
+  const [to, setTo] = useState(searchParams.get('to'));
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
   const distanceUnit = useAttributePreference('distanceUnit');
@@ -143,6 +145,7 @@ const ReplayPage = () => {
     }
     return null;
   });
+  console.log('isQuick2:', isQuick2);
 
   useEffect(() => {
     if (!from && !to) {
@@ -301,17 +304,28 @@ const ReplayPage = () => {
         <Paper elevation={3} square sx={{ backgroundColor: '#f5f5f5' }}>
 
           <Toolbar>
-            <IconButton edge="start" sx={{ mr: 2 }} onClick={() => navigate(-1)}>
-              <BackIcon />
-            </IconButton>
+            {replay ? (
 
+              <IconButton edge="start" sx={{ mr: 2 }} onClick={() => setReplay(false)}>
+                <BackIcon />
+              </IconButton>
+
+
+            ) : (
+              <>
+                {!loading && (
+                  <IconButton edge="start" sx={{ mr: 2 }} onClick={() => navigate(-1)}>
+                    <BackIcon />
+                  </IconButton>
+                )}
+              </>
+            )}
             <Typography className={classes.title} sx={{ fontWeight: 500 }}>{deviceName}</Typography>
             {loaded && (
               <>
                 {!showList && (
                   <IconButton className={classes.replayButton} onClick={() => setReplay(true)} >
                     <RouteIcon sx={{ color: '#1976d2' }} className={classes.flashing} />
-
                   </IconButton>
                 )}
                 <IconButton onClick={handleDownload}>
@@ -319,17 +333,11 @@ const ReplayPage = () => {
                 </IconButton>
                 <IconButton edge="end"
                   onClick={() => {
-                    //setShowList(true);
+                    setShowList(true);
                     setLoading(false);
-
-
                     updateReportParams(searchParams, setSearchParams, 'ignore', []);
-
-
-
                   }}
                 >
-
                   <TuneIcon />
                 </IconButton>
               </>
@@ -353,7 +361,15 @@ const ReplayPage = () => {
                         backgroundColor: '#b0b0b0', // Even darker background on hover
                       },
                     }}
-                  >
+                    onClick={() => {
+                      //console.log(trip.startTime);
+                      setFrom(trip.startTime);
+                      //console.log('the from is', from);
+                      setTo(trip.endTime);
+
+
+                      setReplay(true);
+                    }}>
 
                     <Grid container alignItems="center" spacing={0.5} sx={{ width: '100%' }} >
                       <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }} >

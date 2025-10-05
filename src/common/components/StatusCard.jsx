@@ -258,7 +258,7 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                 </Tooltip>
                 <Tooltip title={t('reportReplay')}>
                   <IconButton
-                    onClick={() => navigate(`/replay?deviceId=${deviceId}`, { state: { isQuick: true } })}
+                    onClick={() => navigate(`/qreplay?deviceId=${deviceId}`, { state: { isQuick: true } })}
                     disabled={disableActions || !position}
                   >
                     <HistoryIcon />
