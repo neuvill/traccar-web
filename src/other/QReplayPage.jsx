@@ -282,9 +282,54 @@ const QReplayPage = () => {
             </MapView>
             <MapScale />
             <MapCamera positions={positions} />
+            <Paper elevation={3} square sx={{ backgroundColor: '#f5f5f5', position: 'fixed', zIndex: 3, left: 0, top: 0, width: '100%' }}>
+                <Toolbar>
+                    {replay ? (
+                        <IconButton edge="start" sx={{ mr: 2 }} onClick={() => {
+                            setHidden(!hidden);
+                            setReplay(false);
+                            setShowList(!showList);
+                        }}>
+                            <BackIcon />
+                        </IconButton>
+                    ) : (
+                        <>
 
+                            <IconButton edge="start" sx={{ mr: 2 }} onClick={() => navigate(-1)}>
+                                <BackIcon />
+                            </IconButton>
+
+                        </>
+                    )}
+                    <Typography className={classes.title} sx={{ fontWeight: 500 }}>{deviceName}</Typography>
+                    {loaded && (
+                        <>
+                            {!showList && (
+                                <IconButton className={classes.replayButton} onClick={() => {
+                                    setHidden(!hidden)
+                                    setReplay(true);
+                                }}>
+                                    <RouteIcon sx={{ color: '#1976d2' }} className={classes.flashing} />
+                                </IconButton>
+                            )}
+                            <IconButton onClick={handleDownload}>
+                                <DownloadIcon />
+                            </IconButton>
+                            <IconButton edge="end"
+                                onClick={() => {
+                                    setShowList(true);
+                                    setLoading(false);
+                                    //updateReportParams(searchParams, setSearchParams, 'ignore', []);
+                                }}
+                            >
+                                <TuneIcon />
+                            </IconButton>
+                        </>
+                    )}
+                </Toolbar>
+            </Paper>
             <div className={classes.sidebar}>
-                <Paper elevation={3} square sx={{ backgroundColor: '#f5f5f5' }}>
+                {/*<Paper elevation={3} square sx={{ backgroundColor: '#f5f5f5' }}>
                     <Toolbar>
                         {replay ? (
                             <IconButton edge="start" sx={{ mr: 2 }} onClick={() => {
@@ -329,9 +374,9 @@ const QReplayPage = () => {
                             </>
                         )}
                     </Toolbar>
-                </Paper>
+                </Paper>*/}
                 {loaded && !showList &&
-                    <Paper style={{ maxHeight: '450px', overflowY: 'auto', marginTop: '0px', display: hidden ? 'none' : undefined }}>
+                    <Paper style={{ maxHeight: '450px', overflowY: 'auto', marginTop: '15%', display: hidden ? 'none' : undefined }}>
 
                         <List>
                             {trips.map((trip, index) => {
