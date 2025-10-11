@@ -254,9 +254,15 @@ const ReplayPage = () => {
   // Fetch positions whenever `replay` becomes true
   useEffect(() => {
     const fetchPositions = async () => {
+
+
       if (replay && selectedDeviceId && from && to) {
         try {
           //setLoading(false);
+
+          //console.log('fetchPositions called with:', { selectedDeviceId, from, to });
+          console.log(from, to, selectedDeviceId);
+
           const query = new URLSearchParams({ deviceId: selectedDeviceId, from, to });
           const response = await fetchOrThrow(`/api/positions?${query.toString()}`);
           setIndex(0);
@@ -324,7 +330,12 @@ const ReplayPage = () => {
             {loaded && (
               <>
                 {!showList && (
-                  <IconButton className={classes.replayButton} onClick={() => setReplay(true)} >
+                  <IconButton className={classes.replayButton} onClick={() => {
+                    //setHidden(!hidden)
+                    setFrom(searchParams.get('from'));
+                    setTo(searchParams.get('to'));
+                    setReplay(true);
+                  }}>
                     <RouteIcon sx={{ color: '#1976d2' }} className={classes.flashing} />
                   </IconButton>
                 )}
@@ -412,7 +423,7 @@ const ReplayPage = () => {
                 <>
 
                   <div className={classes.controls}>
-                    <Typography variant="subtitle1" align="left">{formatTime(positions[index].fixTime, 'seconds')}</Typography>
+                    <Typography variant="subtitle1" align="left">{positions[index].fixTime ? formatTime(positions[index].fixTime, 'seconds') : '-'}</Typography>
                     <Typography variant="subtitle1" align="right">{positions[index].speed ? formatSpeed(positions[index].speed, 'kmh', t) : '-'}</Typography>
                   </div>
                   <Slider

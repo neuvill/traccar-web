@@ -282,7 +282,7 @@ const QReplayPage = () => {
             </MapView>
             <MapScale />
             <MapCamera positions={positions} />
-            <Paper elevation={3} square sx={{ backgroundColor: '#f5f5f5', position: 'fixed', zIndex: 3, left: 0, top: 0, width: '100%' }}>
+            <Paper elevation={5} square sx={{ backgroundColor: '#f5f5f5', position: 'fixed', zIndex: 5, left: 0, top: 0, width: '100%' }}>
                 <Toolbar>
                     {replay ? (
                         <IconButton edge="start" sx={{ mr: 2 }} onClick={() => {
@@ -437,12 +437,12 @@ const QReplayPage = () => {
                 {showList && (
                     <>
 
-                        <Paper className={classes.content} square>
+                        <Paper sx={{ position: 'fixed', width: '98.5%', bottom: '8%' }} className={classes.content} square>
                             {replay ? (
                                 <>
 
                                     <div className={classes.controls}>
-                                        <Typography variant="subtitle1" align="left">{formatTime(positions[index].fixTime, 'seconds')}</Typography>
+                                        <Typography variant="subtitle1" align="left">{positions[index].fixTime ? formatTime(positions[index].fixTime, 'seconds') : '-'}</Typography>
                                         <Typography variant="subtitle1" align="right">{positions[index].speed ? formatSpeed(positions[index].speed, 'kmh', t) : '-'}</Typography>
                                     </div>
                                     <Slider
