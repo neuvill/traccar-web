@@ -34,6 +34,13 @@ import BackIcon from '../common/components/BackIcon';
 import fetchOrThrow from '../common/util/fetchOrThrow';
 import { useAttributePreference } from '../common/util/preferences';
 import { useLocation } from 'react-router-dom';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from 'dayjs';
+import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
+import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 
 import SpeedIcon from '@mui/icons-material/Speed';
 
@@ -129,7 +136,7 @@ const QReplayPage = () => {
     const [to, setTo] = useState(todayMidnight.toISOString());
     todayMidnight.setHours(0, 0, 0, 0);
     const [from, setFrom] = useState(todayMidnight.toISOString());
-
+    const [noDataMessage, setNoDataMessage] = useState(false);
     //const [to, setTo] = useState(searchParams.get('to'));
     const [playing, setPlaying] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -137,6 +144,8 @@ const QReplayPage = () => {
     const [replay, setReplay] = useState(false);
     const [showList, setShowList] = useState(true);
     const loaded = Boolean(from && to && !loading && positions.length || !hidden);
+    const [open, setOpen] = useState(false);
+    const [dateChanged, setDateChanged] = useState(false);
 
 
     const deviceName = useSelector((state) => {
@@ -258,7 +267,7 @@ const QReplayPage = () => {
             console.log(loading);
         };
         fetchSummary();
-    }, [selectedDeviceId]);
+    }, [selectedDeviceId, dateChanged]);
 
     const handleDownload = () => {
         const query = new URLSearchParams({ deviceId: selectedDeviceId, from, to });
@@ -432,6 +441,7 @@ const QReplayPage = () => {
                             })}
                         </List>
 
+
                     </Paper>
                 }
                 {showList && (
@@ -476,24 +486,128 @@ const QReplayPage = () => {
                                 (null)
                             )}
                         </Paper>
+
                     </>)}
                 {loaded && !showList &&
-                    <Paper sx={{ backgroundColor: '#f5f5f5', width: '100%', padding: '10px', marginTop: '1px' }} square>
+                    <>
+                        <Paper sx={{ backgroundColor: '#f5f5f5', width: '100%', padding: '10px', marginTop: '1px' }} square>
 
 
-                        <div className={classes.controls}>
-                            {summary.length ?
-                                <Typography variant="subtitle1" align="left" sx={{ display: 'flex', alignItems: 'center', fontWeight: 500 }}>
-                                    <SpeedIcon sx={{ mr: 0.5, color: '#ed2736' }} fontSize='small' /> {formatSpeed(summary[0]['maxSpeed'], 'kmh', t)}
-                                </Typography> : null}
-                            {summary.length ?
-                                <Typography variant="subtitle1" align="right" sx={{ display: 'flex', alignItems: 'center', fontWeight: 500 }}>
-                                    <DirectionsCarIcon sx={{ mr: 0.5 }} fontSize='small' /> {formatDistance(summary[0]['distance'], 'km', t)}
-                                </Typography> : null}
+                            <div className={classes.controls}>
+                                {summary.length ?
+                                    <Typography variant="subtitle1" align="left" sx={{ display: 'flex', alignItems: 'center', fontWeight: 500 }}>
+                                        <SpeedIcon sx={{ mr: 0.5, color: '#ed2736' }} fontSize='small' /> {formatSpeed(summary[0]['maxSpeed'], 'kmh', t)}
+                                    </Typography> : null}
+                                {summary.length ?
+                                    <Typography variant="subtitle1" align="right" sx={{ display: 'flex', alignItems: 'center', fontWeight: 500 }}>
+                                        <DirectionsCarIcon sx={{ mr: 0.5 }} fontSize='small' /> {formatDistance(summary[0]['distance'], 'km', t)}
+                                    </Typography> : null}
 
-                        </div>
+                            </div>
 
-                    </Paper>
+                        </Paper>
+                        <Paper >
+                            <Grid container spacing={1} alignItems="center">
+                                <Grid item>
+                                    <IconButton color='primary' onClick={() => {
+
+                                        //setIsDataLoading(false);
+
+                                        const newFrom = dayjs(from).subtract(1, 'day').startOf('day').toISOString();
+                                        const newTo = dayjs(to).subtract(1, 'day').endOf('day').toISOString();
+                                        setFrom(newFrom);
+                                        setTo(newTo);
+                                        //handleSubmit({ deviceId: selectedDeviceId, from: newFrom, to: newTo });
+                                        //setCollapsed(false);
+                                        //setIsMapVisible(false);
+                                        //setIsNewDraw(false);
+                                        setNoDataMessage(false);
+                                        setDateChanged(!dateChanged);
+                                    }}>
+                                        <ArrowLeftIcon sx={{ fontSize: 30 }} />
+                                    </IconButton>
+                                </Grid>
+                                <Grid item xs>
+                                    <Typography
+                                        variant="body1"
+                                        align="center"
+                                        onClick={() => setOpen(true)}
+                                        sx={{
+                                            cursor: 'pointer', // Makes it clickable
+                                            marginBottom: '8px',
+                                            fontWeight: 'bold',
+                                            textAlign: 'center',
+                                            padding: '8px 16px', // Adds padding to make it look like a button
+                                            backgroundColor: noDataMessage ? '#f0f0f0' : 'transparent', // Background color
+                                            border: '1px solid #ccc', // Adds a border
+                                            borderRadius: '4px', // Rounds the corners
+                                            transition: 'background-color 0.3s ease', // Smooth hover effect
+                                            animation: noDataMessage ? 'blink 1s infinite' : 'none', // Blinking animation
+                                            '@keyframes blink': {
+                                                '0%': { opacity: 1 },
+                                                '50%': { opacity: 0.5 },
+                                                '100%': { opacity: 1 },
+                                            },
+                                            '&:hover': {
+                                                backgroundColor: '#e0e0e0', // Changes background on hover
+                                            },
+                                        }}
+                                    >
+                                        {dayjs(from).format('D MMM, YYYY')}
+                                    </Typography>
+                                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                        <DatePicker
+                                            open={open}
+                                            onClose={() => setOpen(false)}
+                                            value={dayjs(from)}
+                                            onChange={(newDate) => {
+                                                setIsDataLoading(false);
+                                                setOpen(false);
+                                                handleDateChange(newDate);
+                                                setIsMapVisible(false);
+                                                setIsNewDraw(false);
+                                                setNoDataMessage(false);
+                                            }}
+                                            disableFuture={true}
+                                            slotProps={{ textField: { style: { display: 'none' } }, desktopPaper: { style: { marginTop: '70%', marginLeft: '5%' } } }} // Hides the input field
+                                            // Adds space above the DatePicker pop-up
+                                            PopperProps={{
+                                                disablePortal: true, // Ensures it renders in the correct place
+                                            }}
+
+                                        />
+                                    </LocalizationProvider>
+                                </Grid>
+                                <Grid item>
+                                    <IconButton color='primary' onClick={() => {
+
+                                        //setIsDataLoading(false);
+
+                                        const newFrom = dayjs(from).add(1, 'day').startOf('day').toISOString();
+                                        const newTo = dayjs(to).add(1, 'day').endOf('day').toISOString();
+                                        setFrom(newFrom);
+                                        setTo(newTo);
+                                        //handleSubmit({ deviceId: selectedDeviceId, from: newFrom, to: newTo });
+                                        //setCollapsed(false);
+                                        //setIsMapVisible(false);
+                                        //setIsNewDraw(false);
+                                        //setNoDataMessage(false);
+
+                                        setNoDataMessage(false);
+                                        setDateChanged(!dateChanged);
+
+
+                                    }}
+                                        disabled={dayjs(to).isSame(dayjs(), 'day')}
+                                    >
+                                        <ArrowRightIcon sx={{ fontSize: 30 }} />
+                                    </IconButton>
+                                </Grid>
+                            </Grid>
+                        </Paper>
+
+                    </>
+
                 }
             </div>
             {
