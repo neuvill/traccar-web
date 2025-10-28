@@ -543,6 +543,7 @@
     "alarmRemoving": "Removing",
     "notificationType": "Type of Notification",
     "notificationAlways": "All Devices",
+    "notificationGeofenceLabel": "Link geofences to devices or groups to receive these events.",
     "notificationNotificators": "Channels",
     "notificatorCommand": "Command",
     "notificatorWeb": "Web",
