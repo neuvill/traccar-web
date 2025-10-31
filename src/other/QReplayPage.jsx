@@ -59,7 +59,7 @@ const useStyles = makeStyles()((theme) => ({
         top: 0,
         margin: theme.spacing(1.5),
         //width: theme.dimensions.drawerWidthDesktop,
-        width: '28%',
+        width: '33%',
         [theme.breakpoints.down('md')]: {
             width: '100%',
             margin: 0,
@@ -315,6 +315,14 @@ const QReplayPage = () => {
                         <>
                             {!showList && (
                                 <IconButton className={classes.replayButton} onClick={() => {
+                                    //console.log('from before:', from);
+                                    const newFrom = dayjs(from).startOf('day').toISOString();
+                                    const newTo = dayjs(to).endOf('day').toISOString();
+                                    //console.log('new from:', newFrom);
+                                    //console.log('new to:', newTo);
+                                    setFrom(newFrom);
+                                    setTo(newTo);
+
                                     setHidden(!hidden)
                                     setReplay(true);
                                 }}>
@@ -326,6 +334,7 @@ const QReplayPage = () => {
                             </IconButton>
                             <IconButton edge="end"
                                 onClick={() => {
+
                                     setShowList(true);
                                     setLoading(false);
                                     //updateReportParams(searchParams, setSearchParams, 'ignore', []);
@@ -338,52 +347,7 @@ const QReplayPage = () => {
                 </Toolbar>
             </Paper>
             <div className={classes.sidebar}>
-                {/*<Paper elevation={3} square sx={{ backgroundColor: '#f5f5f5' }}>
-                    <Toolbar>
-                        {replay ? (
-                            <IconButton edge="start" sx={{ mr: 2 }} onClick={() => {
-                                setHidden(!hidden);
-                                setReplay(false);
-                                setShowList(!showList);
-                            }}>
-                                <BackIcon />
-                            </IconButton>
-                        ) : (
-                            <>
 
-                                <IconButton edge="start" sx={{ mr: 2 }} onClick={() => navigate(-1)}>
-                                    <BackIcon />
-                                </IconButton>
-
-                            </>
-                        )}
-                        <Typography className={classes.title} sx={{ fontWeight: 500 }}>{deviceName}</Typography>
-                        {loaded && (
-                            <>
-                                {!showList && (
-                                    <IconButton className={classes.replayButton} onClick={() => {
-                                        setHidden(!hidden)
-                                        setReplay(true);
-                                    }}>
-                                        <RouteIcon sx={{ color: '#1976d2' }} className={classes.flashing} />
-                                    </IconButton>
-                                )}
-                                <IconButton onClick={handleDownload}>
-                                    <DownloadIcon />
-                                </IconButton>
-                                <IconButton edge="end"
-                                    onClick={() => {
-                                        setShowList(true);
-                                        setLoading(false);
-                                        //updateReportParams(searchParams, setSearchParams, 'ignore', []);
-                                    }}
-                                >
-                                    <TuneIcon />
-                                </IconButton>
-                            </>
-                        )}
-                    </Toolbar>
-                </Paper>*/}
                 {loaded && !showList &&
                     <Paper style={{ maxHeight: '450px', overflowY: 'auto', marginTop: '15%', display: hidden ? 'none' : undefined }}>
 
@@ -507,7 +471,7 @@ const QReplayPage = () => {
 
                         </Paper>
                         <Paper >
-                            <Grid container spacing={1} alignItems="center">
+                            <Grid container spacing={2} alignItems="center">
                                 <Grid item>
                                     <IconButton color='primary' onClick={() => {
 
@@ -527,7 +491,7 @@ const QReplayPage = () => {
                                         <ArrowLeftIcon sx={{ fontSize: 30 }} />
                                     </IconButton>
                                 </Grid>
-                                <Grid item xs>
+                                <Grid item xs sx={{ width: '75%' }}>
                                     <Typography
                                         variant="body1"
                                         align="center"
@@ -549,7 +513,7 @@ const QReplayPage = () => {
                                                 '100%': { opacity: 1 },
                                             },
                                             '&:hover': {
-                                                backgroundColor: '#e0e0e0', // Changes background on hover
+                                                backgroundColor: '#bfe8ffff', // Changes background on hover
                                             },
                                         }}
                                     >
@@ -561,14 +525,20 @@ const QReplayPage = () => {
                                             onClose={() => setOpen(false)}
                                             value={dayjs(from)}
                                             onChange={(newDate) => {
-                                                setIsDataLoading(false);
-                                                setOpen(false);
-                                                handleDateChange(newDate);
-                                                setIsMapVisible(false);
-                                                setIsNewDraw(false);
+
+                                                //console.log('new date from picker:', newDate.toISOString());
+
+                                                const newFrom = dayjs(newDate.toISOString()).startOf('day').toISOString();
+                                                const newTo = dayjs(newDate.toISOString()).endOf('day').toISOString();
+                                                //console.log('new from:', newFrom);
+                                                //console.log('new to:', newTo);
+                                                setFrom(newFrom);
+                                                setTo(newTo);
+
                                                 setNoDataMessage(false);
+                                                setDateChanged(!dateChanged);
                                             }}
-                                            disableFuture={true}
+                                            disableFuture={false}
                                             slotProps={{ textField: { style: { display: 'none' } }, desktopPaper: { style: { marginTop: '70%', marginLeft: '5%' } } }} // Hides the input field
                                             // Adds space above the DatePicker pop-up
                                             PopperProps={{
