@@ -110,6 +110,26 @@ const useStyles = makeStyles()((theme) => ({
     replayButton: {
         marginRight: theme.spacing(2),
     },
+    replayTime: {
+        display: 'flex',
+        alignItems: 'center',
+        width: '75%',
+        fontWeight: 500
+    },
+    replayDistance: {
+        display: 'flex',
+        alignItems: 'center',
+        width: '25%',
+        fontWeight: 500
+
+    },
+    replayListItem: {
+        maxHeight: '75vh',
+        overflowY: 'auto',
+        marginTop: '10%',
+        marginBottom: '10%',
+
+    },
 }));
 
 const QReplayPage = () => {
@@ -303,7 +323,6 @@ const QReplayPage = () => {
                         </IconButton>
                     ) : (
                         <>
-
                             <IconButton edge="start" sx={{ mr: 2 }} onClick={() => navigate(-1)}>
                                 <BackIcon />
                             </IconButton>
@@ -315,11 +334,8 @@ const QReplayPage = () => {
                         <>
                             {!showList && (
                                 <IconButton className={classes.replayButton} onClick={() => {
-                                    //console.log('from before:', from);
                                     const newFrom = dayjs(from).startOf('day').toISOString();
                                     const newTo = dayjs(to).endOf('day').toISOString();
-                                    //console.log('new from:', newFrom);
-                                    //console.log('new to:', newTo);
                                     setFrom(newFrom);
                                     setTo(newTo);
 
@@ -349,7 +365,7 @@ const QReplayPage = () => {
             <div className={classes.sidebar}>
 
                 {loaded && !showList &&
-                    <Paper style={{ maxHeight: '450px', overflowY: 'auto', marginTop: '15%', display: hidden ? 'none' : undefined }}>
+                    <Paper className={classes.replayListItem} style={{ display: hidden ? 'none' : undefined }}>
 
                         <List>
                             {trips.map((trip, index) => {
@@ -366,9 +382,7 @@ const QReplayPage = () => {
                                             },
                                         }}
                                         onClick={() => {
-                                            //console.log(trip.startTime);
                                             setFrom(trip.startTime);
-                                            //console.log('the from is', from);
                                             setTo(trip.endTime);
                                             setReplay(true);
                                             setHidden(!hidden);
@@ -376,11 +390,11 @@ const QReplayPage = () => {
 
                                         <Grid container alignItems="center" spacing={0.5} sx={{ width: '100%' }} >
                                             <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }} >
-                                                <Typography variant="subtitle1" align="left" sx={{ display: 'flex', alignItems: 'center', width: '72%', fontWeight: 500 }}>
+                                                <Typography className={classes.replayTime} variant="subtitle1" align="left">
                                                     <AccessTimeRoundedIcon sx={{ mr: 0.5 }} fontSize="small" />
                                                     {formatTime(trip.startTime, 'time', t)} - {formatTime(trip.endTime, 'time', t)}
                                                 </Typography>
-                                                <Typography variant="subtitle1" align="right" sx={{ display: 'flex', alignItems: 'center', width: '28%', fontWeight: 500 }}>
+                                                <Typography className={classes.replayDistance} variant="subtitle1" align="right" >
                                                     <DirectionsCarIcon fontSize="small" sx={{ mr: 0.5 }} />
                                                     {formatDistance(Math.abs(trip.distance), distanceUnit, t)}
                                                 </Typography>
@@ -394,18 +408,12 @@ const QReplayPage = () => {
                                             <Grid item sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                                                 <Typography variant="body2" sx={{ color: 'grey', display: 'flex', alignItems: 'center' }}> <StopRoundedIcon sx={{ marginRight: '4px', color: '#ed2736' }} /> {trip.endAddress ? `${trip.endAddress.slice(0, 40) + "..."}` : ""}</Typography>
                                             </Grid>
-
-
                                         </Grid>
-
-
                                     </ListItemButton>
 
                                 );
                             })}
                         </List>
-
-
                     </Paper>
                 }
                 {showList && (
@@ -471,27 +479,20 @@ const QReplayPage = () => {
 
                         </Paper>
                         <Paper >
-                            <Grid container spacing={2} alignItems="center">
-                                <Grid item>
+                            <Grid container spacing={0} alignItems="center">
+                                <Grid item sx={{ width: '15%', display: 'flex', justifyContent: 'center' }}>
                                     <IconButton color='primary' onClick={() => {
-
-                                        //setIsDataLoading(false);
-
                                         const newFrom = dayjs(from).subtract(1, 'day').startOf('day').toISOString();
                                         const newTo = dayjs(to).subtract(1, 'day').endOf('day').toISOString();
                                         setFrom(newFrom);
                                         setTo(newTo);
-                                        //handleSubmit({ deviceId: selectedDeviceId, from: newFrom, to: newTo });
-                                        //setCollapsed(false);
-                                        //setIsMapVisible(false);
-                                        //setIsNewDraw(false);
                                         setNoDataMessage(false);
                                         setDateChanged(!dateChanged);
                                     }}>
                                         <ArrowLeftIcon sx={{ fontSize: 30 }} />
                                     </IconButton>
                                 </Grid>
-                                <Grid item xs sx={{ width: '75%' }}>
+                                <Grid item xs sx={{ width: '70%' }}>
                                     <Typography
                                         variant="body1"
                                         align="center"
@@ -525,16 +526,10 @@ const QReplayPage = () => {
                                             onClose={() => setOpen(false)}
                                             value={dayjs(from)}
                                             onChange={(newDate) => {
-
-                                                //console.log('new date from picker:', newDate.toISOString());
-
                                                 const newFrom = dayjs(newDate.toISOString()).startOf('day').toISOString();
                                                 const newTo = dayjs(newDate.toISOString()).endOf('day').toISOString();
-                                                //console.log('new from:', newFrom);
-                                                //console.log('new to:', newTo);
                                                 setFrom(newFrom);
                                                 setTo(newTo);
-
                                                 setNoDataMessage(false);
                                                 setDateChanged(!dateChanged);
                                             }}
@@ -548,25 +543,14 @@ const QReplayPage = () => {
                                         />
                                     </LocalizationProvider>
                                 </Grid>
-                                <Grid item>
+                                <Grid item sx={{ width: '15%', display: 'flex', justifyContent: 'center' }}>
                                     <IconButton color='primary' onClick={() => {
-
-                                        //setIsDataLoading(false);
-
                                         const newFrom = dayjs(from).add(1, 'day').startOf('day').toISOString();
                                         const newTo = dayjs(to).add(1, 'day').endOf('day').toISOString();
                                         setFrom(newFrom);
                                         setTo(newTo);
-                                        //handleSubmit({ deviceId: selectedDeviceId, from: newFrom, to: newTo });
-                                        //setCollapsed(false);
-                                        //setIsMapVisible(false);
-                                        //setIsNewDraw(false);
-                                        //setNoDataMessage(false);
-
                                         setNoDataMessage(false);
                                         setDateChanged(!dateChanged);
-
-
                                     }}
                                         disabled={dayjs(to).isSame(dayjs(), 'day')}
                                     >
@@ -575,9 +559,7 @@ const QReplayPage = () => {
                                 </Grid>
                             </Grid>
                         </Paper>
-
                     </>
-
                 }
             </div>
             {
