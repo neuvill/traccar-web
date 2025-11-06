@@ -114,20 +114,31 @@ const useStyles = makeStyles()((theme) => ({
         display: 'flex',
         alignItems: 'center',
         width: '75%',
-        fontWeight: 500
+        fontWeight: 500,
+        [theme.breakpoints.down('md')]: {
+            width: '70%',
+        },
+
     },
     replayDistance: {
         display: 'flex',
         alignItems: 'center',
         width: '25%',
-        fontWeight: 500
+        fontWeight: 500,
+        [theme.breakpoints.down('md')]: {
+            width: '30%',
+        },
 
     },
     replayListItem: {
         maxHeight: '75vh',
         overflowY: 'auto',
         marginTop: '10%',
-        marginBottom: '10%',
+        //marginBottom: '0%',
+        paddingBottom: '0px',
+        [theme.breakpoints.down('md')]: {
+            maxHeight: '71vh',
+        },
 
     },
 }));
@@ -365,20 +376,21 @@ const QReplayPage = () => {
             <div className={classes.sidebar}>
 
                 {loaded && !showList &&
-                    <Paper className={classes.replayListItem} style={{ display: hidden ? 'none' : undefined }}>
+                    <Paper square className={classes.replayListItem} style={{ display: hidden ? 'none' : undefined }}>
 
-                        <List>
+                        <List sx={{ padding: '0px' }}>
                             {trips.map((trip, index) => {
                                 return (
 
                                     <ListItemButton key={index}
                                         sx={{
+
                                             borderBottom: '1px solid #ccccccff', // Adds a black bottom border
                                             '&.Mui-selected': {
                                                 backgroundColor: '#d3d3d3', // Darker background for selected item
                                             },
                                             '&.Mui-selected:hover': {
-                                                backgroundColor: '#b0b0b0', // Even darker background on hover
+                                                backgroundColor: '#b0b0b0',// Even darker background on hover
                                             },
                                         }}
                                         onClick={() => {
@@ -478,7 +490,7 @@ const QReplayPage = () => {
                             </div>
 
                         </Paper>
-                        <Paper >
+                        <Paper square >
                             <Grid container spacing={0} alignItems="center">
                                 <Grid item sx={{ width: '15%', display: 'flex', justifyContent: 'center' }}>
                                     <IconButton color='primary' onClick={() => {

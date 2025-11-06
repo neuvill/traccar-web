@@ -34,11 +34,7 @@ import BackIcon from '../common/components/BackIcon';
 import fetchOrThrow from '../common/util/fetchOrThrow';
 import { useAttributePreference } from '../common/util/preferences';
 import { useLocation } from 'react-router-dom';
-
 import SpeedIcon from '@mui/icons-material/Speed';
-
-
-
 const useStyles = makeStyles()((theme) => ({
   root: {
     height: '100%',
@@ -113,11 +109,8 @@ const ReplayPage = () => {
   const timerRef = useRef();
   const { isQuick } = location.state || {};
   const [isQuick2, setIsQuick] = useState(isQuick);
-
   const [searchParams, setSearchParams] = useSearchParams();
-
   const defaultDeviceId = useSelector((state) => state.devices.selectedId);
-
   const [positions, setPositions] = useState([]);
   const [summary, setSummary] = useState([]);
   const [trips, setTrips] = useState([]);
@@ -185,49 +178,21 @@ const ReplayPage = () => {
     setLoading(true);
     setSelectedDeviceId(deviceId);
     const query = new URLSearchParams({ deviceId, from, to });
-    //console.log(query.toString());
-    /*if (replay) {
-      try {
-        const response = await fetchOrThrow(`/api/positions?${query.toString()}`);
-        setIndex(0);
-        const positions = await response.json();
-        setPositions(positions);
-        console.log('positions done');
-        if (!positions.length) {
-          throw Error(t('sharedNoData'));
-        }
-      } finally {
-        setLoading(true);
-      }
-    }*/
-
     try {
       console.log('trips started');
       const response = await fetchOrThrow(`/api/reports/trips?${query.toString()}`, {
         headers: { Accept: 'application/json' },
       });
-
-
       setIndex(0);
       const trips = await response.json();
       setTrips(trips);
       console.log('trips', trips);
-      //console.log('isQuick', isQuick2);
-      //console.log(query.toString());
-
       if (!trips.length) {
-
-
         throw Error(t('sharedNoData'));
-
       }
     } finally {
       setLoading(true);
-
     }
-
-
-
     try {
       console.log('summary started');
       const response = await fetchOrThrow(`/api/reports/summary?${query.toString()}`, {
@@ -240,7 +205,6 @@ const ReplayPage = () => {
       console.log('summary', summary);
 
       if (!summary.length) {
-
         throw Error(t('sharedNoData'));
       }
     } finally {
@@ -258,11 +222,6 @@ const ReplayPage = () => {
 
       if (replay && selectedDeviceId && from && to) {
         try {
-          //setLoading(false);
-
-          //console.log('fetchPositions called with:', { selectedDeviceId, from, to });
-          console.log(from, to, selectedDeviceId);
-
           const query = new URLSearchParams({ deviceId: selectedDeviceId, from, to });
           const response = await fetchOrThrow(`/api/positions?${query.toString()}`);
           setIndex(0);
@@ -373,12 +332,8 @@ const ReplayPage = () => {
                       },
                     }}
                     onClick={() => {
-                      //console.log(trip.startTime);
                       setFrom(trip.startTime);
-                      //console.log('the from is', from);
                       setTo(trip.endTime);
-
-
                       setReplay(true);
                     }}>
 
