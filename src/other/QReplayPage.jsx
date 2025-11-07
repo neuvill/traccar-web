@@ -446,6 +446,7 @@ const QReplayPage = () => {
                                         marks={positions.map((_, index) => ({ value: index }))}
                                         value={index}
                                         onChange={(_, index) => setIndex(index)}
+                                        color='normal'
                                     />
                                     <div className={classes.controls}>
 

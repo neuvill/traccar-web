@@ -35,6 +35,7 @@ import fetchOrThrow from '../common/util/fetchOrThrow';
 import { useAttributePreference } from '../common/util/preferences';
 import { useLocation } from 'react-router-dom';
 import SpeedIcon from '@mui/icons-material/Speed';
+import fa from 'dayjs/locale/fa';
 const useStyles = makeStyles()((theme) => ({
   root: {
     height: '100%',
@@ -108,7 +109,7 @@ const ReplayPage = () => {
   const navigate = useNavigate();
   const timerRef = useRef();
   const { isQuick } = location.state || {};
-  const [isQuick2, setIsQuick] = useState(isQuick);
+  //const [isQuick2, setIsQuick] = useState(isQuick);
   const [searchParams, setSearchParams] = useSearchParams();
   const defaultDeviceId = useSelector((state) => state.devices.selectedId);
   const [positions, setPositions] = useState([]);
@@ -138,7 +139,7 @@ const ReplayPage = () => {
     }
     return null;
   });
-  console.log('isQuick2:', isQuick2);
+  //console.log('isQuick2:', isQuick2);
 
   useEffect(() => {
     if (!from && !to) {
@@ -179,51 +180,57 @@ const ReplayPage = () => {
     setSelectedDeviceId(deviceId);
     const query = new URLSearchParams({ deviceId, from, to });
     try {
-      console.log('trips started');
+      //console.log('trips started');
       const response = await fetchOrThrow(`/api/reports/trips?${query.toString()}`, {
         headers: { Accept: 'application/json' },
       });
       setIndex(0);
       const trips = await response.json();
       setTrips(trips);
-      console.log('trips', trips);
+      //console.log('trips', trips);
       if (!trips.length) {
+        //setShowList(true);
+        setLoading(false);
+        updateReportParams(searchParams, setSearchParams, 'ignore', []);
+        //console.log('test log 2');
         throw Error(t('sharedNoData'));
       }
     } finally {
-      setLoading(true);
+      setLoading(false);
     }
     try {
-      console.log('summary started');
+      //console.log('summary started');
       const response = await fetchOrThrow(`/api/reports/summary?${query.toString()}`, {
         headers: { Accept: 'application/json' },
       });
       setIndex(0);
-      console.log(response);
+      //console.log(response);
       const summary = await response.json();
       setSummary(summary);
       console.log('summary', summary);
 
       if (!summary.length) {
+        //setShowList(true);
+        setLoading(false);
+        updateReportParams(searchParams, setSearchParams, 'ignore', []);
+        //console.log('test log 2');
         throw Error(t('sharedNoData'));
       }
     } finally {
       setLoading(false);
-      setShowList(false);
+      setShowList(true);
     }
-    console.log(loading);
+    //console.log(loading);
 
   });
 
   // Fetch positions whenever `replay` becomes true
   useEffect(() => {
     const fetchPositions = async () => {
-
-
       if (replay && selectedDeviceId && from && to) {
         try {
           const query = new URLSearchParams({ deviceId: selectedDeviceId, from, to });
-          const response = await fetchOrThrow(`/api/positions?${query.toString()}`);
+          const response = await fetch(`/api/positions?${query.toString()}`);
           setIndex(0);
           const newPositions = await response.json();
           setPositions(newPositions);
@@ -240,7 +247,7 @@ const ReplayPage = () => {
     };
     //end
     fetchPositions();
-  }, [replay, selectedDeviceId, from, to, t]);
+  }, [replay, selectedDeviceId, from, to]);
 
   const handleDownload = () => {
     const query = new URLSearchParams({ deviceId: selectedDeviceId, from, to });
@@ -288,7 +295,7 @@ const ReplayPage = () => {
             <Typography className={classes.title} sx={{ fontWeight: 500 }}>{deviceName}</Typography>
             {loaded && (
               <>
-                {!showList && (
+                {showList && (
                   <IconButton className={classes.replayButton} onClick={() => {
                     //setHidden(!hidden)
                     setFrom(searchParams.get('from'));
