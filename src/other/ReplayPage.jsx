@@ -35,7 +35,6 @@ import fetchOrThrow from '../common/util/fetchOrThrow';
 import { useAttributePreference } from '../common/util/preferences';
 import { useLocation } from 'react-router-dom';
 import SpeedIcon from '@mui/icons-material/Speed';
-import fa from 'dayjs/locale/fa';
 const useStyles = makeStyles()((theme) => ({
   root: {
     height: '100%',
@@ -175,7 +174,7 @@ const ReplayPage = () => {
   }, [setShowCard]);
 
   const onShow = useCatch(async ({ deviceIds, from, to }) => {
-    const deviceId = deviceIds.find(() => true);
+    const deviceId = deviceIds[0];
     setLoading(true);
     setSelectedDeviceId(deviceId);
     const query = new URLSearchParams({ deviceId, from, to });
@@ -184,18 +183,20 @@ const ReplayPage = () => {
       const response = await fetchOrThrow(`/api/reports/trips?${query.toString()}`, {
         headers: { Accept: 'application/json' },
       });
-      setIndex(0);
+
       const trips = await response.json();
+      setIndex(0);
       setTrips(trips);
       //console.log('trips', trips);
       if (!trips.length) {
-        //setShowList(true);
-        setLoading(false);
+        setShowList(false);
+        setLoading(true);
         updateReportParams(searchParams, setSearchParams, 'ignore', []);
         //console.log('test log 2');
         throw Error(t('sharedNoData'));
       }
     } finally {
+      setShowList(true);
       setLoading(false);
     }
     try {
@@ -210,8 +211,8 @@ const ReplayPage = () => {
       console.log('summary', summary);
 
       if (!summary.length) {
-        //setShowList(true);
-        setLoading(false);
+        setShowList(false);
+        setLoading(true);
         updateReportParams(searchParams, setSearchParams, 'ignore', []);
         //console.log('test log 2');
         throw Error(t('sharedNoData'));
@@ -247,7 +248,7 @@ const ReplayPage = () => {
     };
     //end
     fetchPositions();
-  }, [replay, selectedDeviceId, from, to]);
+  }, [replay]);
 
   const handleDownload = () => {
     const query = new URLSearchParams({ deviceId: selectedDeviceId, from, to });
@@ -295,7 +296,7 @@ const ReplayPage = () => {
             <Typography className={classes.title} sx={{ fontWeight: 500 }}>{deviceName}</Typography>
             {loaded && (
               <>
-                {showList && (
+                {!showList && (
                   <IconButton className={classes.replayButton} onClick={() => {
                     //setHidden(!hidden)
                     setFrom(searchParams.get('from'));
