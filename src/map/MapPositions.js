@@ -124,12 +124,14 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
           'text-offset': [0, -2 * iconScale],
           'text-font': findFonts(map),
           'text-size': 15,
+          'symbol-sort-key': ['get', 'id'],
         },
         paint: {
           'text-halo-color': 'white',
           'text-halo-width': 10,
           'text-halo-color': 'rgba(110, 110, 110, 0.9)',
           'text-color': 'white',
+
         },
       });
       /*map.addLayer({
