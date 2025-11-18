@@ -174,7 +174,7 @@ const ReplayPage = () => {
   }, [setShowCard]);
 
   const onShow = useCatch(async ({ deviceIds, from, to }) => {
-    const deviceId = deviceIds[0];
+    const deviceId = deviceIds.find(() => true);
     setLoading(true);
     setSelectedDeviceId(deviceId);
     const query = new URLSearchParams({ deviceId, from, to });
@@ -183,9 +183,8 @@ const ReplayPage = () => {
       const response = await fetchOrThrow(`/api/reports/trips?${query.toString()}`, {
         headers: { Accept: 'application/json' },
       });
-
-      const trips = await response.json();
       setIndex(0);
+      const trips = await response.json();
       setTrips(trips);
       //console.log('trips', trips);
       if (!trips.length) {
@@ -219,7 +218,7 @@ const ReplayPage = () => {
       }
     } finally {
       setLoading(false);
-      setShowList(true);
+      setShowList(false);
     }
     //console.log(loading);
 
@@ -306,18 +305,22 @@ const ReplayPage = () => {
                     <RouteIcon sx={{ color: '#1976d2' }} className={classes.flashing} />
                   </IconButton>
                 )}
-                <IconButton onClick={handleDownload}>
-                  <DownloadIcon />
-                </IconButton>
-                <IconButton edge="end"
-                  onClick={() => {
-                    setShowList(true);
-                    setLoading(false);
-                    updateReportParams(searchParams, setSearchParams, 'ignore', []);
-                  }}
-                >
-                  <TuneIcon />
-                </IconButton>
+                {!showList && (
+                  <IconButton onClick={handleDownload}>
+                    <DownloadIcon />
+                  </IconButton>
+                )}
+                {!showList && (
+                  <IconButton edge="end"
+                    onClick={() => {
+                      setShowList(true);
+                      setLoading(false);
+                      updateReportParams(searchParams, setSearchParams, 'ignore', []);
+                    }}
+                  >
+                    <TuneIcon />
+                  </IconButton>
+                )}
               </>
             )}
           </Toolbar>
