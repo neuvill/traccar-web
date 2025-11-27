@@ -22,6 +22,7 @@ import MapView from '../map/core/MapView';
 import MapRoutePath from '../map/MapRoutePathHm';
 import MapRoutePoints from '../map/MapRoutePointsHm';
 import MapPositions from '../map/MapPositions';
+import MapRouteStops from '../map/MapRouteStops';
 import { formatSpeed, formatTime, formatDistance } from '../common/util/formatter';
 import ReportFilter, { updateReportParams } from '../reports/components/ReportFilter';
 import { useTranslation } from '../common/components/LocalizationProvider';
@@ -159,6 +160,7 @@ const QReplayPage = () => {
     const [positions, setPositions] = useState([]);
     const [summary, setSummary] = useState([]);
     const [trips, setTrips] = useState([]);
+    const [stops, setStops] = useState([]);
     const [index, setIndex] = useState(0);
     const [selectedDeviceId, setSelectedDeviceId] = useState(defaultDeviceId || searchParams.get('deviceId'));
     const [showCard, setShowCard] = useState(false);
@@ -235,10 +237,23 @@ const QReplayPage = () => {
                     setIndex(0);
                     const newPositions = await response.json();
                     setPositions(newPositions);
-                    console.log('positions updated after replay toggle');
+                    //console.log('positions updated after replay toggle', newPositions);
 
                     if (!newPositions.length) {
                         throw Error(t('sharedNoData'));
+                    }
+                    else {
+                        console.log('stops started');
+                        const response = await fetchOrThrow(`/api/reports/stops?${query.toString()}`, {
+                            headers: { Accept: 'application/json' },
+                        });
+                        setIndex(0);
+                        const stops = await response.json();
+                        setStops(stops);
+                        console.log('stops', stops);
+                        /*if (!stops.length) {
+                            throw Error(t('sharedNoData'));
+                        }*/
                     }
                 } finally {
                     setLoading(true);
@@ -255,18 +270,19 @@ const QReplayPage = () => {
         setLoading(true);
         //setSelectedDeviceId(deviceId);
         const query = new URLSearchParams({ deviceId, from, to });
+        console.log('query:', query.toString());
         const fetchTrips = async () => {
             try {
-                console.log('trips started');
+                //console.log('trips started');
                 const response = await fetchOrThrow(`/api/reports/trips?${query.toString()}`, {
                     headers: { Accept: 'application/json' },
                 });
-                console.log(response);
+                //console.log(response);
 
                 setIndex(0);
                 const trips = await response.json();
                 setTrips(trips);
-                console.log('trips', trips);
+                //console.log('trips', trips);
                 if (!trips.length) {
                     throw Error(t('sharedNoData'));
                 }
@@ -278,15 +294,15 @@ const QReplayPage = () => {
 
         const fetchSummary = async () => {
             try {
-                console.log('summary started');
+                //console.log('summary started');
                 const response = await fetchOrThrow(`/api/reports/summary?${query.toString()}`, {
                     headers: { Accept: 'application/json' },
                 });
                 setIndex(0);
-                console.log(response);
+                //console.log(response);
                 const summary = await response.json();
                 setSummary(summary);
-                console.log('summary', summary);
+                //console.log('summary', summary);
 
                 if (!summary.length) {
                     throw Error(t('sharedNoData'));
@@ -314,6 +330,7 @@ const QReplayPage = () => {
                     <>
                         {<MapRoutePath positions={positions} />}
                         {<MapRoutePoints positions={positions} onClick={onPointClick} />}
+                        {<MapRouteStops stops={stops} />}
                         {index < positions.length && (
                             <MapPositions positions={[positions[index]]} onMarkerClick={onMarkerClick} titleField="fixTime" />
                         )}
