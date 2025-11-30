@@ -23,7 +23,7 @@ const MapRouteStops = ({ stops }) => {
     }, [onClick]);*/
 
     useEffect(() => {
-        map.addSource(stopsId, {
+        map.addSource(id, {
             type: 'geojson',
             data: {
                 type: 'FeatureCollection',
@@ -46,14 +46,14 @@ const MapRouteStops = ({ stops }) => {
             },
         });
 
-        //map.on('mouseenter', id, onMouseEnter);
-        //map.on('mouseleave', id, onMouseLeave);
-        //map.on('click', id, onMarkerClick);
+        map.on('mouseenter', stopsId, onMouseEnter);
+        map.on('mouseleave', stopsId, onMouseLeave);
+        //map.on('click', stopsId, onMarkerClick);
 
         return () => {
-            //map.off('mouseenter', id, onMouseEnter);
-            //map.off('mouseleave', id, onMouseLeave);
-            //map.off('click', id, onMarkerClick);
+            map.off('mouseenter', stopsId, onMouseEnter);
+            map.off('mouseleave', stopsId, onMouseLeave);
+            //map.off('click', stopsId, onMarkerClick);
 
             if (map.getLayer(stopsId)) {
                 map.removeLayer(stopsId);

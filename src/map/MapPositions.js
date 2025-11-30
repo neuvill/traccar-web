@@ -10,10 +10,11 @@ import { useCatchCallback } from '../reactHelper';
 import { findFonts } from './core/mapUtil';
 import { Color } from 'maplibre-gl';
 
-const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, selectedPosition, titleField }) => {
+const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, selectedPosition, titleField, isReplay }) => {
   const id = useId();
   const clusters = `${id}-clusters`;
   const selected = `${id}-selected`;
+  const Replay = isReplay || false;
 
   const theme = useTheme();
   const desktop = useMediaQuery(theme.breakpoints.up('md'));
@@ -118,7 +119,8 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
             ['get', 'rotation'],
             0
           ],
-          'text-field': `{${titleField || 'name'}}`,
+
+          'text-field': Replay ? '' : ['get', 'name'],
           'text-allow-overlap': true,
           'text-anchor': 'bottom',
           'text-offset': [0, -2 * iconScale],
@@ -127,7 +129,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
           'symbol-sort-key': ['get', 'id'],
         },
         paint: {
-          'text-halo-color': 'white',
+
           'text-halo-width': 10,
           'text-halo-color': 'rgba(110, 110, 110, 0.9)',
           'text-color': 'white',
@@ -225,7 +227,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
           })),
       });
     });
-  }, [mapCluster, clusters, onMarkerClick, onClusterClick, devices, positions, selectedPosition]);
+  }, [mapCluster, clusters, onMarkerClick, onClusterClick, devices, positions, selectedPosition, isReplay]);
 
   return null;
 };

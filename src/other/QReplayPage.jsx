@@ -22,7 +22,7 @@ import MapView from '../map/core/MapView';
 import MapRoutePath from '../map/MapRoutePathHm';
 import MapRoutePoints from '../map/MapRoutePointsHm';
 import MapPositions from '../map/MapPositions';
-import MapRouteStops from '../map/MapRouteStops';
+import MapStopsPoints from '../map/MapStopsPoints';
 import { formatSpeed, formatTime, formatDistance } from '../common/util/formatter';
 import ReportFilter, { updateReportParams } from '../reports/components/ReportFilter';
 import { useTranslation } from '../common/components/LocalizationProvider';
@@ -161,6 +161,7 @@ const QReplayPage = () => {
     const [summary, setSummary] = useState([]);
     const [trips, setTrips] = useState([]);
     const [stops, setStops] = useState([]);
+    const [eventData, setEventData] = useState([]);
     const [index, setIndex] = useState(0);
     const [selectedDeviceId, setSelectedDeviceId] = useState(defaultDeviceId || searchParams.get('deviceId'));
     const [showCard, setShowCard] = useState(false);
@@ -243,17 +244,38 @@ const QReplayPage = () => {
                         throw Error(t('sharedNoData'));
                     }
                     else {
-                        console.log('stops started');
                         const response = await fetchOrThrow(`/api/reports/stops?${query.toString()}`, {
                             headers: { Accept: 'application/json' },
                         });
                         setIndex(0);
-                        const stops = await response.json();
-                        setStops(stops);
-                        console.log('stops', stops);
+                        const stopData = await response.json();
+                        const stopsWithIds = stopData.map((stop, index) => ({
+                            ...stop,
+                            id: stop.id || index, // Use stop.id if available, otherwise use index
+                        }));
+                        setStops(stopsWithIds);
+                        //console.log('stops after adding ids', stops);
                         /*if (!stops.length) {
                             throw Error(t('sharedNoData'));
                         }*/
+                        const eventResponse = await fetchOrThrow(`/api/reports/events?${query.toString()}&type=deviceOverspeed`, {
+                            headers: { Accept: 'application/json' },
+                        });
+                        setIndex(0);
+                        const eventData = await eventResponse.json();
+                        // Create new data mapping events to positions
+                        //console.log('the positions:', newPositions);
+
+                        const mappedData = eventData.map(event => {
+                            const matchingPosition = newPositions.find(position => position.id === event.positionId);
+                            return {
+                                ...event,
+                                position: matchingPosition || null, // Include matching position or null if not found
+                            };
+                        });
+                        console.log('events', mappedData);
+                        setEventData(mappedData);
+
                     }
                 } finally {
                     setLoading(true);
@@ -330,9 +352,9 @@ const QReplayPage = () => {
                     <>
                         {<MapRoutePath positions={positions} />}
                         {<MapRoutePoints positions={positions} onClick={onPointClick} />}
-                        {<MapRouteStops stops={stops} />}
+                        {<MapStopsPoints stops={stops} />}
                         {index < positions.length && (
-                            <MapPositions positions={[positions[index]]} onMarkerClick={onMarkerClick} titleField="fixTime" />
+                            <MapPositions positions={[positions[index]]} onMarkerClick={onMarkerClick} isReplay={replay} />
                         )}
                     </>
                 )}
