@@ -18,15 +18,25 @@ import MapGeocoder from '../map/geocoder/MapGeocoder';
 import MapScale from '../map/MapScale';
 import MapNotification from '../map/notification/MapNotification';
 import useFeatures from '../common/util/useFeatures';
+import { makeStyles } from 'tss-react/mui';
+import BottomPhoneMenue from '../common/components/BottomPhoneMenu';
 
-const MainMap = ({ filteredPositions, selectedPosition, onEventsClick }) => {
+const useStyles = makeStyles(() => ({
+
+  menu: {
+    zIndex: 4,
+    //pointerEvents: 'none',
+  },
+}));
+
+const MainMap = ({ filteredPositions, selectedPosition, onEventsClick, selectedDevices, setDeviceSheetOpen }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
 
   const desktop = useMediaQuery(theme.breakpoints.up('md'));
 
   const eventsAvailable = useSelector((state) => !!state.events.items.length);
-
+  const classes = useStyles();
   const features = useFeatures();
 
   const onMarkerClick = useCallback((_, deviceId) => {
@@ -43,14 +53,20 @@ const MainMap = ({ filteredPositions, selectedPosition, onEventsClick }) => {
         <MapPositions
           positions={filteredPositions}
           onMarkerClick={onMarkerClick}
+          selectedDevices={selectedDevices}
           selectedPosition={selectedPosition}
           showStatus
         />
         <MapDefaultCamera />
         <MapSelectedDevice />
         <PoiMap />
+        {!desktop && location.pathname !== '/replay' && (
+          <div className={classes.menu}>
+            <BottomPhoneMenue setDeviceSheetOpen={setDeviceSheetOpen} />
+          </div>
+        )}
       </MapView>
-      <MapScale />
+      {/*<MapScale />*/}
       <MapCurrentLocation />
       <MapGeocoder />
       {!features.disableEvents && (

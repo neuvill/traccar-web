@@ -30,6 +30,7 @@ import parkedSvg from '../../resources/images/icon/parked.svg'
 import movingSvg from '../../resources/images/icon/moving.svg'
 import idlingSvg from '../../resources/images/icon/idling.svg'
 import stopmapSvg from '../../resources/images/icon/stopmap.svg';
+import mapEventSvg from '../../resources/images/icon/event.svg';
 
 export const mapIcons = {
   animal: animalSvg,
@@ -58,6 +59,7 @@ export const mapIcons = {
   moving: movingSvg,
   idling: idlingSvg,
   stopmap: stopmapSvg,
+  mapEvent: mapEventSvg,
 };
 
 export const mapIconKey = (category) => {

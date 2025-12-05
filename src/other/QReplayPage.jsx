@@ -13,9 +13,9 @@ import PauseIcon from '@mui/icons-material/Pause';
 import FastForwardIcon from '@mui/icons-material/FastForward';
 import FastRewindIcon from '@mui/icons-material/FastRewind';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
-import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded'
+import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import StopRoundedIcon from '@mui/icons-material/StopRounded'
+import StopRoundedIcon from '@mui/icons-material/StopRounded';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import MapView from '../map/core/MapView';
@@ -23,6 +23,7 @@ import MapRoutePath from '../map/MapRoutePathHm';
 import MapRoutePoints from '../map/MapRoutePointsHm';
 import MapPositions from '../map/MapPositions';
 import MapStopsPoints from '../map/MapStopsPoints';
+import MapEventsPoints from '../map/MapEventsPoints';
 import { formatSpeed, formatTime, formatDistance } from '../common/util/formatter';
 import ReportFilter, { updateReportParams } from '../reports/components/ReportFilter';
 import { useTranslation } from '../common/components/LocalizationProvider';
@@ -353,6 +354,7 @@ const QReplayPage = () => {
                         {<MapRoutePath positions={positions} />}
                         {<MapRoutePoints positions={positions} onClick={onPointClick} />}
                         {<MapStopsPoints stops={stops} />}
+                        {<MapEventsPoints events={eventData} />}
                         {index < positions.length && (
                             <MapPositions positions={[positions[index]]} onMarkerClick={onMarkerClick} isReplay={replay} />
                         )}

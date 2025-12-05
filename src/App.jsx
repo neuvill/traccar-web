@@ -2,7 +2,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useMediaQuery, useTheme } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
-import BottomMenu from './common/components/BottomMenu';
+//import BottomMenu from './common/components/BottomMenu';
 import SocketController from './SocketController';
 import CachingController from './CachingController';
 import { useCatch, useEffectAsync } from './reactHelper';
@@ -80,11 +80,11 @@ const App = () => {
       <div className={classes.page}>
         <Outlet />
       </div>
-      {!desktop && (
+      {/*!desktop && (
         <div className={classes.menu}>
           <BottomMenu />
         </div>
-      )}
+      )*/}
     </>
   );
 };

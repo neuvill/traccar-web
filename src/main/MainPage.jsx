@@ -16,22 +16,25 @@ import useFilter from './useFilter';
 import MainToolbar from './MainToolbar';
 import MainMap from './MainMap';
 import { useAttributePreference } from '../common/util/preferences';
+import DeviceBottomSheet from './DeviceBottomSheet';
 
 const useStyles = makeStyles()((theme) => ({
   root: {
     height: '100%',
   },
   sidebar: {
-    pointerEvents: 'none',
     display: 'flex',
     flexDirection: 'column',
+    backgroundColor: '#fff',
+    boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
+    position: 'relative', // Ensure the button is positioned relative to the sidebar
     [theme.breakpoints.up('md')]: {
       position: 'fixed',
       left: 0,
       top: 0,
-      height: `calc(100% - ${theme.spacing(3)})`,
+      height: `calc(100% - ${theme.spacing(0)})`,
       width: theme.dimensions.drawerWidthDesktop,
-      margin: theme.spacing(1.5),
+      margin: theme.spacing(0),
       zIndex: 3,
     },
     [theme.breakpoints.down('md')]: {
@@ -63,6 +66,30 @@ const useStyles = makeStyles()((theme) => ({
     display: 'flex',
     minHeight: 0,
   },
+  toggleButton: {
+    position: 'absolute',
+    top: '30%', // Center vertically
+    right: '-22px', // Move it outside the sidebar
+    transform: 'translateY(-50%)', // Align perfectly in the middle
+    backgroundColor: '#e0e0e0', // Light grey like in the image
+    color: '#000', // Black icon
+    border: '1px solid #ccc', // Slight border
+    borderRadius: '4px 10px 10px 4px', // Rounded only on left side
+    width: '30px', // Smaller width
+    height: '60px', // Taller button
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.2)',
+    transition: 'background-color 0.3s ease',
+    '&:hover': {
+      backgroundColor: '#d6d6d6', // Slightly darker grey on hover
+    },
+    [theme.breakpoints.down('md')]: {
+      display: 'none', // Hide on mobile
+    },
+  },
 }));
 
 const MainPage = () => {
@@ -71,8 +98,10 @@ const MainPage = () => {
   const theme = useTheme();
 
   const desktop = useMediaQuery(theme.breakpoints.up('md'));
-
+  const mobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const mapOnSelect = useAttributePreference('mapOnSelect', true);
+  const [deviceSheetOpen, setDeviceSheetOpen] = useState(false);
 
   const selectedDeviceId = useSelector((state) => state.devices.selectedId);
   const positions = useSelector((state) => state.session.positions);
@@ -111,42 +140,85 @@ const MainPage = () => {
           onEventsClick={onEventsClick}
         />
       )}
-      <div className={classes.sidebar}>
-        <Paper square elevation={3} className={classes.header}>
-          <MainToolbar
-            filteredDevices={filteredDevices}
-            devicesOpen={devicesOpen}
-            setDevicesOpen={setDevicesOpen}
-            keyword={keyword}
-            setKeyword={setKeyword}
-            filter={filter}
-            setFilter={setFilter}
-            filterSort={filterSort}
-            setFilterSort={setFilterSort}
-            filterMap={filterMap}
-            setFilterMap={setFilterMap}
-          />
-        </Paper>
+
+      <div className={classes.sidebar}
+        style={{
+          transform: isSidebarVisible ? 'translateX(0)' : 'translateX(-100%)', // Slide in/out
+          transition: 'transform 0.3s ease-in-out', // Smooth animation
+        }}
+      >
+        {desktop &&
+          <Paper square elevation={3} className={classes.header}>
+            <MainToolbar
+              filteredDevices={filteredDevices}
+              devicesOpen={devicesOpen}
+              setDevicesOpen={setDevicesOpen}
+              keyword={keyword}
+              setKeyword={setKeyword}
+              filter={filter}
+              setFilter={setFilter}
+              filterSort={filterSort}
+              setFilterSort={setFilterSort}
+              filterMap={filterMap}
+              setFilterMap={setFilterMap}
+            />
+          </Paper>}
         <div className={classes.middle}>
           {!desktop && (
             <div className={classes.contentMap}>
               <MainMap
                 filteredPositions={filteredPositions}
                 selectedPosition={selectedPosition}
+                selectedDevices={filteredDevices}
                 onEventsClick={onEventsClick}
+                setDeviceSheetOpen={setDeviceSheetOpen}
               />
             </div>
           )}
-          <Paper square className={classes.contentList} style={devicesOpen ? {} : { visibility: 'hidden' }}>
-            <DeviceList devices={filteredDevices} />
-          </Paper>
+          {desktop && (
+            <Paper square className={classes.contentList} style={devicesOpen ? {} : { visibility: 'hidden' }}>
+              <DeviceList devices={filteredDevices} />
+            </Paper>
+          )}
         </div>
         {desktop && (
           <div className={classes.footer}>
             <BottomMenu />
           </div>
         )}
+        <button
+          className={classes.toggleButton}
+          aria-label={isSidebarVisible ? 'Hide Sidebar' : 'Show Sidebar'}
+          onClick={() => setIsSidebarVisible(!isSidebarVisible)}
+        >
+          {isSidebarVisible ? '❮' : '❯'}
+        </button>
+
       </div>
+
+      {mobile && (
+
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 1300, // Above most elements
+          }}
+        >
+
+          <DeviceBottomSheet
+            open={deviceSheetOpen}
+            onOpen={() => setDeviceSheetOpen(true)}
+            onClose={() => setDeviceSheetOpen(false)}
+            devices={filteredDevices}
+            setDeviceSheetOpen={setDeviceSheetOpen}
+          />
+
+        </div>
+      )}
+
       <EventsDrawer open={eventsOpen} onClose={() => setEventsOpen(false)} />
       {selectedDeviceId && (
         <StatusCard

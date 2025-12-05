@@ -13,6 +13,7 @@ import {
 import { makeStyles } from 'tss-react/mui';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from './LocalizationProvider';
@@ -129,6 +130,9 @@ const PageLayout = ({ menu, breadcrumbs, children }) => {
       {!desktop && (
         <AppBar className={classes.mobileToolbar} position="static" color="inherit">
           <Toolbar>
+            <IconButton color="inherit" edge="start" sx={{ mr: 2 }} onClick={() => navigate('/')}>
+              <ArrowBackIcon />
+            </IconButton>
             <IconButton color="inherit" edge="start" sx={{ mr: 2 }} onClick={() => setOpenDrawer(true)}>
               <MenuIcon />
             </IconButton>
