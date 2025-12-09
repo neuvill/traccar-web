@@ -58,7 +58,8 @@ const useStyles = makeStyles()((theme) => ({
         position: 'fixed',
         zIndex: 3,
         left: 0,
-        top: 0,
+        top: '3.5%',
+        //bottom: 0,
         margin: theme.spacing(1.5),
         //width: theme.dimensions.drawerWidthDesktop,
         width: '33%',
@@ -346,10 +347,10 @@ const QReplayPage = () => {
 
     return (
         <div className={classes.root}>
+            {replay && (
+                <MapView>
+                    <MapGeofence />
 
-            <MapView>
-                <MapGeofence />
-                {replay && (
                     <>
                         {<MapRoutePath positions={positions} />}
                         {<MapRoutePoints positions={positions} onClick={onPointClick} />}
@@ -359,9 +360,11 @@ const QReplayPage = () => {
                             <MapPositions positions={[positions[index]]} onMarkerClick={onMarkerClick} isReplay={replay} />
                         )}
                     </>
-                )}
-            </MapView>
+
+                </MapView>
+            )}
             <MapScale />
+
             <MapCamera positions={positions} />
             <Paper elevation={5} square sx={{ backgroundColor: '#f5f5f5', position: 'fixed', zIndex: 5, left: 0, top: 0, width: '100%' }}>
                 <Toolbar>

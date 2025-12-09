@@ -17,6 +17,7 @@ import MainToolbar from './MainToolbar';
 import MainMap from './MainMap';
 import { useAttributePreference } from '../common/util/preferences';
 import DeviceBottomSheet from './DeviceBottomSheet';
+import StatusCardDrawer from '../common/components/StatusCardDrawer';
 
 const useStyles = makeStyles()((theme) => ({
   root: {
@@ -220,8 +221,16 @@ const MainPage = () => {
       )}
 
       <EventsDrawer open={eventsOpen} onClose={() => setEventsOpen(false)} />
-      {selectedDeviceId && (
+      {selectedDeviceId && desktop && (
         <StatusCard
+          deviceId={selectedDeviceId}
+          position={selectedPosition}
+          onClose={() => dispatch(devicesActions.selectId(null))}
+          desktopPadding={theme.dimensions.drawerWidthDesktop}
+        />
+      )}
+      {selectedDeviceId && mobile && (
+        <StatusCardDrawer
           deviceId={selectedDeviceId}
           position={selectedPosition}
           onClose={() => dispatch(devicesActions.selectId(null))}
