@@ -18,7 +18,7 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-const DeviceList = ({ devices }) => {
+const DeviceList = ({ devices, setDeviceSheetOpen }) => {
   const { classes } = useStyles();
   const dispatch = useDispatch();
 
@@ -42,7 +42,7 @@ const DeviceList = ({ devices }) => {
       rowComponent={DeviceRow}
       rowCount={devices.length}
       rowHeight={90}
-      rowProps={{ devices }}
+      rowProps={{ devices, setDeviceSheetOpen }}
       overscanCount={5}
     />
   );

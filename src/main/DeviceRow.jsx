@@ -55,7 +55,7 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-const DeviceRow = ({ devices, index, style }) => {
+const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
   const { classes } = useStyles();
   const dispatch = useDispatch();
   const t = useTranslation();
@@ -97,6 +97,14 @@ const DeviceRow = ({ devices, index, style }) => {
     );
   };
 
+  const handleClick = () => {
+    if (setDeviceSheetOpen) {
+      setDeviceSheetOpen(false);
+    }
+    //data.setDeviceSheetOpen(false);
+    dispatch(devicesActions.selectId(item.id));
+  };
+
   function getTimeDiff(startIso, endIso) {
     const start = new Date(startIso);
     const end = new Date(endIso);
@@ -109,7 +117,7 @@ const DeviceRow = ({ devices, index, style }) => {
     <div style={{ ...style, borderBottom: '1px solid #e0e0e0' }}>
       <ListItemButton
         key={item.id}
-        onClick={() => dispatch(devicesActions.selectId(item.id))}
+        onClick={handleClick}
         disabled={!admin && item.disabled}
         selected={selectedDeviceId === item.id}
         className={selectedDeviceId === item.id ? classes.selected : null}

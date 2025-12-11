@@ -36,8 +36,11 @@ import usePositionAttributes from '../attributes/usePositionAttributes';
 import { devicesActions } from '../../store';
 import { useCatch, useCatchCallback } from '../../reactHelper';
 import { useAttributePreference } from '../util/preferences';
+import { useTheme } from '@mui/material/styles';
 
-const useStyles = makeStyles((theme) => ({
+//const theme = useTheme();
+
+const useStyles = makeStyles()((theme, { desktopPadding }) => ({
 
 
     mediaButton: {
@@ -105,7 +108,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const StatusRow = ({ name, content }) => {
-    const classes = useStyles();
+    const { classes } = useStyles({ desktopPadding: 0 });
 
     return (
         <TableRow>
@@ -120,7 +123,7 @@ const StatusRow = ({ name, content }) => {
 };
 
 const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableActions, desktopPadding = 0 }) => {
-    const classes = useStyles();
+    const { classes } = useStyles({ desktopPadding });
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const t = useTranslation();
@@ -205,10 +208,13 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
                             pointerEvents: 'none', // Also important for the modal layer
                         },
                     }}
-                    PaperProps={{
-                        className: classes.drawerPaper,
-                        sx: {
-                            pointerEvents: 'auto', // Only the drawer itself should handle interaction
+                    slotProps={{
+                        paper: {
+                            className: classes.drawerPaper,
+                            sx: {
+                                pointerEvents: 'auto', // Only the drawer itself should handle interaction
+
+                            },
                         },
                     }}
                 >
