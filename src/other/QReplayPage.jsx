@@ -25,9 +25,9 @@ import MapPositions from '../map/MapPositions';
 import MapStopsPoints from '../map/MapStopsPoints';
 import MapEventsPoints from '../map/MapEventsPoints';
 import { formatSpeed, formatTime, formatDistance } from '../common/util/formatter';
-import ReportFilter, { updateReportParams } from '../reports/components/ReportFilter';
+//import ReportFilter, { updateReportParams } from '../reports/components/ReportFilter';
 import { useTranslation } from '../common/components/LocalizationProvider';
-import { useCatch } from '../reactHelper';
+//import { useCatch } from '../reactHelper';
 import MapCamera from '../map/MapCamera';
 import MapGeofence from '../map/MapGeofence';
 import StatusCard from '../common/components/StatusCard';
@@ -43,7 +43,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
-
+import Loader from '../common/components/Loader';
 import SpeedIcon from '@mui/icons-material/Speed';
 
 
@@ -58,14 +58,17 @@ const useStyles = makeStyles()((theme) => ({
         position: 'fixed',
         zIndex: 3,
         left: 0,
-        top: '3.5%',
-        //bottom: 0,
-        margin: theme.spacing(1.5),
-        //width: theme.dimensions.drawerWidthDesktop,
+        top: "2.5%",
+        bottom: 0,
+        margin: theme.spacing(0),
+        //width: (theme.dimensions.drawerWidthDesktop),
         width: '33%',
         [theme.breakpoints.down('md')]: {
             width: '100%',
             margin: 0,
+            bottom: 0,
+            top: "3.5%",
+            height: '100%',
         },
     },
     title: {
@@ -153,7 +156,7 @@ const QReplayPage = () => {
     const navigate = useNavigate();
     const timerRef = useRef();
     const { isQuick } = location.state || {};
-    const [isQuick2, setIsQuick] = useState(isQuick);
+    //const [isQuick2, setIsQuick] = useState(isQuick);
     const [hidden, setHidden] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
 
@@ -280,7 +283,7 @@ const QReplayPage = () => {
 
                     }
                 } finally {
-                    setLoading(true);
+                    setLoading(false);
                     setShowList(true);
                 }
             }
@@ -311,7 +314,7 @@ const QReplayPage = () => {
                     throw Error(t('sharedNoData'));
                 }
             } finally {
-                setLoading(true);
+                setLoading(false);
             }
         };
         fetchTrips();
@@ -344,6 +347,10 @@ const QReplayPage = () => {
         const query = new URLSearchParams({ deviceId: selectedDeviceId, from, to });
         window.location.assign(`/api/positions/kml?${query.toString()}`);
     };
+
+    if (loading) {
+        return (<Loader />);
+    }
 
     return (
         <div className={classes.root}>
@@ -393,7 +400,7 @@ const QReplayPage = () => {
                                     const newTo = dayjs(to).endOf('day').toISOString();
                                     setFrom(newFrom);
                                     setTo(newTo);
-
+                                    setLoading(true);
                                     setHidden(!hidden)
                                     setReplay(true);
                                 }}>
@@ -442,6 +449,7 @@ const QReplayPage = () => {
                                             setTo(trip.endTime);
                                             setReplay(true);
                                             setHidden(!hidden);
+                                            setLoading(true);
                                         }}>
 
                                         <Grid container alignItems="center" spacing={0.5} sx={{ width: '100%' }} >
