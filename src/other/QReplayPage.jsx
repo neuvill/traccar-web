@@ -1,4 +1,4 @@
-import React, {
+import {
     useState, useEffect, useRef, useCallback,
 } from 'react';
 import {
@@ -51,6 +51,7 @@ import SpeedIcon from '@mui/icons-material/Speed';
 const useStyles = makeStyles()((theme) => ({
     root: {
         height: '100%',
+        //zIndex: 9999,
     },
     sidebar: {
         display: 'flex',
@@ -64,7 +65,7 @@ const useStyles = makeStyles()((theme) => ({
         //width: (theme.dimensions.drawerWidthDesktop),
         width: '33%',
         [theme.breakpoints.down('md')]: {
-            width: '100%',
+            //width: '100%',
             margin: 0,
             bottom: 0,
             top: "3.5%",
@@ -355,7 +356,7 @@ const QReplayPage = () => {
     return (
         <div className={classes.root}>
             {replay && (
-                <MapView>
+                <MapView >
                     <MapGeofence />
 
                     <>
@@ -483,7 +484,7 @@ const QReplayPage = () => {
                 {showList && (
                     <>
 
-                        <Paper sx={{ position: 'fixed', width: '98.5%', bottom: '8%' }} className={classes.content} square>
+                        <Paper sx={{ position: 'fixed', width: '100%', bottom: '0%' }} className={classes.content} square>
                             {replay ? (
                                 <>
 
