@@ -65,11 +65,33 @@ const useStyles = makeStyles()((theme) => ({
         //width: (theme.dimensions.drawerWidthDesktop),
         width: '33%',
         [theme.breakpoints.down('md')]: {
-            //width: '100%',
+            width: '100%',
             margin: 0,
             bottom: 0,
             top: "3.5%",
             height: '100%',
+            //backgroundColor: "red",
+        },
+    },
+    slidebar: {
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'fixed',
+        zIndex: 3,
+        left: 0,
+        top: "2.5%",
+        bottom: 0,
+        margin: theme.spacing(0),
+        //width: (theme.dimensions.drawerWidthDesktop),
+        width: '33%',
+        [theme.breakpoints.down('md')]: {
+            width: 1,
+            //position: "relative",
+            //margin: 0,
+            //bottom: 0,
+            //top: "3.5%",
+            //height: '100%',
+            //backgroundColor: "green",
         },
     },
     title: {
@@ -425,10 +447,10 @@ const QReplayPage = () => {
                     )}
                 </Toolbar>
             </Paper>
-            <div className={classes.sidebar}>
+            <div className={classes.sidebar} style={{ display: hidden ? 'none' : undefined }}>
 
                 {loaded && !showList &&
-                    <Paper square className={classes.replayListItem} style={{ display: hidden ? 'none' : undefined }}>
+                    <Paper square className={classes.replayListItem} >
 
                         <List sx={{ padding: '0px' }}>
                             {trips.map((trip, index) => {
@@ -437,7 +459,7 @@ const QReplayPage = () => {
                                     <ListItemButton key={index}
                                         sx={{
 
-                                            borderBottom: '1px solid #ccccccff', // Adds a black bottom border
+                                            borderBottom: '1px solid #d4d4d4ff', // Adds a black bottom border
                                             '&.Mui-selected': {
                                                 backgroundColor: '#d3d3d3', // Darker background for selected item
                                             },
@@ -481,7 +503,7 @@ const QReplayPage = () => {
                         </List>
                     </Paper>
                 }
-                {showList && (
+                {/*{showList && (
                     <>
 
                         <Paper sx={{ position: 'fixed', width: '100%', bottom: '0%' }} className={classes.content} square>
@@ -525,7 +547,7 @@ const QReplayPage = () => {
                             )}
                         </Paper>
 
-                    </>)}
+                    </>)}*/}
                 {loaded && !showList &&
                     <>
                         <Paper sx={{ backgroundColor: '#f5f5f5', width: '100%', padding: '10px', marginTop: '1px' }} square>
@@ -628,6 +650,56 @@ const QReplayPage = () => {
                     </>
                 }
             </div>
+            {showList && (
+                <>
+                    <div>
+
+
+                        <Paper sx={{ position: 'fixed', width: '100%', bottom: '0%', zIndex: 1000, padding: '2%' }}  >
+                            {replay ? (
+                                <>
+
+                                    <div className={classes.controls}>
+                                        <Typography variant="subtitle1" align="left">{positions[index].fixTime ? formatTime(positions[index].fixTime, 'seconds') : '-'}</Typography>
+                                        <Typography variant="subtitle1" align="right">{positions[index].speed ? formatSpeed(positions[index].speed, 'kmh', t) : '-'}</Typography>
+                                    </div>
+                                    <Slider
+                                        className={classes.slider}
+                                        max={positions.length - 1}
+                                        step={null}
+                                        marks={positions.map((_, index) => ({ value: index }))}
+                                        value={index}
+                                        onChange={(_, index) => setIndex(index)}
+                                        color='normal'
+                                    />
+                                    <div className={classes.controls}>
+
+                                        <IconButton onClick={() => setIndex((index) => index - 1)} disabled={playing || index <= 0}>
+                                            <FastRewindIcon />
+                                        </IconButton>
+                                        <IconButton onClick={() => setPlaying(!playing)} disabled={index >= positions.length - 1}>
+                                            {playing ? <PauseIcon /> : <PlayArrowIcon />}
+                                        </IconButton>
+                                        <IconButton onClick={() => setIndex((index) => index + 1)} disabled={playing || index >= positions.length - 1}>
+                                            <FastForwardIcon />
+                                        </IconButton>
+
+                                    </div>
+                                    <div className={classes.controls}>
+                                        <Typography variant="subtitle1" align="center">{positions.length ? positions[index].address.slice(0, 50) : '-'}</Typography>
+                                    </div>
+
+                                </>
+                            ) : (
+
+                                (null)
+                            )}
+                        </Paper>
+                    </div>
+
+                </>)}
+
+
             {
                 showCard && index < positions.length && (
                     <StatusCard
