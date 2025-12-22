@@ -175,6 +175,7 @@ const MainPage = () => {
                 selectedPosition={selectedPosition}
                 selectedDevices={filteredDevices}
                 onEventsClick={onEventsClick}
+                onBoardClick={onBoardClick}
                 setDeviceSheetOpen={setDeviceSheetOpen}
               />
             </div>

@@ -11,6 +11,9 @@ import {
     Divider,
 } from '@mui/material';
 import { formatSpeed, formatTime, formatDistance } from '../common/util/formatter';
+import Loader from '../common/components/Loader';
+import DashboardLoading from '../common/components/DashboardLoading';
+import { useNavigate } from 'react-router-dom';
 
 const useStyles = makeStyles()((theme) => ({
     drawer: {
@@ -31,34 +34,18 @@ const DashboardDrawer = ({ open, onClose }) => {
     const [summary, setSummary] = useState([]);
     //const [index, setIndex] = useState(0);
     //const [error, setError] = useState(null);
-    const [groupId, setGroupId] = useState(null);
+    //const [groupId, setGroupId] = useState(null);
     //console.log('DashBoard params : ', queryParams);
-
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
     useEffect(() => {
         if (open) {
+            setLoading(true);
             const now = new Date();
             const midnight = new Date(now.setHours(0, 0, 0, 0));
             const from = midnight.toISOString();
             console.log(from);
             const to = new Date().toISOString();
-
-            // Fetch or update dashboard data here using the queryParams
-            /*const fetchGroups = async () => {
-                try {
-                    const groupResponse = await fetch('/api/groups/');
-                    if (!groupResponse.ok) throw new Error('Failed to fetch groups');
-                    const groups = await groupResponse.json();
-                    const groupId = groups[0]?.id;
-                    console.log('mainGroup:', groupId);
-                    setGroupId(groupId);
-                } catch (err) {
-                    console.error('Error fetching groups:', err);
-                }
-            };
-            fetchGroups();*/
-            //const queryParams = new URLSearchParams({ from, to, groupId }).toString();
-            //console.log('trips started');
-
 
             const fetchSummary = async () => {
                 try {
@@ -68,7 +55,7 @@ const DashboardDrawer = ({ open, onClose }) => {
                     const groups = await groupResponse.json();
                     const groupId = groups[0]?.id;
                     console.log('mainGroup:', groupId);
-                    setGroupId(groupId);
+                    //setGroupId(groupId);
                     const queryParams = new URLSearchParams({ from, to, groupId }).toString();
                     console.log('DashboardDrawer opened with params:', queryParams);
 
@@ -92,6 +79,9 @@ const DashboardDrawer = ({ open, onClose }) => {
                     console.error(err);
                     //setError(err.message);
                 }
+                finally {
+                    setLoading(false);
+                }
             };
             fetchSummary();
         }
@@ -109,31 +99,37 @@ const DashboardDrawer = ({ open, onClose }) => {
                 </Typography>
             </Toolbar>
 
+
             <div className={classes.drawer}>
-                <List dense>
-                    {summary.map((item, index) => (
-                        <div key={index}>
-                            <ListItemButton>
-                                <div style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    width: '100%',
-                                    alignItems: 'center',
-                                    padding: '8px 0px',
-                                }}>
-                                    <Typography variant="body2" fontWeight={500}>
-                                        {item.deviceName}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {formatDistance(item.distance, 'km', t)}
-                                    </Typography>
-                                </div>
-                            </ListItemButton>
-                            <Divider />
-                        </div>
-                    ))}
-                </List>
+                {loading ?
+                    <DashboardLoading /> :
+                    <List dense>
+                        {summary.map((item, index) => (
+                            <div key={index}>
+                                <ListItemButton onClick={() => navigate(`/qreplay?deviceId=${item.deviceId}`)}>
+                                    <div style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        width: '100%',
+                                        alignItems: 'center',
+                                        padding: '8px 0px',
+
+                                    }}>
+                                        <Typography variant="body2" fontWeight={500}>
+                                            {item.deviceName}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            {formatDistance(item.distance, 'km', t)}
+                                        </Typography>
+                                    </div>
+                                </ListItemButton>
+                                <Divider />
+                            </div>
+                        ))}
+                    </List>
+                }
             </div>
+
         </Drawer>
     );
 
