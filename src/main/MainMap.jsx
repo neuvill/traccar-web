@@ -17,6 +17,7 @@ import MapOverlay from '../map/overlay/MapOverlay';
 import MapGeocoder from '../map/geocoder/MapGeocoder';
 import MapScale from '../map/MapScale';
 import MapNotification from '../map/notification/MapNotification';
+import MapDashboard from '../map/dashboard/MapDashboard';
 import useFeatures from '../common/util/useFeatures';
 import { makeStyles } from 'tss-react/mui';
 import BottomPhoneMenue from '../common/components/BottomPhoneMenu';
@@ -29,7 +30,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const MainMap = ({ filteredPositions, selectedPosition, onEventsClick, selectedDevices, setDeviceSheetOpen }) => {
+const MainMap = ({ filteredPositions, selectedPosition, onEventsClick, selectedDevices, setDeviceSheetOpen, onBoardClick }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
 
@@ -72,6 +73,11 @@ const MainMap = ({ filteredPositions, selectedPosition, onEventsClick, selectedD
       {!features.disableEvents && (
         <MapNotification enabled={eventsAvailable} onClick={onEventsClick} />
       )}
+
+      <MapDashboard onClick={onBoardClick} />
+
+
+
       {desktop && (
         <MapPadding start={parseInt(theme.dimensions.drawerWidthDesktop, 10) + parseInt(theme.spacing(1.5), 10)} />
       )}

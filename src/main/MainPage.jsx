@@ -12,6 +12,7 @@ import StatusCard from '../common/components/StatusCard';
 import { devicesActions } from '../store';
 import usePersistedState from '../common/util/usePersistedState';
 import EventsDrawer from './EventsDrawer';
+import DashboardDrawer from './DashboardDrawer';
 import useFilter from './useFilter';
 import MainToolbar from './MainToolbar';
 import MainMap from './MainMap';
@@ -121,9 +122,10 @@ const MainPage = () => {
 
   const [devicesOpen, setDevicesOpen] = useState(desktop);
   const [eventsOpen, setEventsOpen] = useState(false);
+  const [dashboardOpen, setDashboardOpen] = useState(false);
 
   const onEventsClick = useCallback(() => setEventsOpen(true), [setEventsOpen]);
-
+  const onBoardClick = useCallback(() => setDashboardOpen(true), [setDashboardOpen]);
   useEffect(() => {
     if (!desktop && mapOnSelect && selectedDeviceId) {
       setDevicesOpen(false);
@@ -139,6 +141,7 @@ const MainPage = () => {
           filteredPositions={filteredPositions}
           selectedPosition={selectedPosition}
           onEventsClick={onEventsClick}
+          onBoardClick={onBoardClick}
         />
       )}
 
@@ -221,6 +224,7 @@ const MainPage = () => {
       )}
 
       <EventsDrawer open={eventsOpen} onClose={() => setEventsOpen(false)} />
+      <DashboardDrawer open={dashboardOpen} onClose={() => setDashboardOpen(false)} />
       {selectedDeviceId && desktop && (
         <StatusCard
           deviceId={selectedDeviceId}

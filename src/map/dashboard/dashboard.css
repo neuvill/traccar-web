@@ -1,0 +1,11 @@
+.maplibre-ctrl-dashboard {
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 20px 20px;
+  pointer-events: auto;
+}
+
+.maplibre-ctrl-dashboard-on,
+.maplibre-ctrl-dashboard-off {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='20' height='20'%3E%3Cpath fill='%23007AFF' d='M12 3C6.48 3 2 7.48 2 13c0 3.31 1.61 6.23 4.09 8h11.82C20.39 19.23 22 16.31 22 13c0-5.52-4.48-10-10-10zm0 2c4.41 0 8 3.59 8 8 0 2.29-.98 4.36-2.55 5.78H6.55C4.98 17.36 4 15.29 4 13c0-4.41 3.59-8 8-8zm-1 3v4.59l-2.3 2.3 1.42 1.42L13 13.41V8h-2z'/%3E%3C/svg%3E");
+}
