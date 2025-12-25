@@ -58,6 +58,8 @@ const MainToolbar = ({
 
   const deviceStatusCount = (status) => Object.values(devices).filter((d) => d.status === status).length;
 
+  const motionStatusCount = (motion) => Object.values(devices).filter((d) => d.attributes?.motionStatus === motion).length;
+
   return (
     <Toolbar ref={toolbarRef} className={classes.toolbar}>
       {/*<IconButton edge="start" onClick={() => setDevicesOpen(!devicesOpen)}>
@@ -136,6 +138,28 @@ const MainToolbar = ({
               <MenuItem value="unknown">{`${t('deviceStatusUnknown')} (${deviceStatusCount('unknown')})`}</MenuItem>
             </Select>
           </FormControl>
+          <FormControl>
+            <InputLabel>{t('Motion Status')}</InputLabel>
+            <Select
+              label={t('Motion Status')}
+              value={filter.motionStatuses || []}
+              onChange={(e) =>
+                setFilter({ ...filter, motionStatuses: e.target.value })
+              }
+              multiple
+            >
+              <MenuItem value="moving">
+                {`Moving (${motionStatusCount('moving')})`}
+              </MenuItem>
+              <MenuItem value="idling">
+                {`Idling (${motionStatusCount('idling')})`}
+              </MenuItem>
+              <MenuItem value="parked">
+                {`Parked (${motionStatusCount('parked')})`}
+              </MenuItem>
+            </Select>
+          </FormControl>
+
           <FormControl>
             <InputLabel>{t('settingsGroups')}</InputLabel>
             <Select

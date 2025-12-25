@@ -19,6 +19,7 @@ const useStyles = makeStyles()((theme) => ({
 }));
 
 const DeviceList = ({ devices, setDeviceSheetOpen }) => {
+  //console.log(position[0]);
   const { classes } = useStyles();
   const dispatch = useDispatch();
 

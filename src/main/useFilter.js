@@ -20,6 +20,7 @@ export default (keyword, filter, filterSort, filterMap, positions, setFilteredDe
     const filtered = Object.values(devices)
       .filter((device) => !filter.statuses.length || filter.statuses.includes(device.status))
       .filter((device) => !filter.groups.length || deviceGroups(device).some((id) => filter.groups.includes(id)))
+      .filter((device) => !filter.motionStatuses?.length || filter.motionStatuses.includes(device.attributes?.motionStatus))
       .filter((device) => {
         const lowerCaseKeyword = keyword.toLowerCase();
         return [device.name, device.uniqueId, device.phone, device.model, device.contact].some((s) => s && s.toLowerCase().includes(lowerCaseKeyword));
