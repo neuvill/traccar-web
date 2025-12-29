@@ -628,5 +628,6 @@
     "categoryScooter": "Scooter",
     "categoryDynamic": "Dynamique",
     "maintenanceStart": "Départ",
-    "maintenancePeriod": "Période"
+    "maintenancePeriod": "Période",
+    "MotionStatus": "Statut de mouvement"
 }

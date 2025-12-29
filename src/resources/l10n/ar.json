@@ -628,5 +628,6 @@
     "categoryScooter": "سكوتر",
     "categoryDynamic": "ديناميكي",
     "maintenanceStart": "بداية",
-    "maintenancePeriod": "فترة"
+    "maintenancePeriod": "فترة",
+    "MotionStatus": "الحركة"
 }

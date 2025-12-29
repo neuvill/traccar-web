@@ -139,9 +139,9 @@ const MainToolbar = ({
             </Select>
           </FormControl>
           <FormControl>
-            <InputLabel>{t('Motion Status')}</InputLabel>
+            <InputLabel>{t('MotionStatus')}</InputLabel>
             <Select
-              label={t('Motion Status')}
+              label={t('MotionStatus')}
               value={filter.motionStatuses || []}
               onChange={(e) =>
                 setFilter({ ...filter, motionStatuses: e.target.value })
