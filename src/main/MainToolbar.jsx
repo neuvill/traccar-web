@@ -57,8 +57,13 @@ const MainToolbar = ({
   const [devicesAnchorEl, setDevicesAnchorEl] = useState(null);
 
   const deviceStatusCount = (status) => Object.values(devices).filter((d) => d.status === status).length;
+  const positions = useSelector((state) => state.session.positions);
+  //console.log('positions',positions);
 
-  const motionStatusCount = (motion) => Object.values(devices).filter((d) => d.attributes?.motionStatus === motion).length;
+  const motionStatusCount = (motion) =>
+    Object.values(positions || {})
+      .filter((p) => p.attributes?.motionStatus === motion)
+      .length;
 
   return (
     <Toolbar ref={toolbarRef} className={classes.toolbar}>

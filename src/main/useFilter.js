@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 export default (keyword, filter, filterSort, filterMap, positions, setFilteredDevices, setFilteredPositions) => {
   const groups = useSelector((state) => state.groups.items);
   const devices = useSelector((state) => state.devices.items);
+  //const positions = useSelector((state) => state.session.positions);
 
   useEffect(() => {
     const deviceGroups = (device) => {
@@ -20,7 +21,17 @@ export default (keyword, filter, filterSort, filterMap, positions, setFilteredDe
     const filtered = Object.values(devices)
       .filter((device) => !filter.statuses.length || filter.statuses.includes(device.status))
       .filter((device) => !filter.groups.length || deviceGroups(device).some((id) => filter.groups.includes(id)))
-      .filter((device) => !filter.motionStatuses?.length || filter.motionStatuses.includes(device.attributes?.motionStatus))
+      .filter((device) => {
+        if (!filter.motionStatuses.length) return true;
+
+        const position = positions?.[device.id];
+        if (!position) return false;
+
+        return filter.motionStatuses.includes(
+          position.attributes?.motionStatus
+        );
+      })
+
       .filter((device) => {
         const lowerCaseKeyword = keyword.toLowerCase();
         return [device.name, device.uniqueId, device.phone, device.model, device.contact].some((s) => s && s.toLowerCase().includes(lowerCaseKeyword));
