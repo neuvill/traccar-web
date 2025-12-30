@@ -629,5 +629,9 @@
     "categoryDynamic": "ديناميكي",
     "maintenanceStart": "بداية",
     "maintenancePeriod": "فترة",
-    "MotionStatus": "الحركة"
+    "motionStatus": "الحركة",
+    "motionStatusMoving": "الحركة",
+    "motionStatusParked": "متوقف",
+    "motionStatusIdle": "غير نشط",
+    "dashboardTitle": "لوحة القيادة"
 }

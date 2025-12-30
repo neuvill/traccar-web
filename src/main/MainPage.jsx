@@ -113,17 +113,22 @@ const MainPage = () => {
   const [filteredDevices, setFilteredDevices] = useState([]);
 
   const [keyword, setKeyword] = useState('');
-  const [filter, setFilter] = usePersistedState('filter', {
+  const INITIAL_FILTER = {
     statuses: [],
     groups: [],
-    motionStatuses: [],   // ⬅️ add this
-  });
+    motionStatuses: [],
+  };
+  const [filter, setFilter] = usePersistedState('filter', INITIAL_FILTER);
   const [filterSort, setFilterSort] = usePersistedState('filterSort', '');
   const [filterMap, setFilterMap] = usePersistedState('filterMap', false);
+  const handleResetFilters = () => {
+    setFilter(INITIAL_FILTER);
+  };
 
   const [devicesOpen, setDevicesOpen] = useState(desktop);
   const [eventsOpen, setEventsOpen] = useState(false);
   const [dashboardOpen, setDashboardOpen] = useState(false);
+
 
   const onEventsClick = useCallback(() => setEventsOpen(true), [setEventsOpen]);
   const onBoardClick = useCallback(() => setDashboardOpen(true), [setDashboardOpen]);
@@ -166,6 +171,7 @@ const MainPage = () => {
               setFilterSort={setFilterSort}
               filterMap={filterMap}
               setFilterMap={setFilterMap}
+              onResetFilters={handleResetFilters}
             />
           </Paper>}
         <div className={classes.middle}>
@@ -226,7 +232,36 @@ const MainPage = () => {
       )}
 
       <EventsDrawer open={eventsOpen} onClose={() => setEventsOpen(false)} />
-      <DashboardDrawer open={dashboardOpen} onClose={() => setDashboardOpen(false)} />
+      <DashboardDrawer
+        open={dashboardOpen}
+        onClose={() => setDashboardOpen(false)}
+        onMotionFilter={(motionStatus) => {
+          const isActive =
+            filter.motionStatuses?.length === 1 &&
+            filter.motionStatuses[0] === motionStatus;
+
+          setFilter({
+            ...filter,
+            motionStatuses: isActive ? [] : [motionStatus],
+          });
+        }}
+        onStatusFilter={(status) => {
+          const isActive =
+            filter.statuses?.length === 1 &&
+            filter.statuses[0] === status;
+
+          setFilter({
+            ...filter,
+            statuses: isActive ? [] : [status],
+          });
+        }}
+        onShowDevices={() => {
+          if (!mobile) return;
+
+          setDashboardOpen(false);
+          setDeviceSheetOpen(true);
+        }}
+      />
       {selectedDeviceId && desktop && (
         <StatusCard
           deviceId={selectedDeviceId}

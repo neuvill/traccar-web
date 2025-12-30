@@ -17,6 +17,7 @@ import DashboardLoading from '../common/components/DashboardLoading';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { PieChart } from '@mui/x-charts/PieChart';
+//import useFilter from './useFilter';
 
 const useStyles = makeStyles()((theme) => ({
     drawer: {
@@ -31,7 +32,7 @@ const useStyles = makeStyles()((theme) => ({
     },
 }));
 
-const DashboardDrawer = ({ open, onClose }) => {
+const DashboardDrawer = ({ open, onClose, onMotionFilter, onStatusFilter, onShowDevices }) => {
     const { classes } = useStyles();
     const t = useTranslation();
     const navigate = useNavigate();
@@ -41,19 +42,23 @@ const DashboardDrawer = ({ open, onClose }) => {
     const [loading, setLoading] = useState(false);
     const [tab, setTab] = useState(0);
 
+
     const deviceStats = useMemo(() => {
         let online = 0;
         let offline = 0;
+        let unknown = 0;
 
         devices.forEach((device) => {
             if (device.status === 'online') {
                 online += 1;
-            } else {
+            } else if (device.status === 'offline') {
                 offline += 1;
+            } else {
+                unknown += 1;
             }
         });
 
-        return { online, offline };
+        return { online, offline, unknown };
     }, [devices]);
 
     const motionStats = useMemo(() => {
@@ -73,6 +78,38 @@ const DashboardDrawer = ({ open, onClose }) => {
     }, [positions]);
 
 
+
+    const motionPieData = useMemo(() => ([
+        { id: 'moving', label: t('motionStatusMoving'), value: motionStats.moving, color: '#27cb46' },
+        { id: 'idling', label: t('motionStatusIdle'), value: motionStats.idling, color: '#00b5e2' },
+        { id: 'parked', label: t('motionStatusParked'), value: motionStats.parked, color: '#ed2736' },
+    ]), [motionStats]);
+
+
+    const statusPieData = useMemo(() => ([
+        { id: 'online', label: t('deviceStatusOnline'), value: deviceStats.online, color: '#27cb46' },
+        { id: 'offline', label: t('deviceStatusOffline'), value: deviceStats.offline, color: '#ed2736' },
+        { id: 'unknown', label: t('deviceStatusUnknown'), value: devices.length - deviceStats.online - deviceStats.offline, color: '#808080' },
+    ]), [deviceStats]);
+
+    const handleMotionClick = (_, item) => {
+        const motionStatus = motionPieData[item.dataIndex]?.id;
+        if (!motionStatus) return;
+
+        onMotionFilter(motionStatus);
+        onShowDevices(); // 👈 NEW
+    };
+
+    const handleStatusClick = (_, item) => {
+        const status = statusPieData[item.dataIndex]?.id;
+        if (!status) return;
+
+        onStatusFilter(status);
+        onShowDevices(); // 👈 NEW
+    };
+
+
+
     useEffect(() => {
         if (!open || tab !== 1) return;
 
@@ -82,8 +119,8 @@ const DashboardDrawer = ({ open, onClose }) => {
         const midnight = new Date(now.setHours(0, 0, 0, 0));
         const from = midnight.toISOString();
         const to = new Date().toISOString();
-        console.log(devices);
-        console.log(positions);
+        //console.log(devices);
+        //console.log(positions);
 
         const fetchSummary = async () => {
             try {
@@ -120,7 +157,7 @@ const DashboardDrawer = ({ open, onClose }) => {
         <Drawer anchor="right" open={open} onClose={onClose}>
             <Toolbar className={classes.toolbar} disableGutters>
                 <Typography variant="h6" className={classes.title}>
-                    DASHBOARD
+                    {t('dashboardTitle')}
                 </Typography>
             </Toolbar>
 
@@ -129,8 +166,8 @@ const DashboardDrawer = ({ open, onClose }) => {
                 onChange={(_, value) => setTab(value)}
                 variant="fullWidth"
             >
-                <Tab label="STATUS" />
-                <Tab label="SUMMARY" />
+                <Tab label={t('deviceStatus')} />
+                <Tab label={t('reportSummary')} />
             </Tabs>
 
             <Divider />
@@ -150,7 +187,7 @@ const DashboardDrawer = ({ open, onClose }) => {
                         {/* Devices Status */}
                         <Box sx={{ textAlign: 'center' }}>
                             <Typography variant="subtitle1" gutterBottom>
-                                Devices Status
+                                {t('deviceStatus')}
                             </Typography>
 
                             <Box sx={{ width: '100%', maxWidth: 230, mx: 'auto' }}>
@@ -159,12 +196,19 @@ const DashboardDrawer = ({ open, onClose }) => {
                                     height={200}
                                     series={[
                                         {
-                                            data: [
-                                                { id: 0, value: deviceStats.online, label: 'Online', color: '#27cb46' },
-                                                { id: 1, value: deviceStats.offline, label: 'Offline', color: '#ed2736' },
-                                            ],
+                                            data: statusPieData,
+                                            arcLabel: (item) => item.value,
+                                            arcLabelMinAngle: 10,
                                         },
                                     ]}
+                                    onItemClick={handleStatusClick}
+                                    sx={{
+                                        '& .MuiPieArcLabel-root': {
+                                            fill: '#fff',
+                                            fontSize: 18,
+                                            fontWeight: 650,
+                                        },
+                                    }}
                                 />
 
                             </Box>
@@ -175,7 +219,7 @@ const DashboardDrawer = ({ open, onClose }) => {
                         {/* Motion Status */}
                         <Box sx={{ textAlign: 'center' }}>
                             <Typography variant="subtitle1" gutterBottom>
-                                Motion Status
+                                {t('motionStatus')}
                             </Typography>
 
                             <Box sx={{ width: '100%', maxWidth: 230, mx: 'auto' }}>
@@ -184,13 +228,21 @@ const DashboardDrawer = ({ open, onClose }) => {
                                     height={200}
                                     series={[
                                         {
-                                            data: [
-                                                { id: 0, value: motionStats.moving, label: 'Moving', color: '#27cb46' },
-                                                { id: 1, value: motionStats.idling, label: 'Idling', color: '#00b5e2' },
-                                                { id: 2, value: motionStats.parked, label: 'Parked', color: '#ed2736' },
-                                            ],
+                                            data: motionPieData,
+                                            arcLabel: (item) => item.value,
+                                            arcLabelMinAngle: 10,
                                         },
                                     ]}
+                                    onItemClick={handleMotionClick}
+                                    sx={{
+                                        '& .MuiPieArcLabel-root': {
+                                            fill: '#fff',
+                                            fontSize: 18,
+                                            fontWeight: 650,
+
+                                        },
+
+                                    }}
                                 />
                             </Box>
                         </Box>

@@ -629,5 +629,9 @@
     "categoryDynamic": "Dynamic",
     "maintenanceStart": "Start",
     "maintenancePeriod": "Period",
-    "MotionStatus": "Motion Status"
+    "motionStatus": "Motion Status",
+    "motionStatusMoving": "Moving",
+    "motionStatusParked": "Parked",
+    "motionStatusIdle": "Idle",
+    "dashboardTitle": "Dashboard"
 }

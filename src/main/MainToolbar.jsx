@@ -10,6 +10,7 @@ import MapIcon from '@mui/icons-material/Map';
 import DnsIcon from '@mui/icons-material/Dns';
 import AddIcon from '@mui/icons-material/Add';
 import TuneIcon from '@mui/icons-material/Tune';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import { useDeviceReadonly } from '../common/util/permissions';
 import DeviceRow from './DeviceRow';
@@ -40,6 +41,7 @@ const MainToolbar = ({
   setFilterSort,
   filterMap,
   setFilterMap,
+  onResetFilters,
 }) => {
   const { classes } = useStyles();
   const theme = useTheme();
@@ -70,13 +72,29 @@ const MainToolbar = ({
       {/*<IconButton edge="start" onClick={() => setDevicesOpen(!devicesOpen)}>
         {devicesOpen ? <MapIcon /> : <DnsIcon />}
       </IconButton>*/}
+
       <OutlinedInput
+
         ref={inputRef}
         placeholder={t('sharedSearchDevices')}
         value={keyword}
         onChange={(e) => setKeyword(e.target.value)}
         onFocus={() => setDevicesAnchorEl(toolbarRef.current)}
         onBlur={() => setDevicesAnchorEl(null)}
+        startAdornment={(
+          <IconButton
+            size="small"
+            onClick={onResetFilters}
+            disabled={
+              !filter.statuses.length &&
+              !filter.groups.length &&
+              !filter.motionStatuses.length
+            }
+            title="Reset filters"
+          >
+            <RestartAltIcon fontSize="small" />
+          </IconButton>
+        )}
         endAdornment={(
           <InputAdornment position="end">
             {filteredDevices.length} {/* added total number of devices*/}

@@ -629,5 +629,9 @@
     "categoryDynamic": "Dynamique",
     "maintenanceStart": "Départ",
     "maintenancePeriod": "Période",
-    "MotionStatus": "Statut de mouvement"
+    "motionStatus": "Statut de mouvement",
+    "motionStatusMoving": "En mouvement",
+    "motionStatusParked": "Stationné",
+    "motionStatusIdle": "En pause",
+    "dashboardTitle": "Tableau de bord"
 }
