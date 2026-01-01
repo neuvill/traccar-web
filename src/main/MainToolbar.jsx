@@ -6,9 +6,9 @@ import {
 } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import { useTheme } from '@mui/material/styles';
-import MapIcon from '@mui/icons-material/Map';
-import DnsIcon from '@mui/icons-material/Dns';
-import AddIcon from '@mui/icons-material/Add';
+//import MapIcon from '@mui/icons-material/Map';
+//import DnsIcon from '@mui/icons-material/Dns';
+//import AddIcon from '@mui/icons-material/Add';
 import TuneIcon from '@mui/icons-material/Tune';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { useTranslation } from '../common/components/LocalizationProvider';
@@ -42,13 +42,14 @@ const MainToolbar = ({
   filterMap,
   setFilterMap,
   onResetFilters,
+  setDeviceSheetOpen,
 }) => {
   const { classes } = useStyles();
   const theme = useTheme();
-  const navigate = useNavigate();
+  //const navigate = useNavigate();
   const t = useTranslation();
 
-  const deviceReadonly = useDeviceReadonly();
+  //const deviceReadonly = useDeviceReadonly();
 
   const groups = useSelector((state) => state.groups.items);
   const devices = useSelector((state) => state.devices.items);
@@ -127,10 +128,13 @@ const MainToolbar = ({
         disableEnforceFocus
       >
         {filteredDevices.slice(0, 3).map((_, index) => (
-          <DeviceRow key={filteredDevices[index].id} devices={filteredDevices} index={index} />
+          <DeviceRow key={filteredDevices[index].id} devices={filteredDevices} index={index} setDeviceSheetOpen={setDeviceSheetOpen} />
         ))}
         {filteredDevices.length > 3 && (
-          <ListItemButton alignItems="center" onClick={() => setDevicesOpen(true)}>
+          <ListItemButton alignItems="center" onClick={() => {
+            setDevicesOpen(true);
+
+          }}>
             <ListItemText
               primary={t('notificationAlways')}
               style={{ textAlign: 'center' }}

@@ -9,23 +9,23 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
 
-const DeviceBottomSheet = ({ open, onOpen, onClose, devices, setDeviceSheetOpen }) => {
+const DeviceBottomSheet = ({ open, onOpen, onClose, devices, setDeviceSheetOpen, filter, setFilter, filterSort, setFilterSort, filterMap, setFilterMap, keyword, setKeyword, onResetFilters }) => {
     //console.log('DeviceBottomSheet devices:', devices);
     const theme = useTheme();
     const desktop = useMediaQuery(theme.breakpoints.up('md'));
-    const [keyword, setKeyword] = useState('');
-    const [filter, setFilter] = usePersistedState('filter', {
+    //const [keyword, setKeyword] = useState('');
+    /*const [filter, setFilter] = usePersistedState('filter', {
         statuses: [],
         groups: [],
-    });
-    const [filterSort, setFilterSort] = usePersistedState('filterSort', '');
-    const [filterMap, setFilterMap] = usePersistedState('filterMap', false);
-    const positions = useSelector((state) => state.session.positions);
-    const [filteredDevices, setFilteredDevices] = useState([]);
-    const [filteredPositions, setFilteredPositions] = useState([]);
+    });*/
+    //const [filterSort, setFilterSort] = usePersistedState('filterSort', '');
+    //const [filterMap, setFilterMap] = usePersistedState('filterMap', false);
+    //const positions = useSelector((state) => state.session.positions);
+    //const [filteredDevices, setFilteredDevices] = useState([]);
+    //const [filteredPositions, setFilteredPositions] = useState([]);
     const [devicesOpen, setDevicesOpen] = useState(desktop);
 
-    useFilter(keyword, filter, filterSort, filterMap, positions, setFilteredDevices, setFilteredPositions);
+    //useFilter(keyword, filter, filterSort, filterMap, positions, setFilteredDevices, setFilteredPositions);
 
 
     //const [deviceSheetOpen, setDeviceSheetOpen] = useState(false);
@@ -59,7 +59,7 @@ const DeviceBottomSheet = ({ open, onOpen, onClose, devices, setDeviceSheetOpen 
                 }}
             />
             <MainToolbar
-                filteredDevices={filteredDevices}
+                filteredDevices={devices}
                 devicesOpen={devicesOpen}
                 setDevicesOpen={setDevicesOpen}
                 keyword={keyword}
@@ -70,9 +70,11 @@ const DeviceBottomSheet = ({ open, onOpen, onClose, devices, setDeviceSheetOpen 
                 setFilterSort={setFilterSort}
                 filterMap={filterMap}
                 setFilterMap={setFilterMap}
+                onResetFilters={onResetFilters}
+                setDeviceSheetOpen={setDeviceSheetOpen}
             />
             <DeviceList
-                devices={filteredDevices}
+                devices={devices}
                 setDeviceSheetOpen={setDeviceSheetOpen}
             />
         </SwipeableDrawer>

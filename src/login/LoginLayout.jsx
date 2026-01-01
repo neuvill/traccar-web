@@ -12,7 +12,7 @@ const useStyles = makeStyles()((theme) => ({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    background: theme.palette.primary.main,
+    background: theme.palette.primary.secondary,
     paddingBottom: theme.spacing(5),
     width: theme.dimensions.sidebarWidth,
     [theme.breakpoints.down('lg')]: {
@@ -38,6 +38,24 @@ const useStyles = makeStyles()((theme) => ({
     padding: theme.spacing(5),
     width: '100%',
   },
+  logoText: {
+    marginTop: theme.spacing(2),
+    //color: theme.palette.secondary.contrastText,
+    fontSize: '1.1rem',
+    fontWeight: 600,
+    letterSpacing: '0.25em',
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    whiteSpace: 'nowrap',
+    [theme.breakpoints.down('xl')]: {
+      fontSize: '1rem',
+    },
+  },
+  logoContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
 }));
 
 const LoginLayout = ({ children }) => {
@@ -47,7 +65,14 @@ const LoginLayout = ({ children }) => {
   return (
     <main className={classes.root}>
       <div className={classes.sidebar}>
-        {!useMediaQuery(theme.breakpoints.down('lg')) && <LogoImage color={theme.palette.secondary.contrastText} />}
+        {!useMediaQuery(theme.breakpoints.down('lg')) && (
+          <div className={classes.logoContainer}>
+            <LogoImage color={theme.palette.secondary.contrastText} />
+            <div className={classes.logoText}>
+              HM GLOBAL TECHNOLOGIES
+            </div>
+          </div>
+        )}
       </div>
       <Paper className={classes.paper}>
         <form className={classes.form}>

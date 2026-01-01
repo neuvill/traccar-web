@@ -226,6 +226,15 @@ const MainPage = () => {
             onClose={() => setDeviceSheetOpen(false)}
             devices={filteredDevices}
             setDeviceSheetOpen={setDeviceSheetOpen}
+            filter={filter}
+            setFilter={setFilter}
+            filterSort={filterSort}
+            setFilterSort={setFilterSort}
+            filterMap={filterMap}
+            setFilterMap={setFilterMap}
+            keyword={keyword}
+            setKeyword={setKeyword}
+            onResetFilters={handleResetFilters}
           />
 
         </div>
@@ -235,31 +244,37 @@ const MainPage = () => {
       <DashboardDrawer
         open={dashboardOpen}
         onClose={() => setDashboardOpen(false)}
+
         onMotionFilter={(motionStatus) => {
           const isActive =
             filter.motionStatuses?.length === 1 &&
             filter.motionStatuses[0] === motionStatus;
 
-          setFilter({
-            ...filter,
+          setFilter((prev) => ({
+            ...prev,
             motionStatuses: isActive ? [] : [motionStatus],
-          });
+          }));
         }}
+
         onStatusFilter={(status) => {
           const isActive =
             filter.statuses?.length === 1 &&
             filter.statuses[0] === status;
 
-          setFilter({
-            ...filter,
+          setFilter((prev) => ({
+            ...prev,
             statuses: isActive ? [] : [status],
-          });
+          }));
         }}
         onShowDevices={() => {
           if (!mobile) return;
 
           setDashboardOpen(false);
-          setDeviceSheetOpen(true);
+
+          // 🔑 Defer bottom sheet opening until filter is committed
+          requestAnimationFrame(() => {
+            setDeviceSheetOpen(true);
+          });
         }}
       />
       {selectedDeviceId && desktop && (

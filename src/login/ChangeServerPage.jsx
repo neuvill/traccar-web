@@ -22,6 +22,7 @@ const currentServer = `${window.location.protocol}//${window.location.host}`;
 
 const officialServers = [
   currentServer,
+  'https://track.hmglobtech.com',
   'https://demo.traccar.org',
   'https://demo2.traccar.org',
   'https://demo3.traccar.org',
