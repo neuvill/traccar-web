@@ -29,6 +29,7 @@ import vanSvg from '../../resources/images/icon/van.svg';
 import parkedSvg from '../../resources/images/icon/parked.svg'
 import movingSvg from '../../resources/images/icon/moving.svg'
 import idlingSvg from '../../resources/images/icon/idling.svg'
+import stillSvg from '../../resources/images/icon/still.svg'
 import stopmapSvg from '../../resources/images/icon/stopmap.svg';
 import mapEventSvg from '../../resources/images/icon/event.svg';
 
@@ -58,6 +59,7 @@ export const mapIcons = {
   parked: parkedSvg, //adding the new icons
   moving: movingSvg,
   idling: idlingSvg,
+  still: stillSvg,
   stopmap: stopmapSvg,
   mapEvent: mapEventSvg,
 };

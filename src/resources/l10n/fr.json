@@ -51,6 +51,7 @@
     "sharedSound": "Son de notification",
     "sharedType": "Type",
     "sharedDistance": "Distance",
+    "sharedDayAbbreviation": "j",
     "sharedHourAbbreviation": "h",
     "sharedMinuteAbbreviation": "m",
     "sharedSecondAbbreviation": "s",

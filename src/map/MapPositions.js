@@ -8,23 +8,35 @@ import { mapIconKey } from './core/preloadImages';
 import { useAttributePreference } from '../common/util/preferences';
 import { useCatchCallback } from '../reactHelper';
 import { findFonts } from './core/mapUtil';
-import { Color } from 'maplibre-gl';
+import dayjs from 'dayjs';
+//import { Color } from 'maplibre-gl';
 
 const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, selectedPosition, titleField, isReplay }) => {
   const id = useId();
   const clusters = `${id}-clusters`;
   const selected = `${id}-selected`;
   const Replay = isReplay || false;
+  //console.log('positions', positions[0].deviceId);
 
   const theme = useTheme();
   const desktop = useMediaQuery(theme.breakpoints.up('md'));
   const iconScale = useAttributePreference('iconScale', desktop ? 0.75 : 1);
 
   const devices = useSelector((state) => state.devices.items);
+  //console.log('devices', devices[56]);
+
   const selectedDeviceId = useSelector((state) => state.devices.selectedId);
 
   const mapCluster = useAttributePreference('mapCluster', true);
   const directionType = useAttributePreference('mapDirection', 'selected');
+
+  function getLastItemUpdate(item) {
+    if (!item.lastUpdate) {
+      return false;
+    }
+
+    return dayjs().diff(dayjs(item.lastUpdate), 'hour', true) > 3;
+  }
 
   const createFeature = (devices, position, selectedPositionId) => {
     const device = devices[position.deviceId];
@@ -45,9 +57,9 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
       deviceId: position.deviceId,
       name: device.name,
       fixTime: formatTime(position.fixTime, 'seconds'),
-      category: position ? mapIconKey(position.attributes.motionStatus) : mapIconKey(device.category), // Map icon depending on device category
+      category: position ? getLastItemUpdate(device) ? 'still' : mapIconKey(position.attributes.motionStatus) : mapIconKey(device.category), // Map icon depending on device category
       //color: showStatus ? position.attributes.color || getStatusColor(device.status) : 'neutral',
-      color: position ? getIconStatusColor(position.attributes.motionStatus) : 'neutral',
+      color: position ? getLastItemUpdate(device) ? 'neutral' : getIconStatusColor(position.attributes.motionStatus) : 'neutral',
       //Color: 'info',
       rotation: position.course,
       direction: showDirection,

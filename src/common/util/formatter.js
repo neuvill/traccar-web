@@ -85,6 +85,33 @@ export const formatNumericHours = (value, t) => {
   return `${hours} ${t('sharedHourAbbreviation')} ${minutes} ${t('sharedMinuteAbbreviation')}`;
 };
 
+export const formatAdaptiveDuration = (value, t) => {
+  const totalMinutes = Math.floor(value / 60000);
+  const totalHours = Math.floor(value / 3600000);
+  const totalDays = Math.floor(value / 86400000);
+
+  // 0️⃣ Less than 59 minutes → minutes only
+  if (totalMinutes < 59) {
+    return `${totalMinutes} ${t('sharedMinuteAbbreviation')}`;
+  }
+
+  // 1️⃣ Less than 12 hours → hours + minutes
+  if (totalHours < 12) {
+    const minutes = totalMinutes % 60;
+    return `${totalHours} ${t('sharedHourAbbreviation')} ${minutes} ${t('sharedMinuteAbbreviation')}`;
+  }
+
+  // 2️⃣ Between 12h and < 24h → hours only
+  if (totalHours < 24) {
+    return `${totalHours} ${t('sharedHourAbbreviation')}`;
+  }
+
+  // 3️⃣ 24h or more → days only
+  return `${totalDays} ${t('sharedDayAbbreviation')}`;
+};
+
+
+
 export const formatCoordinate = (key, value, unit) => {
   let hemisphere;
   let degrees;

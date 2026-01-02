@@ -16,7 +16,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { devicesActions } from '../store';
 import {
   formatAlarm, formatBoolean, formatPercentage, formatStatus, getStatusColor, formatNumericHours,
-  formatSpeed
+  formatSpeed, formatAdaptiveDuration
 } from '../common/util/formatter';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import { mapIconKey, mapIcons } from '../map/core/preloadImages';
@@ -68,11 +68,18 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
 
   const devicePrimary = useAttributePreference('devicePrimary', 'name');
 
-  const dynamicStatus = (position && position.attributes.motionStatus) ? position.attributes.motionStatus : 'default';
+  //const dynamicStatus = (position && position.attributes.motionStatus) ? position.attributes.motionStatus : 'default';
+
+  const dynamicStatus = getLastItemUpdate(item)
+    ? 'still'
+    : (position && position.attributes.motionStatus)
+      ? position.attributes.motionStatus
+      : 'default';
 
   const secondaryText = () => {
     let status;
     let isSpeed = false;
+    getLastItemUpdate(item);
     if (item.status === 'online' || !item.lastUpdate) {
       if (position && position.attributes.motionStatus === 'moving') {
         status = formatSpeed(position.speed, 'kmh', t);
@@ -81,7 +88,9 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
         status = formatStatus(item.status, t);
       }
     } else {
-      status = formatStatus(item.status, t);
+      //status = formatStatus(item.status, t);
+      const lastUpdate = dayjs(item.lastUpdate);
+      status = lastUpdate.fromNow(true);
     }
     return (
       <>
@@ -109,8 +118,16 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
     const start = new Date(startIso);
     const end = new Date(endIso);
 
-    return (end - start >= 0) ? formatNumericHours(end - start, t) : formatNumericHours(0, t);
+    return (end - start >= 0) ? formatAdaptiveDuration(end - start, t) : formatAdaptiveDuration(0, t);
 
+  }
+
+  function getLastItemUpdate(item) {
+    if (!item.lastUpdate) {
+      return false;
+    }
+
+    return dayjs().diff(dayjs(item.lastUpdate), 'hour', true) > 3;
   }
 
   return (
@@ -140,7 +157,7 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
               }}
             >
               {
-                position && position.attributes.motionStatusChanged ? getTimeDiff(position.attributes.motionStatusChanged, position.deviceTime) : '-'
+                getLastItemUpdate(item) ? '-' : (position && position.attributes.motionStatusChanged) ? getTimeDiff(position.attributes.motionStatusChanged, position.deviceTime) : '-'
               }
             </Typography>
           </div>
