@@ -25,6 +25,7 @@ import { makeStyles } from 'tss-react/mui';
 import ReplayIcon from '@mui/icons-material/Replay';
 import PublishIcon from '@mui/icons-material/Publish';
 import EditIcon from '@mui/icons-material/Edit';
+import CloseIcon from '@mui/icons-material/Close';
 //import DeleteIcon from '@mui/icons-material/Delete';
 import PendingIcon from '@mui/icons-material/Pending';
 import HistoryIcon from '@mui/icons-material/History';
@@ -89,6 +90,12 @@ const useStyles = makeStyles()((theme, { desktopPadding }) => ({
         display: 'flex',
         justifyContent: 'flex-end',
         alignItems: 'flex-start',
+    },
+    closeButton: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        zIndex: 2,
     },
     /*root: ({ desktopPadding }) => ({
         pointerEvents: 'none',
@@ -218,6 +225,13 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
                         },
                     }}
                 >
+                    <IconButton
+                        className={classes.closeButton}
+                        onClick={onClose}
+                        size="small"
+                    >
+                        <CloseIcon />
+                    </IconButton>
                     {deviceImage ? (
                         <CardMedia
                             className={classes.media}
