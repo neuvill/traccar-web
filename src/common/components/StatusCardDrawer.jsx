@@ -318,14 +318,14 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
                                     <PendingIcon />
                                 </IconButton>
                             </Tooltip>
-                            <Tooltip title={t('reportReplay')}>
+                            {/*<Tooltip title={t('reportReplay')}>
                                 <IconButton
                                     onClick={() => navigate(`/replay?deviceId=${deviceId}`)}
                                     disabled={disableActions || !position}
                                 >
                                     <ReplayIcon />
                                 </IconButton>
-                            </Tooltip>
+                            </Tooltip>*/}
                             <Tooltip title={t('reportReplay')}>
                                 <IconButton color='primary'
                                     onClick={() => navigate(`/qreplay?deviceId=${deviceId}`, { state: { isQuick: true } })}

@@ -189,6 +189,7 @@ const QReplayPage = () => {
     const [summary, setSummary] = useState([]);
     const [trips, setTrips] = useState([]);
     const [stops, setStops] = useState([]);
+    const [TopSpeed, setTopSpeed] = useState(0);
     const [eventData, setEventData] = useState([]);
     const [index, setIndex] = useState(0);
     const [selectedDeviceId, setSelectedDeviceId] = useState(defaultDeviceId || searchParams.get('deviceId'));
@@ -291,6 +292,8 @@ const QReplayPage = () => {
                         });
                         setIndex(0);
                         const eventData = await eventResponse.json();
+                        console.log('events', eventData);
+
                         // Create new data mapping events to positions
                         //console.log('the positions:', newPositions);
 
@@ -336,6 +339,22 @@ const QReplayPage = () => {
                 if (!trips.length) {
                     throw Error(t('sharedNoData'));
                 }
+                //get top speed
+                const eventResponse = await fetchOrThrow(`/api/reports/events?${query.toString()}&type=deviceOverspeed`, {
+                    headers: { Accept: 'application/json' },
+                });
+                setIndex(0);
+                const eventData = await eventResponse.json();
+                /*const getTopSpeed = (eventData) => {
+                    if (!Array.isArray(eventData) || eventData.length === 0) {
+                        return null;
+                    }
+
+                    return Math.max(...eventData.map(event => event.attributes?.speed ?? 0));
+                };*/
+                const TopSpeed = (!Array.isArray(eventData) || eventData.length === 0) ? 0 : Math.max(...eventData.map(event => event.attributes?.speed ?? 0));
+                setTopSpeed(TopSpeed);
+                console.log('top speed', TopSpeed);
             } finally {
                 setLoading(false);
             }
@@ -556,7 +575,8 @@ const QReplayPage = () => {
                             <div className={classes.controls}>
                                 {summary.length ?
                                     <Typography variant="subtitle1" align="left" sx={{ display: 'flex', alignItems: 'center', fontWeight: 500 }}>
-                                        <SpeedIcon sx={{ mr: 0.5, color: '#ed2736' }} fontSize='small' /> {formatSpeed(summary[0]['maxSpeed'], 'kmh', t)}
+                                        {/*<SpeedIcon sx={{ mr: 0.5, color: '#ed2736' }} fontSize='small' /> {formatSpeed(summary[0]['maxSpeed'], 'kmh', t)}*/}
+                                        <SpeedIcon sx={{ mr: 0.5, color: '#ed2736' }} fontSize='small' /> {formatSpeed(TopSpeed, 'kmh', t)}
                                     </Typography> : null}
                                 {summary.length ?
                                     <Typography variant="subtitle1" align="right" sx={{ display: 'flex', alignItems: 'center', fontWeight: 500 }}>
