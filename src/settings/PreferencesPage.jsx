@@ -29,6 +29,8 @@ const deviceFields = [
   { id: 'model', name: 'deviceModel' },
   { id: 'contact', name: 'deviceContact' },
   { id: 'address', name: 'deviceAddress' }, //adding the address as device attribute
+  { id: 'geofenceIds', name: 'sharedGeofence' },
+  { id: 'driverUniqueId', name: 'sharedDriver' },
 ];
 
 const PreferencesPage = () => {

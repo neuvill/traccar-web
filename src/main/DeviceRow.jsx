@@ -23,7 +23,12 @@ import { mapIconKey, mapIcons } from '../map/core/preloadImages';
 import { useAdministrator } from '../common/util/permissions';
 import EngineIcon from '../resources/images/data/engine.svg?react';
 import { useAttributePreference } from '../common/util/preferences';
+
 import { grey } from '@mui/material/colors';
+
+import GeofencesValue from '../common/components/GeofencesValue';
+import DriverValue from '../common/components/DriverValue';
+
 
 dayjs.extend(relativeTime);
 
@@ -75,6 +80,21 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
     : (position && position.attributes.motionStatus)
       ? position.attributes.motionStatus
       : 'default';
+
+  const resolveFieldValue = (field) => {
+    if (field === 'geofenceIds') {
+      const geofenceIds = position?.geofenceIds;
+      return geofenceIds?.length ? <GeofencesValue geofenceIds={geofenceIds} /> : null;
+    }
+    if (field === 'driverUniqueId') {
+      const driverUniqueId = position?.attributes?.driverUniqueId;
+      return driverUniqueId ? <DriverValue driverUniqueId={driverUniqueId} /> : null;
+    }
+    return item[field];
+  };
+
+  const primaryValue = resolveFieldValue(devicePrimary);
+  const secondaryValue = resolveFieldValue(deviceSecondary);
 
   const secondaryText = () => {
     let status;
@@ -163,7 +183,7 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
           </div>
         </ListItemAvatar>
         <ListItemText
-          primary={item[devicePrimary]}
+          primary={primaryValue}
           secondary={secondaryText()}
           slots={{
             primary: Typography,
