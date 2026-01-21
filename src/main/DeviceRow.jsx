@@ -72,6 +72,7 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
   const position = useSelector((state) => state.session.positions[item.id]);
 
   const devicePrimary = useAttributePreference('devicePrimary', 'name');
+  const deviceSecondary = useAttributePreference('deviceSecondary', '');
 
   //const dynamicStatus = (position && position.attributes.motionStatus) ? position.attributes.motionStatus : 'default';
 
