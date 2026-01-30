@@ -35,6 +35,8 @@ import fetchOrThrow from '../common/util/fetchOrThrow';
 import { useAttributePreference } from '../common/util/preferences';
 import { useLocation } from 'react-router-dom';
 import SpeedIcon from '@mui/icons-material/Speed';
+import MapOverlay from '../map/overlay/MapOverlay';
+
 const useStyles = makeStyles()((theme) => ({
   root: {
     height: '100%',
@@ -258,6 +260,7 @@ const ReplayPage = () => {
     <div className={classes.root}>
 
       <MapView>
+        <MapOverlay />
         <MapGeofence />
         {replay && (
           <>
