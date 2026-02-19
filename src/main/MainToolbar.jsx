@@ -2,7 +2,22 @@ import { useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
-  Toolbar, IconButton, OutlinedInput, InputAdornment, Popover, FormControl, InputLabel, Select, MenuItem, FormGroup, FormControlLabel, Checkbox, Badge, ListItemButton, ListItemText, Tooltip,
+  Toolbar,
+  IconButton,
+  OutlinedInput,
+  InputAdornment,
+  Popover,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
+  Badge,
+  ListItemButton,
+  ListItemText,
+  Tooltip,
 } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import { useTheme } from '@mui/material/styles';
@@ -100,7 +115,11 @@ const MainToolbar = ({
           <InputAdornment position="end">
             {filteredDevices.length} {/* added total number of devices*/}
             <IconButton size="small" edge="end" onClick={() => setFilterAnchorEl(inputRef.current)}>
-              <Badge color="info" variant="dot" invisible={!filter.statuses.length && !filter.groups.length}>
+              <Badge
+                color="info"
+                variant="dot"
+                invisible={!filter.statuses.length && !filter.groups.length}
+              >
                 <TuneIcon fontSize="small" />
               </Badge>
             </IconButton>
@@ -195,9 +214,13 @@ const MainToolbar = ({
               onChange={(e) => setFilter({ ...filter, groups: e.target.value })}
               multiple
             >
-              {Object.values(groups).sort((a, b) => a.name.localeCompare(b.name)).map((group) => (
-                <MenuItem key={group.id} value={group.id}>{group.name}</MenuItem>
-              ))}
+              {Object.values(groups)
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((group) => (
+                  <MenuItem key={group.id} value={group.id}>
+                    {group.name}
+                  </MenuItem>
+                ))}
             </Select>
           </FormControl>
           <FormControl>
@@ -215,7 +238,9 @@ const MainToolbar = ({
           </FormControl>
           <FormGroup>
             <FormControlLabel
-              control={<Checkbox checked={filterMap} onChange={(e) => setFilterMap(e.target.checked)} />}
+              control={
+                <Checkbox checked={filterMap} onChange={(e) => setFilterMap(e.target.checked)} />
+              }
               label={t('sharedFilterMap')}
             />
           </FormGroup>

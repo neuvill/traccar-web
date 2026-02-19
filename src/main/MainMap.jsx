@@ -40,9 +40,12 @@ const MainMap = ({ filteredPositions, selectedPosition, onEventsClick, selectedD
   const classes = useStyles();
   const features = useFeatures();
 
-  const onMarkerClick = useCallback((_, deviceId) => {
-    dispatch(devicesActions.selectId(deviceId));
-  }, [dispatch]);
+  const onMarkerClick = useCallback(
+    (_, deviceId) => {
+      dispatch(devicesActions.selectId(deviceId));
+    },
+    [dispatch],
+  );
 
   return (
     <>
@@ -79,7 +82,11 @@ const MainMap = ({ filteredPositions, selectedPosition, onEventsClick, selectedD
 
 
       {desktop && (
-        <MapPadding start={parseInt(theme.dimensions.drawerWidthDesktop, 10) + parseInt(theme.spacing(1.5), 10)} />
+        <MapPadding
+          start={
+            parseInt(theme.dimensions.drawerWidthDesktop, 10) + parseInt(theme.spacing(1.5), 10)
+          }
+        />
       )}
     </>
   );

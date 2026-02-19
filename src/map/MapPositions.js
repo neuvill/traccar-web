@@ -11,7 +11,18 @@ import { findFonts } from './core/mapUtil';
 import dayjs from 'dayjs';
 //import { Color } from 'maplibre-gl';
 
+<<<<<<< HEAD
 const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, selectedPosition, titleField, isReplay }) => {
+=======
+const MapPositions = ({
+  positions,
+  onMapClick,
+  onMarkerClick,
+  showStatus,
+  selectedPosition,
+  titleField,
+}) => {
+>>>>>>> upstream/master
   const id = useId();
   const clusters = `${id}-clusters`;
   const selected = `${id}-selected`;
@@ -74,35 +85,44 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
     };
   };
 
-  const onMouseEnter = () => map.getCanvas().style.cursor = 'pointer';
-  const onMouseLeave = () => map.getCanvas().style.cursor = '';
+  const onMouseEnter = () => (map.getCanvas().style.cursor = 'pointer');
+  const onMouseLeave = () => (map.getCanvas().style.cursor = '');
 
-  const onMapClickCallback = useCallback((event) => {
-    if (!event.defaultPrevented && onMapClick) {
-      onMapClick(event.lngLat.lat, event.lngLat.lng);
-    }
-  }, [onMapClick]);
+  const onMapClickCallback = useCallback(
+    (event) => {
+      if (!event.defaultPrevented && onMapClick) {
+        onMapClick(event.lngLat.lat, event.lngLat.lng);
+      }
+    },
+    [onMapClick],
+  );
 
-  const onMarkerClickCallback = useCallback((event) => {
-    event.preventDefault();
-    const feature = event.features[0];
-    if (onMarkerClick) {
-      onMarkerClick(feature.properties.id, feature.properties.deviceId);
-    }
-  }, [onMarkerClick]);
+  const onMarkerClickCallback = useCallback(
+    (event) => {
+      event.preventDefault();
+      const feature = event.features[0];
+      if (onMarkerClick) {
+        onMarkerClick(feature.properties.id, feature.properties.deviceId);
+      }
+    },
+    [onMarkerClick],
+  );
 
-  const onClusterClick = useCatchCallback(async (event) => {
-    event.preventDefault();
-    const features = map.queryRenderedFeatures(event.point, {
-      layers: [clusters],
-    });
-    const clusterId = features[0].properties.cluster_id;
-    const zoom = await map.getSource(id).getClusterExpansionZoom(clusterId);
-    map.easeTo({
-      center: features[0].geometry.coordinates,
-      zoom,
-    });
-  }, [clusters]);
+  const onClusterClick = useCatchCallback(
+    async (event) => {
+      event.preventDefault();
+      const features = map.queryRenderedFeatures(event.point, {
+        layers: [clusters],
+      });
+      const clusterId = features[0].properties.cluster_id;
+      const zoom = await map.getSource(id).getClusterExpansionZoom(clusterId);
+      map.easeTo({
+        center: features[0].geometry.coordinates,
+        zoom,
+      });
+    },
+    [clusters],
+  );
 
   useEffect(() => {
     map.addSource(id, {
@@ -159,12 +179,16 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
         id: `direction-${source}`,
         type: 'symbol',
         source,
+<<<<<<< HEAD
         /*filter: [
           'all',
           ['!has', 'point_count'],
           ['==', 'direction', true],
           ['==', 'dynamicDirection', false], // do not show direction for the dynamic category
         ],*/
+=======
+        filter: ['all', ['!has', 'point_count'], ['==', 'direction', true]],
+>>>>>>> upstream/master
         layout: {
           'icon-image': 'direction',
           'icon-size': iconScale,
@@ -234,8 +258,11 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
     [id, selected].forEach((source) => {
       map.getSource(source)?.setData({
         type: 'FeatureCollection',
-        features: positions.filter((it) => devices.hasOwnProperty(it.deviceId))
-          .filter((it) => (source === id ? it.deviceId !== selectedDeviceId : it.deviceId === selectedDeviceId))
+        features: positions
+          .filter((it) => devices.hasOwnProperty(it.deviceId))
+          .filter((it) =>
+            source === id ? it.deviceId !== selectedDeviceId : it.deviceId === selectedDeviceId,
+          )
           .map((position) => ({
             type: 'Feature',
             geometry: {

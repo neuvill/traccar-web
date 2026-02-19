@@ -1,8 +1,15 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 import {
-  IconButton, Tooltip, Avatar, ListItemAvatar, ListItemText, ListItemButton,
-  Typography, Badge,
+  IconButton,
+  Tooltip,
+  Avatar,
+  ListItemAvatar,
+  ListItemText,
+  ListItemButton,
+  Typography,
+  Badge,
+
 } from '@mui/material';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import BatteryChargingFullIcon from '@mui/icons-material/BatteryChargingFull';
@@ -17,6 +24,7 @@ import { devicesActions } from '../store';
 import {
   formatAlarm, formatBoolean, formatPercentage, formatStatus, getStatusColor, formatNumericHours,
   formatSpeed, formatAdaptiveDuration
+
 } from '../common/util/formatter';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import { mapIconKey, mapIcons } from '../map/core/preloadImages';
@@ -28,6 +36,7 @@ import { grey } from '@mui/material/colors';
 
 import GeofencesValue from '../common/components/GeofencesValue';
 import DriverValue from '../common/components/DriverValue';
+import MotionBar from './components/MotionBar';
 
 
 dayjs.extend(relativeTime);
@@ -103,6 +112,9 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
     if (field === 'driverUniqueId') {
       const driverUniqueId = position?.attributes?.driverUniqueId;
       return driverUniqueId ? <DriverValue driverUniqueId={driverUniqueId} /> : null;
+    }
+    if (field === 'motion') {
+      return <MotionBar deviceId={item.id} />;
     }
     return item[field];
   };
@@ -279,7 +291,9 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
               </Tooltip>
             )}
             {position.attributes.hasOwnProperty('ignition') && (
-              <Tooltip title={`${t('positionIgnition')}: ${formatBoolean(position.attributes.ignition, t)}`}>
+              <Tooltip
+                title={`${t('positionIgnition')}: ${formatBoolean(position.attributes.ignition, t)}`}
+              >
                 <IconButton size="small">
                   {position.attributes.ignition ? (
                     <EngineIcon width={20} height={20} className={classes.success} />
@@ -290,28 +304,32 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
               </Tooltip>
             )}
             {position.attributes.hasOwnProperty('batteryLevel') && (
-              <Tooltip title={`${t('positionBatteryLevel')}: ${formatPercentage(position.attributes.batteryLevel)}`}>
+              <Tooltip
+                title={`${t('positionBatteryLevel')}: ${formatPercentage(position.attributes.batteryLevel)}`}
+              >
                 <IconButton size="small">
-                  {(position.attributes.batteryLevel > 70 && (
-                    position.attributes.charge
-                      ? (<BatteryChargingFullIcon fontSize="small" className={classes.success} />)
-                      : (<BatteryFullIcon fontSize="small" className={classes.success} />)
-                  )) || (position.attributes.batteryLevel > 30 && (
-                    position.attributes.charge
-                      ? (<BatteryCharging60Icon fontSize="small" className={classes.warning} />)
-                      : (<Battery60Icon fontSize="small" className={classes.warning} />)
-                  )) || (
+                  {
+                    (position.attributes.batteryLevel > 70 && (
+                      position.attributes.charge
+                        ? (<BatteryChargingFullIcon fontSize="small" className={classes.success} />)
+                        : (<BatteryFullIcon fontSize="small" className={classes.success} />)
+                    )) || (position.attributes.batteryLevel > 30 && (
+                      position.attributes.charge
+                        ? (<BatteryCharging60Icon fontSize="small" className={classes.warning} />)
+                        : (<Battery60Icon fontSize="small" className={classes.warning} />)
+                    )) || (
                       position.attributes.charge
                         ? (<BatteryCharging20Icon fontSize="small" className={classes.error} />)
                         : (<Battery20Icon fontSize="small" className={classes.error} />)
-                    )}
-                </IconButton>
-              </Tooltip>
+                    )
+                  }
+                </IconButton >
+              </Tooltip >
             )}
           </>
         )}
-      </ListItemButton>
-    </div>
+      </ListItemButton >
+    </div >
   );
 };
 

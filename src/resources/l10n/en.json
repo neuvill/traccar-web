@@ -557,6 +557,7 @@
     "notificatorTraccar": "Push Notification",
     "notificatorTelegram": "Telegram",
     "notificatorPushover": "Pushover",
+    "notificatorWhatsapp": "WhatsApp",
     "reportReplay": "Replay",
     "reportCombined": "Combined",
     "reportPositions": "Positions",
