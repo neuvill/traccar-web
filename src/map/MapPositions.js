@@ -38,6 +38,12 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
     return dayjs().diff(dayjs(item.lastUpdate), 'hour', true) > 3;
   }
 
+  /*function getItemCategory(item) {
+
+    return console.log(item.category);
+    ;
+  }*/
+
   const createFeature = (devices, position, selectedPositionId) => {
     const device = devices[position.deviceId];
     let showDirection;
@@ -57,7 +63,8 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
       deviceId: position.deviceId,
       name: device.name,
       fixTime: formatTime(position.fixTime, 'seconds'),
-      category: position ? getLastItemUpdate(device) ? 'still' : mapIconKey(position.attributes.motionStatus) : mapIconKey(device.category), // Map icon depending on device category
+      //category: position ? getLastItemUpdate(device) ? 'still' : mapIconKey(position.attributes.motionStatus) : mapIconKey(device.category), // Map icon depending on device category
+      category: mapIconKey(device.category),
       //color: showStatus ? position.attributes.color || getStatusColor(device.status) : 'neutral',
       color: position ? getLastItemUpdate(device) ? 'neutral' : getIconStatusColor(position.attributes.motionStatus) : 'neutral',
       //Color: 'info',
@@ -125,12 +132,12 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
           'icon-image': '{category}-{color}',
           'icon-size': iconScale,
           'icon-allow-overlap': true,
-          'icon-rotate': [
+          /*'icon-rotate': [
             'case',
             ['==', ['get', 'dynamicDirection'], true],
             ['get', 'rotation'],
             0
-          ],
+          ],*/
 
           'text-field': Replay ? '' : ['get', 'name'],
           'text-allow-overlap': true,
@@ -148,16 +155,16 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
 
         },
       });
-      /*map.addLayer({
+      map.addLayer({
         id: `direction-${source}`,
         type: 'symbol',
         source,
-        filter: [
+        /*filter: [
           'all',
           ['!has', 'point_count'],
           ['==', 'direction', true],
           ['==', 'dynamicDirection', false], // do not show direction for the dynamic category
-        ],
+        ],*/
         layout: {
           'icon-image': 'direction',
           'icon-size': iconScale,
@@ -165,7 +172,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
           'icon-rotate': ['get', 'rotation'],
           'icon-rotation-alignment': 'map',
         },
-      });*/
+      });
 
       map.on('mouseenter', source, onMouseEnter);
       map.on('mouseleave', source, onMouseLeave);

@@ -2,7 +2,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 import {
   IconButton, Tooltip, Avatar, ListItemAvatar, ListItemText, ListItemButton,
-  Typography,
+  Typography, Badge,
 } from '@mui/material';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import BatteryChargingFullIcon from '@mui/icons-material/BatteryChargingFull';
@@ -65,6 +65,16 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
   const dispatch = useDispatch();
   const t = useTranslation();
 
+
+
+  const statusColors = {
+    moving: '#27cb46',     // green
+    idling: '#00b5e2',     // orange
+    parked: '#ed2736',     // red
+    still: '#ffcc00',      // grey (no update > 3h)
+    default: '#9e9e9e',
+  };
+
   const admin = useAdministrator();
   const selectedDeviceId = useSelector((state) => state.devices.selectedId);
 
@@ -75,7 +85,10 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
   const deviceSecondary = useAttributePreference('deviceSecondary', '');
 
   //const dynamicStatus = (position && position.attributes.motionStatus) ? position.attributes.motionStatus : 'default';
-
+  const isDynamic =
+    !item.category ||
+    item.category === 'default' ||
+    item.category === 'dynamic';
   const dynamicStatus = getLastItemUpdate(item)
     ? 'still'
     : (position && position.attributes.motionStatus)
@@ -151,6 +164,26 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
     return dayjs().diff(dayjs(item.lastUpdate), 'hour', true) > 3;
   }
 
+
+
+  function getItemCategory(item) {
+    const category = item.category;
+
+    if (!category || category === 'default' || category === 'dynamic') {
+      return mapIconKey(dynamicStatus); isDynamic = true;
+    }
+
+    return mapIconKey(category);
+  }
+
+  const badgeColor = statusColors[dynamicStatus] || statusColors.default;
+
+  const resolvedCategory = isDynamic
+    ? dynamicStatus
+    : item.category;
+
+  const iconKey = mapIconKey(resolvedCategory);
+
   return (
     <div style={{ ...style, borderBottom: '1px solid #e0e0e0' }}>
       <ListItemButton
@@ -162,13 +195,51 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
       >
         <ListItemAvatar>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            {!isDynamic ? (
+              <Badge
+                overlap="circular"
+                anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+                variant="dot"
+                sx={{
+                  '& .MuiBadge-badge': {
+                    backgroundColor: badgeColor,
+                    color: badgeColor,
+                    width: 13,
+                    height: 13,
+                    borderRadius: '50%',
+                    border: '2px solid white',
+                  },
+                }}
+              >
+                <Avatar
+                  style={{
+                    backgroundColor: grey[200],
+                    borderColor: grey[400],
+                    borderWidth: 2,
+                    borderStyle: 'solid',
+                  }}
+                >
+                  <img
+                    className={classes.icon}
+                    src={mapIcons[iconKey]}
+                    alt=""
+                  />
+                </Avatar>
+              </Badge>
+            ) : (
+
+              <>
+
+                <Avatar
+                  style={{ backgroundColor: grey[200], borderColor: grey[400], borderWidth: 2, borderStyle: 'solid' }}>
+                  <img className={classes.icon} src={mapIcons[iconKey]} alt="" />
+
+                </Avatar>
 
 
+              </>
+            )}
 
-            <Avatar style={{ backgroundColor: grey[200], borderColor: grey[400], borderWidth: 2, borderStyle: 'solid' }}>
-              <img className={classes.icon} src={mapIcons[mapIconKey(dynamicStatus)]} alt="" />
-
-            </Avatar>
             <Typography
               variant="caption"
               style={{
