@@ -32,11 +32,6 @@ const SearchHeader = ({ keyword, setKeyword }) => {
         onChange={(e) => setKeyword(e.target.value)}
       />
     </div>
-<<<<<<< HEAD
-=======
-  ) : (
-    ''
->>>>>>> upstream/master
   );
 };
 
