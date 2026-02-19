@@ -1,7 +1,4 @@
-import {
-  Route, Routes,
-  useSearchParams,
-} from 'react-router-dom';
+import { Route, Routes, useSearchParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import MainPage from './main/MainPage';
 import CombinedReportPage from './reports/CombinedReportPage';
@@ -17,6 +14,7 @@ import GroupPage from './settings/GroupPage';
 import PositionPage from './other/PositionPage';
 import NetworkPage from './other/NetworkPage';
 import EventReportPage from './reports/EventReportPage';
+import GeofenceReportPage from './reports/GeofenceReportPage';
 import ReplayPage from './other/ReplayPage';
 import TripReportPage from './reports/TripReportPage';
 import StopReportPage from './reports/StopReportPage';
@@ -68,7 +66,9 @@ const Navigation = () => {
 
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const hasQueryParams = ['locale', 'token', 'uniqueId', 'openid'].some(key => searchParams.has(key));
+  const hasQueryParams = ['locale', 'token', 'uniqueId', 'openid'].some((key) =>
+    searchParams.has(key),
+  );
 
   useEffectAsync(async () => {
     if (!hasQueryParams) {
@@ -108,7 +108,7 @@ const Navigation = () => {
   }, [hasQueryParams, searchParams, setSearchParams]);
 
   if (hasQueryParams) {
-    return (<Loader />);
+    return <Loader />;
   }
   return (
     <Routes>
@@ -172,6 +172,7 @@ const Navigation = () => {
           <Route path="combined" element={<CombinedReportPage />} />
           <Route path="chart" element={<ChartReportPage />} />
           <Route path="events" element={<EventReportPage />} />
+          <Route path="geofences" element={<GeofenceReportPage />} />
           <Route path="route" element={<PositionsReportPage />} />
           <Route path="stops" element={<StopReportPage />} />
           <Route path="summary" element={<SummaryReportPage />} />
