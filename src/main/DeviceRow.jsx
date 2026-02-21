@@ -178,7 +178,7 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
 
 
 
-  function getItemCategory(item) {
+  /*function getItemCategory(item) {
     const category = item.category;
 
     if (!category || category === 'default' || category === 'dynamic') {
@@ -186,7 +186,7 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
     }
 
     return mapIconKey(category);
-  }
+  }*/
 
   const badgeColor = statusColors[dynamicStatus] || statusColors.default;
 

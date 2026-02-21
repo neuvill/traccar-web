@@ -66,16 +66,12 @@ const LoginLayout = ({ children }) => {
     <main className={classes.root}>
       <div className={classes.sidebar}>
         {!useMediaQuery(theme.breakpoints.down('lg')) && (
-<<<<<<< HEAD
           <div className={classes.logoContainer}>
             <LogoImage color={theme.palette.secondary.contrastText} />
             <div className={classes.logoText}>
               HM GLOBAL TECHNOLOGIES
             </div>
           </div>
-=======
-          <LogoImage color={theme.palette.secondary.contrastText} />
->>>>>>> upstream/master
         )}
       </div>
       <Paper className={classes.paper}>

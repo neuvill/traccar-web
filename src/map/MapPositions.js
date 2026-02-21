@@ -11,18 +11,7 @@ import { findFonts } from './core/mapUtil';
 import dayjs from 'dayjs';
 //import { Color } from 'maplibre-gl';
 
-<<<<<<< HEAD
 const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, selectedPosition, titleField, isReplay }) => {
-=======
-const MapPositions = ({
-  positions,
-  onMapClick,
-  onMarkerClick,
-  showStatus,
-  selectedPosition,
-  titleField,
-}) => {
->>>>>>> upstream/master
   const id = useId();
   const clusters = `${id}-clusters`;
   const selected = `${id}-selected`;
@@ -179,16 +168,12 @@ const MapPositions = ({
         id: `direction-${source}`,
         type: 'symbol',
         source,
-<<<<<<< HEAD
         /*filter: [
           'all',
           ['!has', 'point_count'],
           ['==', 'direction', true],
           ['==', 'dynamicDirection', false], // do not show direction for the dynamic category
         ],*/
-=======
-        filter: ['all', ['!has', 'point_count'], ['==', 'direction', true]],
->>>>>>> upstream/master
         layout: {
           'icon-image': 'direction',
           'icon-size': iconScale,

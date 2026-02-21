@@ -150,19 +150,10 @@ const PageLayout = ({ menu, breadcrumbs, children }) => {
       {!desktop && (
         <AppBar className={classes.mobileToolbar} position="static" color="inherit">
           <Toolbar>
-<<<<<<< HEAD
             <IconButton color="inherit" edge="start" sx={{ mr: 2 }} onClick={() => navigate('/')}>
               <ArrowBackIcon />
             </IconButton>
             <IconButton color="inherit" edge="start" sx={{ mr: 2 }} onClick={() => setOpenDrawer(true)}>
-=======
-            <IconButton
-              color="inherit"
-              edge="start"
-              sx={{ mr: 2 }}
-              onClick={() => setOpenDrawer(true)}
-            >
->>>>>>> upstream/master
               <MenuIcon />
             </IconButton>
             <PageTitle breadcrumbs={breadcrumbs} />
