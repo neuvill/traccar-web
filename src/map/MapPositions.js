@@ -46,7 +46,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
 
   const createFeature = (devices, position, selectedPositionId) => {
     const device = devices[position.deviceId];
-    let showDirection;
+    /*let showDirection;
     switch (directionType) {
       case 'none':
         showDirection = false;
@@ -57,7 +57,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
       default:
         showDirection = selectedPositionId === position.id && position.course > 0;
         break;
-    }
+    }*/
     return {
       id: position.id,
       deviceId: position.deviceId,
@@ -69,7 +69,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
       color: position ? getLastItemUpdate(device) ? 'neutral' : getIconStatusColor(position.attributes.motionStatus) : 'neutral',
       //Color: 'info',
       rotation: position.course,
-      direction: showDirection,
+      //direction: showDirection,
       dynamicDirection: (position.attributes.motionStatus === 'moving'), //show direction for the moving icone and hide the direction layer
     };
   };
@@ -168,12 +168,12 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
         id: `direction-${source}`,
         type: 'symbol',
         source,
-        /*filter: [
+        filter: [
           'all',
           ['!has', 'point_count'],
-          ['==', 'direction', true],
-          ['==', 'dynamicDirection', false], // do not show direction for the dynamic category
-        ],*/
+          //['==', 'direction', true],
+          ['==', 'dynamicDirection', true], // do not show direction for the dynamic category
+        ],
         layout: {
           'icon-image': 'direction',
           'icon-size': iconScale,
@@ -193,15 +193,15 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
       source: id,
       filter: ['has', 'point_count'],
       layout: {
-        'icon-image': 'background',
-        'icon-size': iconScale,
+        'icon-image': 'backclust',
+        'icon-size': iconScale * 0.65,
         'text-field': '{point_count_abbreviated}',
         'text-font': findFonts(map),
-        'text-size': 14,
+        'text-size': 16,
       },
       paint: {
-        'text-color': 'blue',
-        'text-halo-color': 'rgba(0, 0, 0, 0.3)',
+        'text-color': '#ffffff',
+        'text-halo-color': 'rgba(255, 255, 255, 0.3)',
         'text-halo-width': 1,
       },
     });

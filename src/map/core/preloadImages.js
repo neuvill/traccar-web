@@ -4,6 +4,7 @@ import { loadImage, prepareIcon } from './mapUtil';
 
 import directionSvg from '../../resources/images/direction.svg';
 import backgroundSvg from '../../resources/images/background.svg';
+import backclustSvg from '../../resources/images/backclust.svg';
 import animalSvg from '../../resources/images/icon/animal.svg';
 import bicycleSvg from '../../resources/images/icon/bicycle.svg';
 import boatSvg from '../../resources/images/icon/boat.svg';
@@ -86,6 +87,8 @@ const theme = createTheme({
 
 export default async () => {
   const background = await loadImage(backgroundSvg);
+  const backclust = await loadImage(backclustSvg);
+  mapImages.backclust = prepareIcon(backclust);
   mapImages.background = await prepareIcon(background);
   mapImages.direction = await prepareIcon(await loadImage(directionSvg));
   await Promise.all(

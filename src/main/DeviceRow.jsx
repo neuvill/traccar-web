@@ -26,6 +26,8 @@ import {
   formatSpeed, formatAdaptiveDuration
 
 } from '../common/util/formatter';
+import SpeedIcon from '@mui/icons-material/Speed';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import { mapIconKey, mapIcons } from '../map/core/preloadImages';
 import { useAdministrator } from '../common/util/permissions';
@@ -128,7 +130,20 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
     getLastItemUpdate(item);
     if (item.status === 'online' || !item.lastUpdate) {
       if (position && position.attributes.motionStatus === 'moving') {
-        status = formatSpeed(position.speed, 'kmh', t);
+        status = (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              verticalAlign: 'middle',
+              horizontalAlign: 'center',
+              gap: 6,
+            }}
+          >
+            <SpeedIcon sx={{ fontSize: 16, marginTop: 0.25 }} />
+            {formatSpeed(position.speed, 'kmh', t)}
+          </span>
+        );
         isSpeed = true;
       } else {
         status = formatStatus(item.status, t);
@@ -140,7 +155,19 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
     }
     return (
       <>
-        {(position && position.address) ? position.address.slice(0, 35) : ''}
+        <span
+          style={{
+            fontWeight: 400,
+            display: 'inline-flex',
+            alignItems: 'center',
+            verticalAlign: 'middle',
+            horizontalAlign: 'center',
+            gap: 6,
+          }}
+        >
+          <LocationOnOutlinedIcon sx={{ fontSize: 16, marginTop: 0.25 }} />
+          {(position && position.address) ? position.address.slice(0, 35) : ''}
+        </span>
         <br />
         <span
           className={classes[getStatusColor(item.status)]}
@@ -194,7 +221,8 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
     ? dynamicStatus
     : item.category;
 
-  const iconKey = mapIconKey(resolvedCategory);
+  //const iconKey = mapIconKey(resolvedCategory);
+  const iconKey = mapIconKey(item.category); // keep the original category for the icon and use the dynamic status only for the badge color
 
   return (
     <div style={{ ...style, borderBottom: '1px solid #e0e0e0' }}>
@@ -207,7 +235,7 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
       >
         <ListItemAvatar>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            {!isDynamic ? (
+            {/*!isDynamic ? (
               <Badge
                 overlap="circular"
                 anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
@@ -250,7 +278,38 @@ const DeviceRow = ({ devices, setDeviceSheetOpen, index, style }) => {
 
 
               </>
-            )}
+            )*/}
+            <Badge
+              overlap="circular"
+              anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+              variant="dot"
+              sx={{
+                '& .MuiBadge-badge': {
+                  backgroundColor: badgeColor,
+                  color: badgeColor,
+                  width: 13,
+                  height: 13,
+                  borderRadius: '50%',
+                  border: '2px solid white',
+                },
+              }}
+            >
+              <Avatar
+                style={{
+                  backgroundColor: grey[50],
+                  borderColor: grey[600],
+                  borderWidth: 2,
+                  borderStyle: 'solid',
+                  borderRadius: 16,
+                }}
+              >
+                <img
+                  className={classes.icon}
+                  src={mapIcons[iconKey]}
+                  alt=""
+                />
+              </Avatar>
+            </Badge>
 
             <Typography
               variant="caption"
