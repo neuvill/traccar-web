@@ -28,7 +28,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
   const selectedDeviceId = useSelector((state) => state.devices.selectedId);
 
   const mapCluster = useAttributePreference('mapCluster', true);
-  const directionType = useAttributePreference('mapDirection', 'selected');
+  //const directionType = useAttributePreference('mapDirection', 'selected');
 
   function getLastItemUpdate(item) {
     if (!item.lastUpdate) {
@@ -58,6 +58,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
         showDirection = selectedPositionId === position.id && position.course > 0;
         break;
     }*/
+    const isSelected = position.deviceId === selectedDeviceId;
     return {
       id: position.id,
       deviceId: position.deviceId,
@@ -71,6 +72,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
       rotation: position.course,
       //direction: showDirection,
       dynamicDirection: (position.attributes.motionStatus === 'moving'), //show direction for the moving icone and hide the direction layer
+      isSelected,
     };
   };
 
@@ -139,7 +141,12 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
         filter: ['!has', 'point_count'],
         layout: {
           'icon-image': '{category}-{color}',
-          'icon-size': iconScale,
+          'icon-size': [
+            'case',
+            ['==', ['get', 'isSelected'], true],
+            iconScale * 1.35, // bigger when selected
+            iconScale
+          ],
           'icon-allow-overlap': true,
           /*'icon-rotate': [
             'case',
@@ -151,6 +158,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
           'text-field': Replay ? '' : ['get', 'name'],
           'text-allow-overlap': true,
           'text-anchor': 'bottom',
+
           'text-offset': [0, -2 * iconScale],
           'text-font': findFonts(map),
           'text-size': 15,
@@ -158,8 +166,8 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
         },
         paint: {
 
-          'text-halo-width': 10,
-          'text-halo-color': 'rgba(110, 110, 110, 0.9)',
+          'text-halo-width': 15,
+          'text-halo-color': 'rgba(75, 105, 134, 0.9)',
           'text-color': 'white',
 
         },
@@ -176,7 +184,12 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
         ],
         layout: {
           'icon-image': 'direction',
-          'icon-size': iconScale,
+          'icon-size': [
+            'case',
+            ['==', ['get', 'isSelected'], true],
+            iconScale * 1.5, // bigger when selected
+            iconScale * 1.15
+          ],
           'icon-allow-overlap': true,
           'icon-rotate': ['get', 'rotation'],
           'icon-rotation-alignment': 'map',
@@ -195,6 +208,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
       layout: {
         'icon-image': 'backclust',
         'icon-size': iconScale * 0.65,
+        //'icon-allow-overlap': false,
         'text-field': '{point_count_abbreviated}',
         'text-font': findFonts(map),
         'text-size': 16,
@@ -258,7 +272,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
           })),
       });
     });
-  }, [mapCluster, clusters, onMarkerClick, onClusterClick, devices, positions, selectedPosition, isReplay]);
+  }, [mapCluster, clusters, onMarkerClick, onClusterClick, devices, positions, selectedPosition, isReplay, selectedDeviceId]);
 
   return null;
 };
