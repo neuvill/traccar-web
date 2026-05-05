@@ -1,21 +1,58 @@
-import { useId, useCallback, useEffect } from 'react';
+import { useId, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { map } from './core/MapView';
-import { formatTime, getStatusColor, getIconStatusColor } from '../common/util/formatter';
+import { formatTime, getIconStatusColor } from '../common/util/formatter';
 import { mapIconKey } from './core/preloadImages';
 import { useAttributePreference } from '../common/util/preferences';
 import { useCatchCallback } from '../reactHelper';
 import { findFonts } from './core/mapUtil';
 import dayjs from 'dayjs';
-//import { Color } from 'maplibre-gl';
 
-const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, selectedPosition, titleField, isReplay }) => {
+const isDeviceStale = (device) => {
+  if (!device.lastUpdate) {
+    return false;
+  }
+
+  return dayjs().diff(dayjs(device.lastUpdate), 'hour', true) > 3;
+};
+
+const formatFeatureTitle = (position, device, titleField) => {
+  if (!titleField) {
+    return device.name;
+  }
+
+  const value = position[titleField];
+  if (!value) {
+    return device.name;
+  }
+
+  return titleField === 'fixTime' ? formatTime(value, 'seconds') : value;
+};
+
+const getFeatureCacheKey = (position, device, selectedDeviceId, titleField) =>
+  [
+    position.id,
+    position.latitude,
+    position.longitude,
+    position.course,
+    position.fixTime,
+    position.attributes?.motionStatus,
+    selectedDeviceId,
+    device.name,
+    device.category,
+    device.lastUpdate,
+    titleField,
+    titleField ? position[titleField] : null,
+  ].join('|');
+
+const MapPositions = ({ positions, onMapClick, onMarkerClick, titleField, isReplay }) => {
   const id = useId();
   const clusters = `${id}-clusters`;
   const selected = `${id}-selected`;
   const Replay = isReplay || false;
+  const prevPositionsRef = useRef({});
   //console.log('positions', positions[0].deviceId);
 
   const theme = useTheme();
@@ -30,54 +67,39 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
   const mapCluster = useAttributePreference('mapCluster', true);
   //const directionType = useAttributePreference('mapDirection', 'selected');
 
-  function getLastItemUpdate(item) {
-    if (!item.lastUpdate) {
-      return false;
-    }
+  const deviceMap = devices;
 
-    return dayjs().diff(dayjs(item.lastUpdate), 'hour', true) > 3;
-  }
+  const createFeature = useCallback(
+    (position) => {
+      const device = deviceMap[position.deviceId];
+      if (!device) return null;
 
-  /*function getItemCategory(item) {
+      const isSelected = position.deviceId === selectedDeviceId;
 
-    return console.log(item.category);
-    ;
-  }*/
+      return {
+        id: position.id,
+        deviceId: position.deviceId,
+        name: formatFeatureTitle(position, device, titleField),
+        fixTime: formatTime(position.fixTime, 'seconds'),
+        category: mapIconKey(device.category),
+        color: isDeviceStale(device)
+          ? 'neutral'
+          : getIconStatusColor(position?.attributes?.motionStatus),
+        rotation: position.course,
+        dynamicDirection: position?.attributes?.motionStatus === 'moving',
+        isSelected,
+      };
+    },
+    [deviceMap, selectedDeviceId, titleField],
+  );
 
-  const createFeature = (devices, position, selectedPositionId) => {
-    const device = devices[position.deviceId];
-    /*let showDirection;
-    switch (directionType) {
-      case 'none':
-        showDirection = false;
-        break;
-      case 'all':
-        showDirection = position.course > 0;
-        break;
-      default:
-        showDirection = selectedPositionId === position.id && position.course > 0;
-        break;
-    }*/
-    const isSelected = position.deviceId === selectedDeviceId;
-    return {
-      id: position.id,
-      deviceId: position.deviceId,
-      name: device.name,
-      fixTime: formatTime(position.fixTime, 'seconds'),
-      //category: position ? getLastItemUpdate(device) ? 'still' : mapIconKey(position.attributes.motionStatus) : mapIconKey(device.category), // Map icon depending on device category
-      category: mapIconKey(device.category),
-      //color: showStatus ? position.attributes.color || getStatusColor(device.status) : 'neutral',
-      color: position ? getLastItemUpdate(device) ? 'neutral' : getIconStatusColor(position.attributes.motionStatus) : 'neutral',
-      //Color: 'info',
-      rotation: position.course,
-      //direction: showDirection,
-      dynamicDirection: (position.attributes.motionStatus === 'moving'), //show direction for the moving icone and hide the direction layer
-      isSelected,
-    };
-  };
+  const onMouseEnter = useCallback(() => {
+    map.getCanvas().style.cursor = 'pointer';
+  }, []);
 
-  const onMouseEnter = () => (map.getCanvas().style.cursor = 'pointer');
-  const onMouseLeave = () => (map.getCanvas().style.cursor = '');
+  const onMouseLeave = useCallback(() => {
+    map.getCanvas().style.cursor = '';
+  }, []);
 
   const onMapClickCallback = useCallback(
     (event) => {
@@ -145,7 +167,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
             'case',
             ['==', ['get', 'isSelected'], true],
             iconScale * 1.35, // bigger when selected
-            iconScale
+            iconScale,
           ],
           'icon-allow-overlap': true,
           /*'icon-rotate': [
@@ -165,11 +187,9 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
           'symbol-sort-key': ['get', 'id'],
         },
         paint: {
-
           'text-halo-width': 15,
           'text-halo-color': 'rgba(75, 105, 134, 0.9)',
           'text-color': 'white',
-
         },
       });
       map.addLayer({
@@ -188,7 +208,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
             'case',
             ['==', ['get', 'isSelected'], true],
             iconScale * 1.5, // bigger when selected
-            iconScale * 1.15
+            iconScale * 1.15,
           ],
           'icon-allow-overlap': true,
           'icon-rotate': ['get', 'rotation'],
@@ -251,28 +271,95 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, showStatus, select
         }
       });
     };
-  }, [mapCluster, clusters, onMarkerClickCallback, onClusterClick]);
+  }, [
+    Replay,
+    clusters,
+    iconScale,
+    id,
+    mapCluster,
+    onClusterClick,
+    onMapClickCallback,
+    onMarkerClickCallback,
+    onMouseEnter,
+    onMouseLeave,
+    selected,
+  ]);
 
   useEffect(() => {
-    [id, selected].forEach((source) => {
-      map.getSource(source)?.setData({
-        type: 'FeatureCollection',
-        features: positions
-          .filter((it) => devices.hasOwnProperty(it.deviceId))
-          .filter((it) =>
-            source === id ? it.deviceId !== selectedDeviceId : it.deviceId === selectedDeviceId,
-          )
-          .map((position) => ({
-            type: 'Feature',
-            geometry: {
-              type: 'Point',
-              coordinates: [position.longitude, position.latitude],
-            },
-            properties: createFeature(devices, position, selectedPosition && selectedPosition.id),
-          })),
-      });
+    const sourceMain = map.getSource(id);
+    const sourceSelected = map.getSource(selected);
+
+    if (!sourceMain || !sourceSelected) return;
+
+    const prev = prevPositionsRef.current;
+    const next = {};
+
+    const mainFeatures = [];
+    const selectedFeatures = [];
+
+    for (const position of positions) {
+      const device = deviceMap[position.deviceId];
+      if (!device) continue;
+
+      const prevPos = prev[position.deviceId];
+      const cacheKey = getFeatureCacheKey(position, device, selectedDeviceId, titleField);
+      const changed = prevPos?.cacheKey !== cacheKey;
+
+      const properties = changed ? createFeature(position) : prevPos?.properties;
+
+      if (!properties) continue;
+
+      const feature = {
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [position.longitude, position.latitude],
+        },
+        properties,
+      };
+
+      if (position.deviceId === selectedDeviceId) {
+        selectedFeatures.push(feature);
+      } else {
+        mainFeatures.push(feature);
+      }
+
+      next[position.deviceId] = {
+        ...position,
+        cacheKey,
+        properties,
+      };
+    }
+
+    sourceMain.setData({
+      type: 'FeatureCollection',
+      features: mainFeatures,
     });
-  }, [mapCluster, clusters, onMarkerClick, onClusterClick, devices, positions, selectedPosition, isReplay, selectedDeviceId]);
+
+    sourceSelected.setData({
+      type: 'FeatureCollection',
+      features: selectedFeatures,
+    });
+
+    prevPositionsRef.current = next;
+  }, [
+    Replay,
+    clusters,
+    createFeature,
+    deviceMap,
+    iconScale,
+    id,
+    mapCluster,
+    onClusterClick,
+    onMapClickCallback,
+    onMarkerClickCallback,
+    onMouseEnter,
+    onMouseLeave,
+    positions,
+    selected,
+    selectedDeviceId,
+    titleField,
+  ]);
 
   return null;
 };

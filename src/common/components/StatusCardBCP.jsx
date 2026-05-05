@@ -20,16 +20,14 @@ import {
   Tooltip,
 } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
-import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
 import CloseIcon from '@mui/icons-material/Close';
+import RouteIcon from '@mui/icons-material/Route';
+import SendIcon from '@mui/icons-material/Send';
 import PublishIcon from '@mui/icons-material/Publish';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import HistoryIcon from '@mui/icons-material/History';
-import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import PendingIcon from '@mui/icons-material/Pending';
-import RouteIcon from '@mui/icons-material/Route';
-import SpeedIcon from '@mui/icons-material/Speed';
-import dayjs from 'dayjs';
 
 import { useTranslation } from './LocalizationProvider';
 import RemoveDialog from './RemoveDialog';
@@ -45,10 +43,6 @@ const useStyles = makeStyles()((theme, { desktopPadding }) => ({
   card: {
     pointerEvents: 'auto',
     width: theme.dimensions.popupMaxWidth,
-  },
-  statusLine: {
-    height: 4,
-    width: '100%',
   },
   media: {
     height: theme.dimensions.popupImageHeight,
@@ -89,17 +83,6 @@ const useStyles = makeStyles()((theme, { desktopPadding }) => ({
   cell: {
     borderBottom: 'none',
   },
-  iconCell: {
-    width: theme.spacing(4),
-    textAlign: 'center',
-    color: theme.palette.text.secondary,
-  },
-  positionIcon: {
-    fontSize: 20,
-    stroke: 'currentColor',
-    strokeWidth: 0.6,
-    verticalAlign: 'middle',
-  },
   actions: {
     justifyContent: 'space-between',
   },
@@ -120,58 +103,13 @@ const useStyles = makeStyles()((theme, { desktopPadding }) => ({
   },
 }));
 
-const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);
-
-const STALE_HOURS = 3;
-
-const STATUS_COLORS = {
-  moving: '#27cb46',
-  idling: '#00b5e2',
-  parked: '#ed2736',
-  still: '#ffcc00',
-  default: '#9e9e9e',
-};
-
-const getDeviceStatusColor = (device, position) => {
-  const isStale = device?.lastUpdate
-    ? dayjs().diff(dayjs(device.lastUpdate), 'hour', true) > STALE_HOURS
-    : false;
-  const status = isStale ? 'still' : position?.attributes?.motionStatus || 'default';
-  return STATUS_COLORS[status] || STATUS_COLORS.default;
-};
-
-const getPositionIcon = (key, label, classes) => {
-  const iconProps = {
-    className: classes.positionIcon,
-    fontSize: 'small',
-  };
-  const icons = {
-    fixTime: <AccessTimeRoundedIcon {...iconProps} />,
-    deviceTime: <AccessTimeRoundedIcon {...iconProps} />,
-    serverTime: <AccessTimeRoundedIcon {...iconProps} />,
-    address: <LocationOnOutlinedIcon {...iconProps} />,
-    speed: <SpeedIcon {...iconProps} />,
-    totalDistance: <RouteIcon {...iconProps} />,
-  };
-
-  if (!icons[key]) {
-    return null;
-  }
-
-  return (
-    <Tooltip title={label}>
-      <span aria-label={label}>{icons[key]}</span>
-    </Tooltip>
-  );
-};
-
-const StatusRow = ({ name, icon, content }) => {
+const StatusRow = ({ name, content }) => {
   const { classes } = useStyles({ desktopPadding: 0 });
 
   return (
     <TableRow>
-      <TableCell className={`${classes.cell} ${icon ? classes.iconCell : ''}`}>
-        {icon || <Typography variant="body2">{name}</Typography>}
+      <TableCell className={classes.cell}>
+        <Typography variant="body2">{name}</Typography>
       </TableCell>
       <TableCell className={classes.cell}>
         <Typography variant="body2" color="textSecondary">
@@ -196,7 +134,6 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
   const device = useSelector((state) => state.devices.items[deviceId]);
 
   const deviceImage = device?.attributes?.deviceImage;
-  const statusColor = getDeviceStatusColor(device, position);
 
   const positionAttributes = usePositionAttributes(t);
   const positionItems = useAttributePreference(
@@ -249,7 +186,6 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
             style={{ position: 'relative' }}
           >
             <Card elevation={3} className={classes.card}>
-              <div className={classes.statusLine} style={{ backgroundColor: statusColor }} />
               {deviceImage ? (
                 <CardMedia
                   className={`${classes.media} draggable-header`}
@@ -275,24 +211,23 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                     <TableBody>
                       {positionItems
                         .split(',')
-                        .filter((key) => hasOwn(position, key) || hasOwn(position.attributes, key))
-                        .map((key) => {
-                          const name = positionAttributes[key]?.name || key;
-                          return (
-                            <StatusRow
-                              key={key}
-                              name={name}
-                              icon={getPositionIcon(key, name, classes)}
-                              content={
-                                <PositionValue
-                                  position={position}
-                                  property={hasOwn(position, key) ? key : null}
-                                  attribute={hasOwn(position, key) ? null : key}
-                                />
-                              }
-                            />
-                          );
-                        })}
+                        .filter(
+                          (key) =>
+                            position.hasOwnProperty(key) || position.attributes.hasOwnProperty(key),
+                        )
+                        .map((key) => (
+                          <StatusRow
+                            key={key}
+                            name={positionAttributes[key]?.name || key}
+                            content={
+                              <PositionValue
+                                position={position}
+                                property={position.hasOwnProperty(key) ? key : null}
+                                attribute={position.hasOwnProperty(key) ? null : key}
+                              />
+                            }
+                          />
+                        ))}
                     </TableBody>
                     <TableFooter>
                       <TableRow>
@@ -318,11 +253,17 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                     <PendingIcon />
                   </IconButton>
                 </Tooltip>
+                {/*<Tooltip title={t('reportReplay')}>
+                  <IconButton
+                    onClick={() => navigate(`/replay?deviceId=${deviceId}`)}
+                    disabled={disableActions || !position}
+                  >
+                    <RouteIcon />
+                  </IconButton>
+                </Tooltip>*/}
                 <Tooltip title={t('reportReplay')}>
                   <IconButton
-                    onClick={() =>
-                      navigate(`/qreplay?deviceId=${deviceId}`, { state: { isQuick: true } })
-                    }
+                    onClick={() => navigate(`/qreplay?deviceId=${deviceId}`, { state: { isQuick: true } })}
                     disabled={disableActions || !position}
                   >
                     <HistoryIcon />
@@ -344,6 +285,15 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                     <EditIcon />
                   </IconButton>
                 </Tooltip>
+                {/*<Tooltip title={t('sharedRemove')}>
+                  <IconButton
+                    color="error"
+                    onClick={() => setRemoving(true)}
+                    disabled={disableActions || deviceReadonly}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Tooltip>*/}
               </CardActions>
             </Card>
           </Rnd>

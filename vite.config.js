@@ -9,6 +9,11 @@ export default defineConfig(() => ({
     port: 3000,
     proxy: {
       '/api/socket': 'ws://localhost:8082',
+      '/api/ai': {
+        target: 'https://ai.hmglobtech.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/ai/, ''),
+      },
       '/api': 'http://localhost:8082',
     },
   },
@@ -19,6 +24,7 @@ export default defineConfig(() => ({
     svgr(),
     react(),
     VitePWA({
+      registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png'],
       workbox: {
         navigateFallbackDenylist: [/^\/api/],

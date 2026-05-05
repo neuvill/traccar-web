@@ -2,6 +2,14 @@ import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import dayjs from 'dayjs';
 
+const deviceNameCollator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: 'base',
+});
+
+const sortByName = (device1, device2) =>
+  deviceNameCollator.compare(device1.name || '', device2.name || '');
+
 export default (
   keyword,
   filter,
@@ -13,9 +21,12 @@ export default (
 ) => {
   const groups = useSelector((state) => state.groups.items);
   const devices = useSelector((state) => state.devices.items);
-  //const positions = useSelector((state) => state.session.positions);
 
   useEffect(() => {
+    const filterStatuses = filter?.statuses || [];
+    const filterGroups = filter?.groups || [];
+    const filterMotionStatuses = filter?.motionStatuses || [];
+
     const deviceGroups = (device) => {
       const groupIds = [];
       let { groupId } = device;
@@ -27,20 +38,18 @@ export default (
     };
 
     const filtered = Object.values(devices)
-      .filter((device) => !filter.statuses.length || filter.statuses.includes(device.status))
+      .filter((device) => !filterStatuses.length || filterStatuses.includes(device.status))
       .filter(
         (device) =>
-          !filter.groups.length || deviceGroups(device).some((id) => filter.groups.includes(id)),
+          !filterGroups.length || deviceGroups(device).some((id) => filterGroups.includes(id)),
       )
       .filter((device) => {
-        if (!filter.motionStatuses.length) return true;
+        if (!filterMotionStatuses.length) return true;
 
         const position = positions?.[device.id];
         if (!position) return false;
 
-        return filter.motionStatuses.includes(
-          position.attributes?.motionStatus
-        );
+        return filterMotionStatuses.includes(position.attributes?.motionStatus);
       })
 
       .filter((device) => {
@@ -51,7 +60,7 @@ export default (
       });
     switch (filterSort) {
       case 'name':
-        filtered.sort((device1, device2) => device1.name.localeCompare(device2.name));
+        filtered.sort(sortByName);
         break;
       case 'lastUpdate':
         filtered.sort((device1, device2) => {
@@ -61,13 +70,14 @@ export default (
         });
         break;
       default:
+        filtered.sort(sortByName);
         break;
     }
     setFilteredDevices(filtered);
     setFilteredPositions(
       filterMap
-        ? filtered.map((device) => positions[device.id]).filter(Boolean)
-        : Object.values(positions),
+        ? filtered.map((device) => positions?.[device.id]).filter(Boolean)
+        : Object.values(positions || {}),
     );
   }, [
     keyword,

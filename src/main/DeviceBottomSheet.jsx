@@ -1,67 +1,65 @@
-import React from 'react';
+import Box from '@mui/material/Box';
 import SwipeableDrawer from '@mui/material/SwipeableDrawer';
 import DeviceList from './DeviceList';
-import { useState } from 'react';
-import useFilter from './useFilter';
 import MainToolbar from './MainToolbar';
-import usePersistedState from '../common/util/usePersistedState';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import { useDispatch, useSelector } from 'react-redux';
-import { useTheme } from '@mui/material/styles';
 
-const DeviceBottomSheet = ({ open, onOpen, onClose, devices, setDeviceSheetOpen, filter, setFilter, filterSort, setFilterSort, filterMap, setFilterMap, keyword, setKeyword, onResetFilters }) => {
-    //console.log('DeviceBottomSheet devices:', devices);
-    const theme = useTheme();
-    const desktop = useMediaQuery(theme.breakpoints.up('md'));
-    //const [keyword, setKeyword] = useState('');
-    /*const [filter, setFilter] = usePersistedState('filter', {
-        statuses: [],
-        groups: [],
-    });*/
-    //const [filterSort, setFilterSort] = usePersistedState('filterSort', '');
-    //const [filterMap, setFilterMap] = usePersistedState('filterMap', false);
-    //const positions = useSelector((state) => state.session.positions);
-    //const [filteredDevices, setFilteredDevices] = useState([]);
-    //const [filteredPositions, setFilteredPositions] = useState([]);
-    const [devicesOpen, setDevicesOpen] = useState(desktop);
+const noop = () => { };
 
-    //useFilter(keyword, filter, filterSort, filterMap, positions, setFilteredDevices, setFilteredPositions);
-
-
-    //const [deviceSheetOpen, setDeviceSheetOpen] = useState(false);
-    //console.log(onOpen);
-    return (
-        <SwipeableDrawer
-            anchor="bottom"
-            open={open}
-            onClose={onClose}
-            onOpen={onOpen}
-            swipeAreaWidth={30}
-            disableBackdropTransition={false}
-            disableDiscovery={false}
-            slotProps={{
-                paper: {
-                    sx: {
-                        height: '96%',
-                        borderTopLeftRadius: 16,
-                        borderTopRightRadius: 16,
-                    },
+const DeviceBottomSheet = ({
+    open,
+    onOpen,
+    onClose,
+    devices,
+    setDeviceSheetOpen,
+    filter,
+    setFilter,
+    filterSort,
+    setFilterSort,
+    filterMap,
+    setFilterMap,
+    keyword,
+    setKeyword,
+    onResetFilters,
+}) => (
+    <SwipeableDrawer
+        anchor="bottom"
+        open={open}
+        onClose={onClose}
+        onOpen={onOpen}
+        swipeAreaWidth={30}
+        disableBackdropTransition={false}
+        disableDiscovery={false}
+        ModalProps={{ keepMounted: true }}
+        slotProps={{
+            paper: {
+                sx: {
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '96dvh',
+                    maxHeight: 'calc(100dvh - env(safe-area-inset-top))',
+                    overflow: 'hidden',
+                    borderTopLeftRadius: '16px',
+                    borderTopRightRadius: '16px',
                 },
+            },
+        }}
+    >
+        <Box
+            sx={{
+                width: 40,
+                height: 5,
+                backgroundColor: 'grey.400',
+                borderRadius: '3px',
+                flexShrink: 0,
+                my: 1,
+                mx: 'auto',
             }}
-        >
-            <div
-                style={{
-                    width: 40,
-                    height: 5,
-                    backgroundColor: '#ccc',
-                    borderRadius: 3,
-                    margin: '8px auto',
-                }}
-            />
+        />
+        <Box sx={{ flexShrink: 0 }}>
             <MainToolbar
                 filteredDevices={devices}
-                devicesOpen={devicesOpen}
-                setDevicesOpen={setDevicesOpen}
+                devicesOpen
+                setDevicesOpen={noop}
                 keyword={keyword}
                 setKeyword={setKeyword}
                 filter={filter}
@@ -73,12 +71,11 @@ const DeviceBottomSheet = ({ open, onOpen, onClose, devices, setDeviceSheetOpen,
                 onResetFilters={onResetFilters}
                 setDeviceSheetOpen={setDeviceSheetOpen}
             />
-            <DeviceList
-                devices={devices}
-                setDeviceSheetOpen={setDeviceSheetOpen}
-            />
-        </SwipeableDrawer>
-    );
-};
+        </Box>
+        <Box sx={{ flex: 1, minHeight: 0 }}>
+            <DeviceList devices={devices} setDeviceSheetOpen={setDeviceSheetOpen} />
+        </Box>
+    </SwipeableDrawer>
+);
 
 export default DeviceBottomSheet;

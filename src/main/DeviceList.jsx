@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 import { List } from 'react-window';
 import { devicesActions } from '../store';
@@ -12,24 +12,33 @@ const useStyles = makeStyles()((theme) => ({
     height: '100%',
     direction: theme.direction,
   },
-  listInner: {
-    position: 'relative',
-    margin: theme.spacing(1.5, 0),
-  },
 }));
 
+const Row = ({ index, style, devices, setDeviceSheetOpen, now }) => {
+  const item = devices[index];
+
+  const position = useSelector((state) => state.session.positions[item.id]);
+
+  return (
+    <DeviceRow
+      item={item}
+      position={position}
+      setDeviceSheetOpen={setDeviceSheetOpen}
+      now={now}
+      style={style}
+    />
+  );
+};
+
 const DeviceList = ({ devices, setDeviceSheetOpen }) => {
-  //console.log(position[0]);
   const { classes } = useStyles();
   const dispatch = useDispatch();
 
-  const [, setTime] = useState(Date.now());
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    const interval = setInterval(() => setTime(Date.now()), 60000);
-    return () => {
-      clearInterval(interval);
-    };
+    const interval = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffectAsync(async () => {
@@ -40,10 +49,14 @@ const DeviceList = ({ devices, setDeviceSheetOpen }) => {
   return (
     <List
       className={classes.list}
-      rowComponent={DeviceRow}
+      rowComponent={Row}
       rowCount={devices.length}
       rowHeight={90}
-      rowProps={{ devices, setDeviceSheetOpen }}
+      rowProps={{
+        devices,
+        now,
+        setDeviceSheetOpen,
+      }}
       overscanCount={5}
     />
   );

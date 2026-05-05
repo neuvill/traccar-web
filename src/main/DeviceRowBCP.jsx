@@ -1,0 +1,457 @@
+import { useDispatch, useSelector } from 'react-redux';
+import { makeStyles } from 'tss-react/mui';
+import {
+    IconButton,
+    Tooltip,
+    Avatar,
+    ListItemAvatar,
+    ListItemText,
+    ListItemButton,
+    Typography,
+    Badge,
+
+} from '@mui/material';
+import BatteryFullIcon from '@mui/icons-material/BatteryFull';
+import BatteryChargingFullIcon from '@mui/icons-material/BatteryChargingFull';
+import Battery60Icon from '@mui/icons-material/Battery60';
+import BatteryCharging60Icon from '@mui/icons-material/BatteryCharging60';
+import Battery20Icon from '@mui/icons-material/Battery20';
+import BatteryCharging20Icon from '@mui/icons-material/BatteryCharging20';
+import ErrorIcon from '@mui/icons-material/Error';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import { devicesActions } from '../store';
+import {
+    formatAlarm, formatBoolean, formatPercentage, formatStatus, getStatusColor, formatNumericHours,
+    formatSpeed, formatAdaptiveDuration
+
+} from '../common/util/formatter';
+import SpeedIcon from '@mui/icons-material/Speed';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
+import { useTranslation } from '../common/components/LocalizationProvider';
+import { mapIconKey, mapIcons } from '../map/core/preloadImages';
+import { useAdministrator } from '../common/util/permissions';
+import EngineIcon from '../resources/images/data/engine.svg?react';
+import { useAttributePreference } from '../common/util/preferences';
+
+import { grey } from '@mui/material/colors';
+
+import GeofencesValue from '../common/components/GeofencesValue';
+import DriverValue from '../common/components/DriverValue';
+import MotionBar from './components/MotionBar';
+
+import React from 'react';
+
+dayjs.extend(relativeTime);
+
+const useStyles = makeStyles()((theme) => ({
+    icon: {
+        width: '25px',
+        height: '25px',
+
+    },
+    batteryText: {
+        fontSize: '0.75rem',
+        fontWeight: 'normal',
+        lineHeight: '0.875rem',
+    },
+    success: {
+        color: theme.palette.success.main,
+    },
+    warning: {
+        color: theme.palette.warning.main,
+    },
+    error: {
+        color: theme.palette.error.main,
+    },
+    neutral: {
+        color: theme.palette.neutral.main,
+    },
+    selected: {
+        backgroundColor: theme.palette.action.selected,
+    },
+}));
+
+const DeviceRow = ({ item, position, setDeviceSheetOpen, style }) => {
+    const { classes } = useStyles();
+    const dispatch = useDispatch();
+    const t = useTranslation();
+
+
+
+    const statusColors = {
+        moving: '#27cb46',     // green
+        idling: '#00b5e2',     // orange
+        parked: '#ed2736',     // red
+        still: '#ffcc00',      // grey (no update > 3h)
+        default: '#9e9e9e',
+    };
+
+    const admin = useAdministrator();
+    const selectedDeviceId = useSelector((state) => state.devices.selectedId);
+
+    //const item = devices[index];
+    //const position = useSelector((state) => state.session.positions[item.id]);
+
+    const devicePrimary = useAttributePreference('devicePrimary', 'name');
+    const deviceSecondary = useAttributePreference('deviceSecondary', '');
+
+    //const dynamicStatus = (position && position.attributes.motionStatus) ? position.attributes.motionStatus : 'default';
+    const isDynamic =
+        !item.category ||
+        item.category === 'default' ||
+        item.category === 'dynamic';
+
+    const isStale = React.useMemo(() => {
+        if (!item.lastUpdate) return false;
+        return dayjs().diff(dayjs(item.lastUpdate), 'hour', true) > 3;
+    }, [item.lastUpdate]);
+
+    const dynamicStatus = isStale
+        ? 'still'
+        : position?.attributes?.motionStatus || 'default';
+
+    const resolveFieldValue = (field) => {
+        if (field === 'geofenceIds') {
+            const geofenceIds = position?.geofenceIds;
+            return geofenceIds?.length ? <GeofencesValue geofenceIds={geofenceIds} /> : null;
+        }
+        if (field === 'driverUniqueId') {
+            const driverUniqueId = position?.attributes?.driverUniqueId;
+            return driverUniqueId ? <DriverValue driverUniqueId={driverUniqueId} /> : null;
+        }
+        if (field === 'motion') {
+            return <MotionBar deviceId={item.id} />;
+        }
+        return item[field];
+    };
+
+    //const primaryValue = resolveFieldValue(devicePrimary);
+    const primaryValue = React.useMemo(() => {
+        if (devicePrimary === 'geofenceIds') {
+            const geofenceIds = position?.geofenceIds;
+            return geofenceIds?.length ? <GeofencesValue geofenceIds={geofenceIds} /> : null;
+        }
+        if (devicePrimary === 'driverUniqueId') {
+            const driverUniqueId = position?.attributes?.driverUniqueId;
+            return driverUniqueId ? <DriverValue driverUniqueId={driverUniqueId} /> : null;
+        }
+        if (devicePrimary === 'motion') {
+            return <MotionBar deviceId={item.id} />;
+        }
+        return item[devicePrimary];
+    }, [devicePrimary, position, item]);
+    const secondaryValue = resolveFieldValue(deviceSecondary);
+
+    /*const secondaryText = () => {
+      let status;
+      let isSpeed = false;
+      getLastItemUpdate(item);
+      if (item.status === 'online' || !item.lastUpdate) {
+        if (position && position.attributes.motionStatus === 'moving') {
+          status = (
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                verticalAlign: 'middle',
+                horizontalAlign: 'center',
+                gap: 6,
+              }}
+            >
+              <SpeedIcon sx={{ fontSize: 16, marginTop: 0.25 }} />
+              {formatSpeed(position.speed, 'kmh', t)}
+            </span>
+          );
+          isSpeed = true;
+        } else {
+          status = formatStatus(item.status, t);
+        }
+      } else {
+        //status = formatStatus(item.status, t);
+        const lastUpdate = dayjs(item.lastUpdate);
+        status = lastUpdate.fromNow(true);
+      }
+      return (
+        <>
+          <span
+            style={{
+              fontWeight: 400,
+              display: 'inline-flex',
+              alignItems: 'center',
+              verticalAlign: 'middle',
+              horizontalAlign: 'center',
+              gap: 6,
+            }}
+          >
+            <LocationOnOutlinedIcon sx={{ fontSize: 16, marginTop: 0.25 }} />
+            {(position && position.address) ? position.address.slice(0, 35) : ''}
+          </span>
+          <br />
+          <span
+            className={classes[getStatusColor(item.status)]}
+            style={isSpeed ? { color: '#1976d2', fontWeight: 500 } : {}}
+          >
+            {status}
+          </span>
+        </>
+      );
+    };*/
+
+    const secondary = React.useMemo(() => {
+        let status;
+        let isSpeed = false;
+
+        if (item.status === 'online' || !item.lastUpdate) {
+            if (position?.attributes?.motionStatus === 'moving') {
+                status = (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <SpeedIcon sx={{ fontSize: 16 }} />
+                        {formatSpeed(position.speed, 'kmh', t)}
+                    </span>
+                );
+                isSpeed = true;
+            } else {
+                status = formatStatus(item.status, t);
+            }
+        } else {
+            const lastUpdate = dayjs(item.lastUpdate);
+            status = lastUpdate.fromNow(true);
+        }
+
+        return (
+            <>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <LocationOnOutlinedIcon sx={{ fontSize: 16 }} />
+                    {position?.address ? position.address.slice(0, 35) : ''}
+                </span>
+                <br />
+                <span
+                    className={classes[getStatusColor(item.status)]}
+                    style={isSpeed ? { color: '#1976d2', fontWeight: 500 } : {}}
+                >
+                    {status}
+                </span>
+            </>
+        );
+    }, [item, position, t, classes]);
+
+    const handleClick = () => {
+        if (setDeviceSheetOpen) {
+            setDeviceSheetOpen(false);
+        }
+        //data.setDeviceSheetOpen(false);
+        dispatch(devicesActions.selectId(item.id));
+    };
+
+    function getTimeDiff(startIso, endIso) {
+        const start = new Date(startIso);
+        const end = new Date(endIso);
+
+        return (end - start >= 0) ? formatAdaptiveDuration(end - start, t) : formatAdaptiveDuration(0, t);
+
+    }
+
+    function getLastItemUpdate(item) {
+        if (!item.lastUpdate) {
+            return false;
+        }
+
+        return dayjs().diff(dayjs(item.lastUpdate), 'hour', true) > 3;
+    }
+
+
+
+    /*function getItemCategory(item) {
+      const category = item.category;
+  
+      if (!category || category === 'default' || category === 'dynamic') {
+        return mapIconKey(dynamicStatus); isDynamic = true;
+      }
+  
+      return mapIconKey(category);
+    }*/
+
+    //const badgeColor = statusColors[dynamicStatus] || statusColors.default;
+
+    const badgeColor = React.useMemo(
+        () => statusColors[dynamicStatus] || statusColors.default,
+        [dynamicStatus]
+    );
+
+    const resolvedCategory = isDynamic
+        ? dynamicStatus
+        : item.category;
+
+    //const iconKey = mapIconKey(resolvedCategory);
+    const iconKey = mapIconKey(item.category); // keep the original category for the icon and use the dynamic status only for the badge color
+
+    return (
+        <div style={{ ...style, borderBottom: '1px solid #e0e0e0' }}>
+            <ListItemButton
+                key={item.id}
+                onClick={handleClick}
+                disabled={!admin && item.disabled}
+                selected={selectedDeviceId === item.id}
+                className={selectedDeviceId === item.id ? classes.selected : null}
+            >
+                <ListItemAvatar>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {/*!isDynamic ? (
+              <Badge
+                overlap="circular"
+                anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+                variant="dot"
+                sx={{
+                  '& .MuiBadge-badge': {
+                    backgroundColor: badgeColor,
+                    color: badgeColor,
+                    width: 13,
+                    height: 13,
+                    borderRadius: '50%',
+                    border: '2px solid white',
+                  },
+                }}
+              >
+                <Avatar
+                  style={{
+                    backgroundColor: grey[200],
+                    borderColor: grey[400],
+                    borderWidth: 2,
+                    borderStyle: 'solid',
+                  }}
+                >
+                  <img
+                    className={classes.icon}
+                    src={mapIcons[iconKey]}
+                    alt=""
+                  />
+                </Avatar>
+              </Badge>
+            ) : (
+
+              <>
+
+                <Avatar
+                  style={{ backgroundColor: grey[200], borderColor: grey[400], borderWidth: 2, borderStyle: 'solid' }}>
+                  <img className={classes.icon} src={mapIcons[iconKey]} alt="" />
+
+                </Avatar>
+
+
+              </>
+            )*/}
+                        <Badge
+                            overlap="circular"
+                            anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+                            variant="dot"
+                            sx={{
+                                '& .MuiBadge-badge': {
+                                    backgroundColor: badgeColor,
+                                    color: badgeColor,
+                                    width: 13,
+                                    height: 13,
+                                    borderRadius: '50%',
+                                    border: '2px solid white',
+                                },
+                            }}
+                        >
+                            <Avatar
+                                style={{
+                                    backgroundColor: grey[50],
+                                    borderColor: grey[600],
+                                    borderWidth: 2,
+                                    borderStyle: 'solid',
+                                    borderRadius: 16,
+                                }}
+                            >
+                                <img
+                                    className={classes.icon}
+                                    src={mapIcons[iconKey]}
+                                    alt=""
+                                />
+                            </Avatar>
+                        </Badge>
+
+                        <Typography
+                            variant="caption"
+                            style={{
+                                marginTop: 5,
+                                color: grey[500],
+                                fontWeight: 'bold',
+                            }}
+                        >
+                            {
+                                getLastItemUpdate(item) ? '-' : position?.attributes?.motionStatusChanged ? getTimeDiff(position.attributes.motionStatusChanged, position.deviceTime) : '-'
+                            }
+                        </Typography>
+                    </div>
+                </ListItemAvatar>
+                <ListItemText
+                    primary={primaryValue}
+                    secondary={secondary}
+                    slots={{
+                        primary: Typography,
+                        secondary: Typography,
+                    }}
+                    slotProps={{
+                        primary: { noWrap: true, style: { fontWeight: 500 } },
+                        secondary: { noWrap: true },
+                    }}
+                    style={{
+                        marginLeft: '5%',
+                    }}
+                />
+                {position && (
+                    <>
+                        {position?.attributes && 'alarm' in position.attributes && (
+                            <Tooltip title={`${t('eventAlarm')}: ${formatAlarm(position.attributes.alarm, t)}`}>
+                                <IconButton size="small">
+                                    <ErrorIcon fontSize="small" className={classes.error} />
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                        {position.attributes.hasOwnProperty('ignition') && (
+                            <Tooltip
+                                title={`${t('positionIgnition')}: ${formatBoolean(position.attributes.ignition, t)}`}
+                            >
+                                <IconButton size="small">
+                                    {position.attributes.ignition ? (
+                                        <EngineIcon width={20} height={20} className={classes.success} />
+                                    ) : (
+                                        <EngineIcon width={20} height={20} className={classes.neutral} />
+                                    )}
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                        {position.attributes.hasOwnProperty('batteryLevel') && (
+                            <Tooltip
+                                title={`${t('positionBatteryLevel')}: ${formatPercentage(position.attributes.batteryLevel)}`}
+                            >
+                                <IconButton size="small">
+                                    {
+                                        (position.attributes.batteryLevel > 70 && (
+                                            position.attributes.charge
+                                                ? (<BatteryChargingFullIcon fontSize="small" className={classes.success} />)
+                                                : (<BatteryFullIcon fontSize="small" className={classes.success} />)
+                                        )) || (position.attributes.batteryLevel > 30 && (
+                                            position.attributes.charge
+                                                ? (<BatteryCharging60Icon fontSize="small" className={classes.warning} />)
+                                                : (<Battery60Icon fontSize="small" className={classes.warning} />)
+                                        )) || (
+                                            position.attributes.charge
+                                                ? (<BatteryCharging20Icon fontSize="small" className={classes.error} />)
+                                                : (<Battery20Icon fontSize="small" className={classes.error} />)
+                                        )
+                                    }
+                                </IconButton >
+                            </Tooltip >
+                        )}
+                    </>
+                )}
+            </ListItemButton >
+        </div >
+    );
+};
+
+export default React.memo(DeviceRow);
