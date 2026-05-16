@@ -29,7 +29,6 @@ import HistoryIcon from '@mui/icons-material/History';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import RouteIcon from '@mui/icons-material/Route';
 import SpeedIcon from '@mui/icons-material/Speed';
-import dayjs from 'dayjs';
 import { useTranslation } from './LocalizationProvider';
 import RemoveDialog from './RemoveDialog';
 import PositionValue from './PositionValue';
@@ -37,6 +36,7 @@ import { useDeviceReadonly, useRestriction } from '../util/permissions';
 import usePositionAttributes from '../attributes/usePositionAttributes';
 import { devicesActions } from '../../store';
 import { useCatch, useCatchCallback } from '../../reactHelper';
+import { getDeviceMotionStatus } from '../util/deviceStatus';
 import { useAttributePreference } from '../util/preferences';
 import fetchOrThrow from '../util/fetchOrThrow';
 
@@ -100,8 +100,6 @@ const useStyles = makeStyles()((theme) => ({
 
 const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);
 
-const STALE_HOURS = 3;
-
 const STATUS_COLORS = {
   moving: '#27cb46',
   idling: '#00b5e2',
@@ -111,10 +109,7 @@ const STATUS_COLORS = {
 };
 
 const getDeviceStatusColor = (device, position) => {
-  const isStale = device?.lastUpdate
-    ? dayjs().diff(dayjs(device.lastUpdate), 'hour', true) > STALE_HOURS
-    : false;
-  const status = isStale ? 'still' : position?.attributes?.motionStatus || 'default';
+  const status = getDeviceMotionStatus(device, position);
   return STATUS_COLORS[status] || STATUS_COLORS.default;
 };
 

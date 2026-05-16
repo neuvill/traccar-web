@@ -61,7 +61,7 @@ const MainMap = ({ filteredPositions, selectedPosition, onEventsClick, selectedD
           selectedPosition={selectedPosition}
           showStatus
         />
-        <MapDefaultCamera />
+        <MapDefaultCamera filteredPositions={filteredPositions} />
         <MapSelectedDevice />
         <PoiMap />
         {!desktop && location.pathname !== '/replay' && (

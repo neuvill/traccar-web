@@ -29,7 +29,6 @@ import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import PendingIcon from '@mui/icons-material/Pending';
 import RouteIcon from '@mui/icons-material/Route';
 import SpeedIcon from '@mui/icons-material/Speed';
-import dayjs from 'dayjs';
 
 import { useTranslation } from './LocalizationProvider';
 import RemoveDialog from './RemoveDialog';
@@ -38,6 +37,7 @@ import { useDeviceReadonly, useRestriction } from '../util/permissions';
 import usePositionAttributes from '../attributes/usePositionAttributes';
 import { devicesActions } from '../../store';
 import { useCatch, useCatchCallback } from '../../reactHelper';
+import { getDeviceMotionStatus } from '../util/deviceStatus';
 import { useAttributePreference } from '../util/preferences';
 import fetchOrThrow from '../util/fetchOrThrow';
 
@@ -122,8 +122,6 @@ const useStyles = makeStyles()((theme, { desktopPadding }) => ({
 
 const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);
 
-const STALE_HOURS = 3;
-
 const STATUS_COLORS = {
   moving: '#27cb46',
   idling: '#00b5e2',
@@ -133,10 +131,7 @@ const STATUS_COLORS = {
 };
 
 const getDeviceStatusColor = (device, position) => {
-  const isStale = device?.lastUpdate
-    ? dayjs().diff(dayjs(device.lastUpdate), 'hour', true) > STALE_HOURS
-    : false;
-  const status = isStale ? 'still' : position?.attributes?.motionStatus || 'default';
+  const status = getDeviceMotionStatus(device, position);
   return STATUS_COLORS[status] || STATUS_COLORS.default;
 };
 
@@ -271,7 +266,7 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
               )}
               {position && (
                 <CardContent className={classes.content}>
-                  <Table size="small" classes={{ root: classes.table }}>
+                  <Table size="small" className={classes.table}>
                     <TableBody>
                       {positionItems
                         .split(',')
@@ -308,7 +303,7 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                   </Table>
                 </CardContent>
               )}
-              <CardActions classes={{ root: classes.actions }} disableSpacing>
+              <CardActions className={classes.actions} disableSpacing>
                 <Tooltip title={t('sharedExtra')}>
                   <IconButton
                     color="secondary"
@@ -351,6 +346,12 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
       </div>
       {position && (
         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
+          <MenuItem
+            onClick={() => navigate(`/stream?deviceId=${deviceId}`)}
+            disabled={position.protocol !== 'jt808'}
+          >
+            {t('linkLiveVideo')}
+          </MenuItem>
           {!readonly && <MenuItem onClick={handleGeofence}>{t('sharedCreateGeofence')}</MenuItem>}
           <MenuItem
             component="a"

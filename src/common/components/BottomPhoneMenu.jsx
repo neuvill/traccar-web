@@ -108,25 +108,30 @@ const BottomMenu = ({ setDeviceSheetOpen }) => {
                 bottom: 16,
                 left: 0,
                 right: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
+                minHeight: 96,
                 pointerEvents: 'none', // allows clicks to pass through where needed
                 zIndex: 1000,
             }}
         >
             <Box
                 sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
+                    position: 'relative',
                     width: '100%',
-                    px: 2,
+                    minHeight: 96,
                     pointerEvents: 'auto',
-                    //backgroundColor: 'yellow', // re-enable interaction inside buttons
                 }}
             >
                 {/* Left Side Buttons */}
-                <Box display="flex" flexDirection="column" gap={1} pointerEvents='auto'
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        left: 16,
+                        bottom: 0,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 1,
+                        pointerEvents: 'auto',
+                    }}
                 >
                     <Button
                         variant="contained"
@@ -179,7 +184,17 @@ const BottomMenu = ({ setDeviceSheetOpen }) => {
                 </Box>
 
                 {/* Right Side Buttons */}
-                <Box display="flex" flexDirection="column" gap={1}>
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        right: 16,
+                        bottom: 0,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 1,
+                        pointerEvents: 'auto',
+                    }}
+                >
 
                     <Button
                         variant="contained"

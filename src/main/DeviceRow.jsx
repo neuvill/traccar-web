@@ -35,6 +35,7 @@ import {
   formatStatus,
   getStatusColor,
 } from '../common/util/formatter';
+import { getDeviceFreshness, getDeviceMotionStatus } from '../common/util/deviceStatus';
 import { useAdministrator } from '../common/util/permissions';
 import { useAttributePreference } from '../common/util/preferences';
 import { mapIconKey, mapIcons } from '../map/core/preloadImages';
@@ -43,8 +44,6 @@ import { devicesActions } from '../store';
 import MotionBar from './components/MotionBar';
 
 dayjs.extend(relativeTime);
-
-const STALE_HOURS = 3;
 
 const STATUS_COLORS = {
   moving: '#27cb46',
@@ -114,20 +113,11 @@ const DeviceRow = ({ item, position, setDeviceSheetOpen, now, style }) => {
   const speedUnit = useAttributePreference('speedUnit');
 
   const attributes = position?.attributes || {};
-  const {
-    alarm,
-    batteryLevel,
-    charge,
-    driverUniqueId,
-    ignition,
-    motionStatus,
-    motionStatusChanged,
-  } = attributes;
+  const { alarm, batteryLevel, charge, driverUniqueId, ignition, motionStatusChanged } = attributes;
 
-  const isStale = item.lastUpdate
-    ? dayjs(now).diff(dayjs(item.lastUpdate), 'hour', true) > STALE_HOURS
-    : false;
-  const dynamicStatus = isStale ? 'still' : motionStatus || 'default';
+  const { isStale, staleReferenceTime } = getDeviceFreshness(item, position, now);
+  const dynamicStatus = getDeviceMotionStatus(item, position, now);
+  const motionStatus = dynamicStatus === 'still' ? null : attributes.motionStatus;
   const badgeColor = STATUS_COLORS[dynamicStatus] || STATUS_COLORS.default;
   const iconKey = mapIconKey(item.category);
 
@@ -160,8 +150,8 @@ const DeviceRow = ({ item, position, setDeviceSheetOpen, now, style }) => {
   };
 
   const getStatusText = () => {
-    if (isStale && item.lastUpdate) {
-      return dayjs(item.lastUpdate).from(dayjs(now), true);
+    if (isStale && staleReferenceTime) {
+      return staleReferenceTime.from(dayjs(now), true);
     }
 
     if (item.status === 'online' || !item.lastUpdate) {
