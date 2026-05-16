@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useReducer, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Table,
@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import LoginIcon from '@mui/icons-material/Login';
 import LinkIcon from '@mui/icons-material/Link';
-import { useCatch, useEffectAsync, useScrollToLoad, pageSize } from '../reactHelper';
+import { useCatch, useAsyncTask, useScrollToLoad, pageSize } from '../reactHelper';
 import { formatBoolean, formatTime } from '../common/util/formatter';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import PageLayout from '../common/components/PageLayout';
@@ -24,6 +24,7 @@ import { useManager } from '../common/util/permissions';
 import SearchHeader from './components/SearchHeader';
 import useSettingsStyles from './common/useSettingsStyles';
 import fetchOrThrow from '../common/util/fetchOrThrow';
+import UserDevicesValue from './components/UserDevicesValue';
 
 const UsersPage = () => {
   const { classes } = useSettingsStyles();
@@ -32,10 +33,11 @@ const UsersPage = () => {
 
   const manager = useManager();
 
-  const [timestamp, setTimestamp] = useState(Date.now());
+  const [reloadKey, reload] = useReducer((k) => k + 1, 0);
   const [items, setItems] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [temporary, setTemporary] = useState(false);
 
   const handleLogin = useCatch(async (userId) => {
@@ -57,28 +59,35 @@ const UsersPage = () => {
     handler: (userId) => navigate(`/settings/user/${userId}/connections`),
   };
 
-  const loadItems = async (offset) => {
-    setLoading(true);
-    try {
-      const query = new URLSearchParams({ excludeAttributes: true, limit: pageSize, offset });
-      if (searchKeyword) {
-        query.append('keyword', searchKeyword);
+  const loadItems = useCallback(
+    async (offset, signal) => {
+      setLoading(true);
+      try {
+        const query = new URLSearchParams({ excludeAttributes: true, limit: pageSize, offset });
+        if (searchKeyword) {
+          query.append('keyword', searchKeyword);
+        }
+        const response = await fetchOrThrow(`/api/users?${query.toString()}`, { signal });
+        const data = await response.json();
+        setItems((previous) => (offset ? [...previous, ...data] : data));
+        setHasMore(data.length >= pageSize);
+      } finally {
+        setLoading(false);
       }
-      const response = await fetchOrThrow(`/api/users?${query.toString()}`);
-      const data = await response.json();
-      setItems((previous) => (offset ? [...previous, ...data] : data));
-      setHasMore(data.length >= pageSize);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [searchKeyword],
+  );
 
-  const { sentinelRef, hasMore, setHasMore } = useScrollToLoad(() => loadItems(items.length));
+  const sentinelRef = useScrollToLoad(() => loadItems(items.length));
 
-  useEffectAsync(async () => {
-    setItems([]);
-    await loadItems(0);
-  }, [timestamp, searchKeyword]);
+  useAsyncTask(
+    async ({ signal }) => {
+      void reloadKey;
+      setItems([]);
+      await loadItems(0, signal);
+    },
+    [reloadKey, loadItems],
+  );
 
   return (
     <PageLayout menu={<SettingsMenu />} breadcrumbs={['settingsTitle', 'settingsUsers']}>
@@ -91,6 +100,7 @@ const UsersPage = () => {
             <TableCell>{t('userAdmin')}</TableCell>
             <TableCell>{t('sharedDisabled')}</TableCell>
             <TableCell>{t('userExpirationTime')}</TableCell>
+            <TableCell>{t('deviceTitle')}</TableCell>
             <TableCell className={classes.columnAction} />
           </TableRow>
         </TableHead>
@@ -104,22 +114,25 @@ const UsersPage = () => {
                 <TableCell>{formatBoolean(item.administrator, t)}</TableCell>
                 <TableCell>{formatBoolean(item.disabled, t)}</TableCell>
                 <TableCell>{formatTime(item.expirationTime, 'date')}</TableCell>
+                <TableCell>
+                  <UserDevicesValue userId={item.id} />
+                </TableCell>
                 <TableCell className={classes.columnAction} padding="none">
                   <CollectionActions
                     itemId={item.id}
                     editPath="/settings/user"
                     endpoint="users"
-                    setTimestamp={setTimestamp}
+                    onReload={reload}
                     customActions={manager ? [actionLogin, actionConnections] : [actionConnections]}
                   />
                 </TableCell>
               </TableRow>
             ))}
-          {loading && <TableShimmer columns={6} endAction />}
+          {loading && <TableShimmer columns={7} endAction />}
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={6} align="right">
+            <TableCell colSpan={7} align="right">
               <FormControlLabel
                 control={
                   <Switch

@@ -2,7 +2,7 @@ import { useId, useEffect, useState } from 'react';
 import { kml } from '@tmcw/togeojson';
 import { useTheme } from '@mui/material/styles';
 import { map } from '../core/MapView';
-import { useEffectAsync } from '../../reactHelper';
+import { useAsyncTask } from '../../reactHelper';
 import { usePreference } from '../../common/util/preferences';
 import { findFonts } from '../core/mapUtil';
 
@@ -15,13 +15,16 @@ const PoiMap = () => {
 
   const [data, setData] = useState(null);
 
-  useEffectAsync(async () => {
-    if (poiLayer) {
-      const file = await fetch(poiLayer);
-      const dom = new DOMParser().parseFromString(await file.text(), 'text/xml');
-      setData(kml(dom));
-    }
-  }, [poiLayer]);
+  useAsyncTask(
+    async ({ signal }) => {
+      if (poiLayer) {
+        const file = await fetch(poiLayer, { signal });
+        const dom = new DOMParser().parseFromString(await file.text(), 'text/xml');
+        setData(kml(dom));
+      }
+    },
+    [poiLayer],
+  );
 
   useEffect(() => {
     if (data) {
@@ -93,7 +96,7 @@ const PoiMap = () => {
       };
     }
     return () => {};
-  }, [data]);
+  }, [data, id, theme.palette.geometry.main]);
 
   return null;
 };

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useReducer, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import LinkIcon from '@mui/icons-material/Link';
 import { useTheme } from '@mui/material/styles';
-import { useEffectAsync, useScrollToLoad, pageSize } from '../reactHelper';
+import { useAsyncTask, useScrollToLoad, pageSize } from '../reactHelper';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import PageLayout from '../common/components/PageLayout';
 import SettingsMenu from './components/SettingsMenu';
@@ -46,34 +46,42 @@ const DevicesPage = () => {
 
   const positions = useSelector((state) => state.session.positions);
 
-  const [timestamp, setTimestamp] = useState(Date.now());
+  const [reloadKey, reload] = useReducer((k) => k + 1, 0);
   const [items, setItems] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [showAll, setShowAll] = usePersistedState('showAllDevices', false);
   const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
-  const loadItems = async (offset) => {
-    setLoading(true);
-    try {
-      const query = new URLSearchParams({ all: showAll, limit: pageSize, offset });
-      if (searchKeyword) {
-        query.append('keyword', searchKeyword);
+  const loadItems = useCallback(
+    async (offset, signal) => {
+      setLoading(true);
+      try {
+        const query = new URLSearchParams({ all: showAll, limit: pageSize, offset });
+        if (searchKeyword) {
+          query.append('keyword', searchKeyword);
+        }
+        const response = await fetchOrThrow(`/api/devices?${query.toString()}`, { signal });
+        const data = await response.json();
+        setItems((previous) => (offset ? [...previous, ...data] : data));
+        setHasMore(data.length >= pageSize);
+      } finally {
+        setLoading(false);
       }
-      const response = await fetchOrThrow(`/api/devices?${query.toString()}`);
-      const data = await response.json();
-      setItems((previous) => (offset ? [...previous, ...data] : data));
-      setHasMore(data.length >= pageSize);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [searchKeyword, showAll],
+  );
 
-  const { sentinelRef, hasMore, setHasMore } = useScrollToLoad(() => loadItems(items.length));
+  const sentinelRef = useScrollToLoad(() => loadItems(items.length));
 
-  useEffectAsync(async () => {
-    setItems([]);
-    await loadItems(0);
-  }, [timestamp, showAll, searchKeyword]);
+  useAsyncTask(
+    async ({ signal }) => {
+      void reloadKey;
+      setItems([]);
+      await loadItems(0, signal);
+    },
+    [reloadKey, loadItems],
+  );
 
   const handleExport = async () => {
     const data = items.map((item) => ({
@@ -149,7 +157,7 @@ const DevicesPage = () => {
                   itemId={item.id}
                   editPath="/settings/device"
                   endpoint="devices"
-                  setTimestamp={setTimestamp}
+                  onReload={reload}
                   customActions={[actionConnections]}
                   readonly={deviceReadonly}
                 />

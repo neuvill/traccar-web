@@ -36,7 +36,7 @@ import RegisterPage from './login/RegisterPage';
 import ResetPasswordPage from './login/ResetPasswordPage';
 import GeofencesPage from './other/GeofencesPage';
 import GeofencePage from './settings/GeofencePage';
-import { useEffectAsync } from './reactHelper';
+import { useAsyncTask } from './reactHelper';
 import { devicesActions } from './store';
 import EventPage from './other/EventPage';
 import PreferencesPage from './settings/PreferencesPage';
@@ -71,42 +71,48 @@ const Navigation = () => {
     searchParams.has(key),
   );
 
-  useEffectAsync(async () => {
-    if (!hasQueryParams) {
-      return;
-    }
-
-    const newParams = new URLSearchParams(searchParams);
-
-    if (searchParams.has('locale')) {
-      setLocalLanguage(searchParams.get('locale'));
-      newParams.delete('locale');
-    }
-
-    if (searchParams.has('token')) {
-      const token = searchParams.get('token');
-      await fetch(`/api/session?token=${encodeURIComponent(token)}`);
-      newParams.delete('token');
-    }
-
-    if (searchParams.has('uniqueId')) {
-      const response = await fetchOrThrow(`/api/devices?uniqueId=${searchParams.get('uniqueId')}`);
-      const items = await response.json();
-      if (items.length > 0) {
-        dispatch(devicesActions.selectId(items[0].id));
+  useAsyncTask(
+    async ({ signal }) => {
+      if (!hasQueryParams) {
+        return;
       }
-      newParams.delete('uniqueId');
-    }
 
-    if (searchParams.has('openid')) {
-      if (searchParams.get('openid') === 'success') {
-        generateLoginToken();
+      const newParams = new URLSearchParams(searchParams);
+
+      if (searchParams.has('locale')) {
+        setLocalLanguage(searchParams.get('locale'));
+        newParams.delete('locale');
       }
-      newParams.delete('openid');
-    }
 
-    setSearchParams(newParams, { replace: true });
-  }, [hasQueryParams, searchParams, setSearchParams]);
+      if (searchParams.has('token')) {
+        const token = searchParams.get('token');
+        await fetch(`/api/session?token=${encodeURIComponent(token)}`, { signal });
+        newParams.delete('token');
+      }
+
+      if (searchParams.has('uniqueId')) {
+        const response = await fetchOrThrow(
+          `/api/devices?uniqueId=${searchParams.get('uniqueId')}`,
+          { signal },
+        );
+        const items = await response.json();
+        if (items.length > 0) {
+          dispatch(devicesActions.selectId(items[0].id));
+        }
+        newParams.delete('uniqueId');
+      }
+
+      if (searchParams.has('openid')) {
+        if (searchParams.get('openid') === 'success') {
+          generateLoginToken();
+        }
+        newParams.delete('openid');
+      }
+
+      setSearchParams(newParams, { replace: true });
+    },
+    [hasQueryParams, searchParams, setSearchParams, dispatch, setLocalLanguage],
+  );
 
   if (hasQueryParams) {
     return <Loader />;
