@@ -15,28 +15,36 @@ import MapLiveRoutes from '../map/main/MapLiveRoutes';
 import MapPositions from '../map/MapPositions';
 import MapOverlay from '../map/overlay/MapOverlay';
 import MapGeocoder from '../map/geocoder/MapGeocoder';
-import MapScale from '../map/MapScale';
 import MapNotification from '../map/notification/MapNotification';
 import MapDashboard from '../map/dashboard/MapDashboard';
 import useFeatures from '../common/util/useFeatures';
 import { makeStyles } from 'tss-react/mui';
 import BottomPhoneMenue from '../common/components/BottomPhoneMenu';
+import AssistantWidget from '../common/components/AssistantWidget';
+import MapAssistant from '../map/assistant/MapAssistant';
 
 const useStyles = makeStyles(() => ({
-
   menu: {
     zIndex: 4,
     //pointerEvents: 'none',
   },
 }));
 
-const MainMap = ({ filteredPositions, selectedPosition, onEventsClick, selectedDevices, setDeviceSheetOpen, onBoardClick }) => {
+const MainMap = ({
+  filteredPositions,
+  notificationEnabled,
+  selectedPosition,
+  onEventsClick,
+  selectedDevices,
+  setDeviceSheetOpen,
+  onBoardClick,
+}) => {
   const theme = useTheme();
   const dispatch = useDispatch();
 
   const desktop = useMediaQuery(theme.breakpoints.up('md'));
 
-  const eventsAvailable = useSelector((state) => !!state.events.items.length);
+  const user = useSelector((state) => state.session.user);
   const classes = useStyles();
   const features = useFeatures();
 
@@ -74,12 +82,15 @@ const MainMap = ({ filteredPositions, selectedPosition, onEventsClick, selectedD
       <MapCurrentLocation />
       <MapGeocoder />
       {!features.disableEvents && (
-        <MapNotification enabled={eventsAvailable} onClick={onEventsClick} />
+        <MapNotification enabled={notificationEnabled} onClick={onEventsClick} />
       )}
 
       <MapDashboard onClick={onBoardClick} />
-
-
+      {user?.administrator && (
+        <AssistantWidget
+          renderTrigger={({ onOpen, title }) => <MapAssistant title={title} onClick={onOpen} />}
+        />
+      )}
 
       {desktop && (
         <MapPadding

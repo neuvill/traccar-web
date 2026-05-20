@@ -1,14 +1,15 @@
 import { useEffect, useMemo } from 'react';
 import { useTheme } from '@mui/material';
 import { map } from '../core/MapView';
-import './dashboard.css';
+import './assistant.css';
 
 const statusClass = (status) =>
-  `maplibregl-ctrl-icon maplibre-ctrl-dashboard maplibre-ctrl-dashboard-${status}`;
+  `maplibregl-ctrl-icon maplibre-ctrl-assistant maplibre-ctrl-assistant-${status}`;
 
-class DashboardControl {
-  constructor(eventHandler) {
+class AssistantControl {
+  constructor(eventHandler, title) {
     this.eventHandler = eventHandler;
+    this.title = title;
   }
 
   onAdd() {
@@ -20,10 +21,11 @@ class DashboardControl {
         this.eventHandler(this);
       }
     };
+    this.syncButtonMetadata();
 
     this.container = document.createElement('div');
     this.container.className =
-      'maplibregl-ctrl-group maplibregl-ctrl maplibregl-ctrl-dashboard-group';
+      'maplibregl-ctrl-group maplibregl-ctrl maplibregl-ctrl-assistant-group';
     this.container.appendChild(this.button);
 
     return this.container;
@@ -36,20 +38,35 @@ class DashboardControl {
   setHandler(handler) {
     this.eventHandler = handler;
   }
+
+  setTitle(title) {
+    this.title = title;
+    this.syncButtonMetadata();
+  }
+
+  syncButtonMetadata() {
+    if (!this.button) {
+      return;
+    }
+
+    this.button.title = this.title;
+    this.button.setAttribute('aria-label', this.title);
+  }
 }
 
-const MapDashboard = ({ onClick }) => {
+const MapAssistant = ({ title, onClick }) => {
   const theme = useTheme();
 
-  // ✅ Create control ONCE
-  const control = useMemo(() => new DashboardControl(() => {}), []);
+  const control = useMemo(() => new AssistantControl(() => {}, ''), []);
 
-  // ✅ Update handler when prop changes
   useEffect(() => {
     control.setHandler(onClick ?? (() => {}));
-  }, [onClick, control]);
+  }, [control, onClick]);
 
-  // ✅ Add / remove control
+  useEffect(() => {
+    control.setTitle(title);
+  }, [control, title]);
+
   useEffect(() => {
     map.addControl(control, theme.direction === 'rtl' ? 'top-left' : 'top-right');
     return () => map.removeControl(control);
@@ -58,4 +75,4 @@ const MapDashboard = ({ onClick }) => {
   return null;
 };
 
-export default MapDashboard;
+export default MapAssistant;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Box,
@@ -146,12 +146,7 @@ const extractGatewayMessage = (payload) => {
     return payload;
   }
   return (
-    payload.reply
-    || payload.message
-    || payload.response
-    || payload.answer
-    || payload.text
-    || ''
+    payload.reply || payload.message || payload.response || payload.answer || payload.text || ''
   );
 };
 
@@ -172,7 +167,7 @@ const extractGatewayErrorCode = (payload) => {
   return payload.error || payload.code || '';
 };
 
-const AssistantWidget = () => {
+const AssistantWidget = ({ renderTrigger = null }) => {
   const { classes, cx } = useStyles();
   const theme = useTheme();
   const t = useTranslation();
@@ -191,35 +186,32 @@ const AssistantWidget = () => {
   const [error, setError] = useState('');
   const [messages, setMessages] = useState(() => createInitialMessages(translate));
 
-  const quickPrompts = useMemo(
-    () => [
-      {
-        id: 'inactive',
-        label: translate('assistantQuickInactive'),
-        mode: 'send',
-        message: 'inactive devices',
-      },
-      {
-        id: 'position',
-        label: translate('assistantQuickCurrentPosition'),
-        mode: 'prefill',
-        message: 'current position of ',
-      },
-      {
-        id: 'distance',
-        label: translate('assistantQuickDistanceToday'),
-        mode: 'send',
-        message: 'distance summary today',
-      },
-      {
-        id: 'overspeed',
-        label: translate('assistantQuickOverspeedToday'),
-        mode: 'send',
-        message: 'top 5 overspeed devices today',
-      },
-    ],
-    [t],
-  );
+  const quickPrompts = [
+    {
+      id: 'inactive',
+      label: translate('assistantQuickInactive'),
+      mode: 'send',
+      message: 'inactive devices',
+    },
+    {
+      id: 'position',
+      label: translate('assistantQuickCurrentPosition'),
+      mode: 'prefill',
+      message: 'current position of ',
+    },
+    {
+      id: 'distance',
+      label: translate('assistantQuickDistanceToday'),
+      mode: 'send',
+      message: 'distance summary today',
+    },
+    {
+      id: 'overspeed',
+      label: translate('assistantQuickOverspeedToday'),
+      mode: 'send',
+      message: 'top 5 overspeed devices today',
+    },
+  ];
 
   useEffect(() => {
     if (open) {
@@ -240,7 +232,7 @@ const AssistantWidget = () => {
     setMessages((previous) => [
       ...previous,
       {
-        id: `assistant-message-${sequenceRef.current += 1}`,
+        id: `assistant-message-${(sequenceRef.current += 1)}`,
         role,
         text,
       },
@@ -345,9 +337,13 @@ const AssistantWidget = () => {
     mobile ? classes.drawerPaperMobile : classes.drawerPaperDesktop,
   );
 
-  return (
-    <>
-      {!open && (
+  const trigger = renderTrigger
+    ? renderTrigger({
+        open,
+        onOpen: () => setOpen(true),
+        title: translate('assistantTitle'),
+      })
+    : !open && (
         <Tooltip title={translate('assistantTitle')}>
           <Fab
             color="primary"
@@ -358,7 +354,11 @@ const AssistantWidget = () => {
             <SmartToyOutlinedIcon />
           </Fab>
         </Tooltip>
-      )}
+      );
+
+  return (
+    <>
+      {trigger}
       <Drawer
         anchor={mobile ? 'bottom' : 'right'}
         open={open}
@@ -395,7 +395,13 @@ const AssistantWidget = () => {
               </Alert>
             )}
             {messages.length <= 1 && (
-              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" className={classes.quickPrompts}>
+              <Stack
+                direction="row"
+                spacing={1}
+                useFlexGap
+                flexWrap="wrap"
+                className={classes.quickPrompts}
+              >
                 {quickPrompts.map((prompt) => (
                   <Chip
                     key={prompt.id}

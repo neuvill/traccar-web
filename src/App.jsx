@@ -10,7 +10,6 @@ import UpdateController from './UpdateController';
 import MotionController from './main/MotionController';
 import TermsDialog from './common/components/TermsDialog';
 import Loader from './common/components/Loader';
-import AssistantWidget from './common/components/AssistantWidget';
 import fetchOrThrow from './common/util/fetchOrThrow';
 
 const useStyles = makeStyles()(() => ({
@@ -73,7 +72,6 @@ const App = () => {
       <div className={classes.page}>
         <Outlet />
       </div>
-      {user.administrator && <AssistantWidget />}
       {/*!desktop && (
         <div className={classes.menu}>
           <BottomMenu />

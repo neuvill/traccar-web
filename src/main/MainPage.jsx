@@ -104,6 +104,7 @@ const MainPage = () => {
   const [deviceSheetOpen, setDeviceSheetOpen] = useState(false);
 
   const selectedDeviceId = useSelector((state) => state.devices.selectedId);
+  const latestEventId = useSelector((state) => state.events.items[0]?.id || null);
   const positions = useSelector((state) => state.session.positions);
   const [filteredPositions, setFilteredPositions] = useState([]);
   const selectedPosition = filteredPositions.find(
@@ -128,9 +129,14 @@ const MainPage = () => {
   const [devicesOpen, setDevicesOpen] = useState(desktop);
   const [eventsOpen, setEventsOpen] = useState(false);
   const [dashboardOpen, setDashboardOpen] = useState(false);
+  const [acknowledgedEventId, setAcknowledgedEventId] = useState(null);
 
+  const notificationEnabled = Boolean(latestEventId && latestEventId !== acknowledgedEventId);
 
-  const onEventsClick = useCallback(() => setEventsOpen(true), [setEventsOpen]);
+  const onEventsClick = useCallback(() => {
+    setAcknowledgedEventId(latestEventId);
+    setEventsOpen(true);
+  }, [latestEventId]);
   const onBoardClick = useCallback(() => setDashboardOpen(true), [setDashboardOpen]);
   useEffect(() => {
     if (!desktop && mapOnSelect && selectedDeviceId) {
@@ -153,19 +159,21 @@ const MainPage = () => {
       {desktop && (
         <MainMap
           filteredPositions={filteredPositions}
+          notificationEnabled={notificationEnabled}
           selectedPosition={selectedPosition}
           onEventsClick={onEventsClick}
           onBoardClick={onBoardClick}
         />
       )}
 
-      <div className={classes.sidebar}
+      <div
+        className={classes.sidebar}
         style={{
           transform: isSidebarVisible ? 'translateX(0)' : 'translateX(-100%)', // Slide in/out
           transition: 'transform 0.3s ease-in-out', // Smooth animation
         }}
       >
-        {desktop &&
+        {desktop && (
           <Paper square elevation={3} className={classes.header}>
             <MainToolbar
               filteredDevices={filteredDevices}
@@ -181,12 +189,14 @@ const MainPage = () => {
               setFilterMap={setFilterMap}
               onResetFilters={handleResetFilters}
             />
-          </Paper>}
+          </Paper>
+        )}
         <div className={classes.middle}>
           {!desktop && (
             <div className={classes.contentMap}>
               <MainMap
                 filteredPositions={filteredPositions}
+                notificationEnabled={notificationEnabled}
                 selectedPosition={selectedPosition}
                 selectedDevices={filteredDevices}
                 onEventsClick={onEventsClick}
@@ -196,7 +206,11 @@ const MainPage = () => {
             </div>
           )}
           {desktop && (
-            <Paper square className={classes.contentList} style={devicesOpen ? {} : { visibility: 'hidden' }}>
+            <Paper
+              square
+              className={classes.contentList}
+              style={devicesOpen ? {} : { visibility: 'hidden' }}
+            >
               <DeviceList devices={filteredDevices} />
             </Paper>
           )}
@@ -213,11 +227,9 @@ const MainPage = () => {
         >
           {isSidebarVisible ? '❮' : '❯'}
         </button>
-
       </div>
 
       {mobile && (
-
         <div
           style={{
             position: 'fixed',
@@ -227,7 +239,6 @@ const MainPage = () => {
             zIndex: 1300, // Above most elements
           }}
         >
-
           <DeviceBottomSheet
             open={deviceSheetOpen}
             onOpen={() => setDeviceSheetOpen(true)}
@@ -244,7 +255,6 @@ const MainPage = () => {
             setKeyword={setKeyword}
             onResetFilters={handleResetFilters}
           />
-
         </div>
       )}
 
@@ -252,22 +262,17 @@ const MainPage = () => {
       <DashboardDrawer
         open={dashboardOpen}
         onClose={() => setDashboardOpen(false)}
-
         onMotionFilter={(motionStatus) => {
           const isActive =
-            filter.motionStatuses?.length === 1 &&
-            filter.motionStatuses[0] === motionStatus;
+            filter.motionStatuses?.length === 1 && filter.motionStatuses[0] === motionStatus;
 
           setFilter((prev) => ({
             ...prev,
             motionStatuses: isActive ? [] : [motionStatus],
           }));
         }}
-
         onStatusFilter={(status) => {
-          const isActive =
-            filter.statuses?.length === 1 &&
-            filter.statuses[0] === status;
+          const isActive = filter.statuses?.length === 1 && filter.statuses[0] === status;
 
           setFilter((prev) => ({
             ...prev,
