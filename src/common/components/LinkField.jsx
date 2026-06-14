@@ -1,9 +1,11 @@
 import { Autocomplete, Snackbar, TextField } from '@mui/material';
 import { useState } from 'react';
-import { useCatchCallback, useEffectAsync } from '../../reactHelper';
+import { useCatchCallback, useAsyncTask } from '../../reactHelper';
 import { snackBarDurationShortMs } from '../util/duration';
 import { useTranslation } from './LocalizationProvider';
 import fetchOrThrow from '../util/fetchOrThrow';
+
+const defaultTitleGetter = (item) => item.name;
 
 const LinkField = ({
   label,
@@ -12,8 +14,7 @@ const LinkField = ({
   baseId,
   keyBase,
   keyLink,
-  keyGetter = (item) => item.id,
-  titleGetter = (item) => item.name,
+  titleGetter = defaultTitleGetter,
 }) => {
   const t = useTranslation();
   const [active, setActive] = useState(false);
@@ -21,31 +22,31 @@ const LinkField = ({
   const [linked, setLinked] = useState();
   const [updated, setUpdated] = useState(false);
 
-  useEffectAsync(async () => {
-    if (active) {
-      const response = await fetchOrThrow(endpointAll);
-      setItems(await response.json());
-    }
-  }, [active]);
+  useAsyncTask(
+    async ({ signal }) => {
+      if (active) {
+        const response = await fetchOrThrow(endpointAll, { signal });
+        setItems(await response.json());
+      }
+    },
+    [active, endpointAll],
+  );
 
-  useEffectAsync(async () => {
-    if (active) {
-      const response = await fetchOrThrow(endpointLinked);
-      setLinked(await response.json());
-    }
-  }, [active]);
-
-  const createBody = (linkId) => {
-    const body = {};
-    body[keyBase] = baseId;
-    body[keyLink] = linkId;
-    return body;
-  };
+  useAsyncTask(
+    async ({ signal }) => {
+      if (active) {
+        const response = await fetchOrThrow(endpointLinked, { signal });
+        setLinked(await response.json());
+      }
+    },
+    [active, endpointLinked],
+  );
 
   const onChange = useCatchCallback(
     async (value) => {
-      const oldValue = linked.map((it) => keyGetter(it));
-      const newValue = value.map((it) => keyGetter(it));
+      const createBody = (linkId) => ({ [keyBase]: baseId, [keyLink]: linkId });
+      const oldValue = linked.map((it) => it.id);
+      const newValue = value.map((it) => it.id);
       if (!newValue.find((it) => it < 0)) {
         const results = [];
         newValue
@@ -75,7 +76,7 @@ const LinkField = ({
         setLinked(value);
       }
     },
-    [linked, setUpdated, setLinked],
+    [linked, baseId, keyBase, keyLink],
   );
 
   return (
@@ -83,7 +84,7 @@ const LinkField = ({
       <Autocomplete
         size="small"
         loading={active && !items}
-        isOptionEqualToValue={(i1, i2) => keyGetter(i1) === keyGetter(i2)}
+        isOptionEqualToValue={(i1, i2) => i1.id === i2.id}
         options={items || []}
         getOptionLabel={(item) => titleGetter(item)}
         slotProps={{ chip: { size: 'small' } }}

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { Paper } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import { useTheme } from '@mui/material/styles';
@@ -13,10 +13,11 @@ import EventsDrawer from './EventsDrawer';
 import DashboardDrawer from './DashboardDrawer';
 import useFilter from './useFilter';
 import MainToolbar from './MainToolbar';
-import MainMap from './MainMap';
 import { useAttributePreference } from '../common/util/preferences';
 import DeviceBottomSheet from './DeviceBottomSheet';
 import StatusCardDrawer from '../common/components/StatusCardDrawer';
+
+const MainMap = lazy(() => import('./MainMap'));
 
 const useStyles = makeStyles()((theme) => ({
   root: {
@@ -27,7 +28,7 @@ const useStyles = makeStyles()((theme) => ({
     flexDirection: 'column',
     backgroundColor: '#fff',
     boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-    position: 'relative', // Ensure the button is positioned relative to the sidebar
+    position: 'relative',
     [theme.breakpoints.up('md')]: {
       position: 'fixed',
       left: 0,
@@ -68,15 +69,15 @@ const useStyles = makeStyles()((theme) => ({
   },
   toggleButton: {
     position: 'absolute',
-    top: '30%', // Center vertically
-    right: '-22px', // Move it outside the sidebar
-    transform: 'translateY(-50%)', // Align perfectly in the middle
-    backgroundColor: '#e0e0e0', // Light grey like in the image
-    color: '#000', // Black icon
-    border: '1px solid #ccc', // Slight border
-    borderRadius: '4px 10px 10px 4px', // Rounded only on left side
-    width: '30px', // Smaller width
-    height: '60px', // Taller button
+    top: '30%',
+    right: '-22px',
+    transform: 'translateY(-50%)',
+    backgroundColor: '#e0e0e0',
+    color: '#000',
+    border: '1px solid #ccc',
+    borderRadius: '4px 10px 10px 4px',
+    width: '30px',
+    height: '60px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -84,13 +85,20 @@ const useStyles = makeStyles()((theme) => ({
     boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.2)',
     transition: 'background-color 0.3s ease',
     '&:hover': {
-      backgroundColor: '#d6d6d6', // Slightly darker grey on hover
+      backgroundColor: '#d6d6d6',
     },
     [theme.breakpoints.down('md')]: {
-      display: 'none', // Hide on mobile
+      display: 'none',
     },
   },
 }));
+
+const INITIAL_FILTER = {
+  statuses: [],
+  groups: [],
+  geofences: [],
+  motionStatuses: [],
+};
 
 const MainPage = () => {
   const { classes } = useStyles();
@@ -114,17 +122,13 @@ const MainPage = () => {
   const [filteredDevices, setFilteredDevices] = useState([]);
 
   const [keyword, setKeyword] = useState('');
-  const INITIAL_FILTER = {
-    statuses: [],
-    groups: [],
-    motionStatuses: [],
-  };
-  const [filter, setFilter] = usePersistedState('filter', INITIAL_FILTER);
+  const [filter, setFilter] = usePersistedState('deviceFilter', INITIAL_FILTER);
   const [filterSort, setFilterSort] = usePersistedState('filterSort', '');
   const [filterMap, setFilterMap] = usePersistedState('filterMap', false);
-  const handleResetFilters = () => {
+
+  const handleResetFilters = useCallback(() => {
     setFilter(INITIAL_FILTER);
-  };
+  }, [setFilter]);
 
   const [devicesOpen, setDevicesOpen] = useState(desktop);
   const [eventsOpen, setEventsOpen] = useState(false);
@@ -137,7 +141,9 @@ const MainPage = () => {
     setAcknowledgedEventId(latestEventId);
     setEventsOpen(true);
   }, [latestEventId]);
-  const onBoardClick = useCallback(() => setDashboardOpen(true), [setDashboardOpen]);
+
+  const onBoardClick = useCallback(() => setDashboardOpen(true), []);
+
   useEffect(() => {
     if (!desktop && mapOnSelect && selectedDeviceId) {
       setDevicesOpen(false);
@@ -157,20 +163,22 @@ const MainPage = () => {
   return (
     <div className={classes.root}>
       {desktop && (
-        <MainMap
-          filteredPositions={filteredPositions}
-          notificationEnabled={notificationEnabled}
-          selectedPosition={selectedPosition}
-          onEventsClick={onEventsClick}
-          onBoardClick={onBoardClick}
-        />
+        <Suspense fallback={null}>
+          <MainMap
+            filteredPositions={filteredPositions}
+            notificationEnabled={notificationEnabled}
+            selectedPosition={selectedPosition}
+            onEventsClick={onEventsClick}
+            onBoardClick={onBoardClick}
+          />
+        </Suspense>
       )}
 
       <div
         className={classes.sidebar}
         style={{
-          transform: isSidebarVisible ? 'translateX(0)' : 'translateX(-100%)', // Slide in/out
-          transition: 'transform 0.3s ease-in-out', // Smooth animation
+          transform: isSidebarVisible ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 0.3s ease-in-out',
         }}
       >
         {desktop && (
@@ -188,21 +196,24 @@ const MainPage = () => {
               filterMap={filterMap}
               setFilterMap={setFilterMap}
               onResetFilters={handleResetFilters}
+              setDeviceSheetOpen={setDeviceSheetOpen}
             />
           </Paper>
         )}
         <div className={classes.middle}>
           {!desktop && (
             <div className={classes.contentMap}>
-              <MainMap
-                filteredPositions={filteredPositions}
-                notificationEnabled={notificationEnabled}
-                selectedPosition={selectedPosition}
-                selectedDevices={filteredDevices}
-                onEventsClick={onEventsClick}
-                onBoardClick={onBoardClick}
-                setDeviceSheetOpen={setDeviceSheetOpen}
-              />
+              <Suspense fallback={null}>
+                <MainMap
+                  filteredPositions={filteredPositions}
+                  notificationEnabled={notificationEnabled}
+                  selectedPosition={selectedPosition}
+                  selectedDevices={filteredDevices}
+                  onEventsClick={onEventsClick}
+                  onBoardClick={onBoardClick}
+                  setDeviceSheetOpen={setDeviceSheetOpen}
+                />
+              </Suspense>
             </div>
           )}
           {desktop && (
@@ -211,7 +222,7 @@ const MainPage = () => {
               className={classes.contentList}
               style={devicesOpen ? {} : { visibility: 'hidden' }}
             >
-              <DeviceList devices={filteredDevices} />
+              <DeviceList devices={filteredDevices} setDeviceSheetOpen={setDeviceSheetOpen} />
             </Paper>
           )}
         </div>
@@ -236,7 +247,7 @@ const MainPage = () => {
             bottom: 0,
             left: 0,
             right: 0,
-            zIndex: 1300, // Above most elements
+            zIndex: 1300,
           }}
         >
           <DeviceBottomSheet
@@ -283,8 +294,6 @@ const MainPage = () => {
           if (!mobile) return;
 
           setDashboardOpen(false);
-
-          // 🔑 Defer bottom sheet opening until filter is committed
           requestAnimationFrame(() => {
             setDeviceSheetOpen(true);
           });

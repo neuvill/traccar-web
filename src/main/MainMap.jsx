@@ -1,7 +1,8 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useDispatch, useSelector } from 'react-redux';
+import { makeStyles } from 'tss-react/mui';
 import MapView from '../map/core/MapView';
 import MapSelectedDevice from '../map/main/MapSelectedDevice';
 import MapAccuracy from '../map/main/MapAccuracy';
@@ -14,11 +15,12 @@ import MapDefaultCamera from '../map/main/MapDefaultCamera';
 import MapLiveRoutes from '../map/main/MapLiveRoutes';
 import MapPositions from '../map/MapPositions';
 import MapOverlay from '../map/overlay/MapOverlay';
-import MapGeocoder from '../map/geocoder/MapGeocoder';
-import MapNotification from '../map/notification/MapNotification';
+import MapGeocoder from '../map/control/MapGeocoder';
+import MapScale from '../map/MapScale';
+import MapRuler from '../map/control/MapRuler';
+import MapNotification from '../map/control/MapNotification';
 import MapDashboard from '../map/dashboard/MapDashboard';
 import useFeatures from '../common/util/useFeatures';
-import { makeStyles } from 'tss-react/mui';
 import BottomPhoneMenue from '../common/components/BottomPhoneMenu';
 import AssistantWidget from '../common/components/AssistantWidget';
 import MapAssistant from '../map/assistant/MapAssistant';
@@ -26,7 +28,6 @@ import MapAssistant from '../map/assistant/MapAssistant';
 const useStyles = makeStyles(() => ({
   menu: {
     zIndex: 4,
-    //pointerEvents: 'none',
   },
 }));
 
@@ -48,6 +49,8 @@ const MainMap = ({
   const classes = useStyles();
   const features = useFeatures();
 
+  const [rulerActive, setRulerActive] = useState(false);
+
   const onMarkerClick = useCallback(
     (_, deviceId) => {
       dispatch(devicesActions.selectId(deviceId));
@@ -68,30 +71,30 @@ const MainMap = ({
           selectedDevices={selectedDevices}
           selectedPosition={selectedPosition}
           showStatus
+          disabled={rulerActive}
         />
         <MapDefaultCamera filteredPositions={filteredPositions} />
         <MapSelectedDevice />
         <PoiMap />
+        <MapRuler positions={filteredPositions} onActiveChange={setRulerActive} />
         {!desktop && location.pathname !== '/replay' && (
           <div className={classes.menu}>
             <BottomPhoneMenue setDeviceSheetOpen={setDeviceSheetOpen} />
           </div>
         )}
       </MapView>
-      {/*<MapScale />*/}
+      <MapScale />
       <MapCurrentLocation />
       <MapGeocoder />
       {!features.disableEvents && (
         <MapNotification enabled={notificationEnabled} onClick={onEventsClick} />
       )}
-
       <MapDashboard onClick={onBoardClick} />
       {user?.administrator && (
         <AssistantWidget
           renderTrigger={({ onOpen, title }) => <MapAssistant title={title} onClick={onOpen} />}
         />
       )}
-
       {desktop && (
         <MapPadding
           start={

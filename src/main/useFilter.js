@@ -43,6 +43,11 @@ export default (
         (device) =>
           !filterGroups.length || deviceGroups(device).some((id) => filterGroups.includes(id)),
       )
+      .filter(
+        (device) =>
+          !filter.geofences.length ||
+          (positions[device.id]?.geofenceIds || []).some((id) => filter.geofences.includes(id)),
+      )
       .filter((device) => {
         if (!filterMotionStatuses.length) return true;
 

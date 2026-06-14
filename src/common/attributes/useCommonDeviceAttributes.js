@@ -6,22 +6,22 @@ export default (t) =>
       speedLimit: {
         name: t('attributeSpeedLimit'),
         type: 'number',
-        subtype: 'speed',
+        dataType: 'speed',
       },
       proximityEnterDistance: {
         name: t('attributeProximityEnterDistance'),
         type: 'number',
-        subtype: 'distance',
+        dataType: 'distance',
       },
       proximityExitDistance: {
         name: t('attributeProximityExitDistance'),
         type: 'number',
-        subtype: 'distance',
+        dataType: 'distance',
       },
       unaccompaniedDistance: {
         name: t('attributeUnaccompaniedDistance'),
         type: 'number',
-        subtype: 'distance',
+        dataType: 'distance',
       },
       fuelDropThreshold: {
         name: t('attributeFuelDropThreshold'),
@@ -113,6 +113,10 @@ export default (t) =>
       },
       'filter.skipAttributes': {
         name: t('attributeFilterSkipAttributes'),
+        type: 'string',
+      },
+      'time.override': {
+        name: t('attributeTimeOverride'),
         type: 'string',
       },
     }),

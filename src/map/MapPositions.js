@@ -2,13 +2,13 @@ import { useId, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import dayjs from 'dayjs';
 import { map } from './core/MapView';
 import { formatTime, getIconStatusColor } from '../common/util/formatter';
 import { mapIconKey } from './core/preloadImages';
 import { useAttributePreference } from '../common/util/preferences';
 import { useCatchCallback } from '../reactHelper';
-import { findFonts } from './core/mapUtil';
-import dayjs from 'dayjs';
+import { findFonts, fromMapCoordinates, toMapCoordinates } from './core/mapUtil';
 
 const isDeviceStale = (device) => {
   if (!device.lastUpdate) {
@@ -31,7 +31,7 @@ const formatFeatureTitle = (position, device, titleField) => {
   return titleField === 'fixTime' ? formatTime(value, 'seconds') : value;
 };
 
-const getFeatureCacheKey = (position, device, selectedDeviceId, titleField) =>
+const getFeatureCacheKey = (position, device, selectedDeviceId, titleField, showStatus) =>
   [
     position.id,
     position.latitude,
@@ -45,33 +45,40 @@ const getFeatureCacheKey = (position, device, selectedDeviceId, titleField) =>
     device.lastUpdate,
     titleField,
     titleField ? position[titleField] : null,
+    showStatus,
   ].join('|');
 
-const MapPositions = ({ positions, onMapClick, onMarkerClick, titleField, isReplay }) => {
+const MapPositions = ({
+  positions,
+  onMapClick,
+  onMarkerClick,
+  showStatus,
+  selectedPosition,
+  titleField,
+  isReplay,
+  disabled,
+}) => {
   const id = useId();
   const clusters = `${id}-clusters`;
   const selected = `${id}-selected`;
   const Replay = isReplay || false;
   const prevPositionsRef = useRef({});
-  //console.log('positions', positions[0].deviceId);
 
   const theme = useTheme();
   const desktop = useMediaQuery(theme.breakpoints.up('md'));
   const iconScale = useAttributePreference('iconScale', desktop ? 0.75 : 0.75);
 
   const devices = useSelector((state) => state.devices.items);
-  //console.log('devices', devices[56]);
-
   const selectedDeviceId = useSelector((state) => state.devices.selectedId);
 
   const mapCluster = useAttributePreference('mapCluster', true);
-  //const directionType = useAttributePreference('mapDirection', 'selected');
 
-  const deviceMap = devices;
+  const disabledRef = useRef(disabled);
+  disabledRef.current = disabled;
 
   const createFeature = useCallback(
     (position) => {
-      const device = deviceMap[position.deviceId];
+      const device = devices[position.deviceId];
       if (!device) return null;
 
       const isSelected = position.deviceId === selectedDeviceId;
@@ -82,15 +89,16 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, titleField, isRepl
         name: formatFeatureTitle(position, device, titleField),
         fixTime: formatTime(position.fixTime, 'seconds'),
         category: mapIconKey(device.category),
-        color: isDeviceStale(device)
-          ? 'neutral'
-          : getIconStatusColor(position?.attributes?.motionStatus),
+        color:
+          !showStatus || isDeviceStale(device)
+            ? 'neutral'
+            : getIconStatusColor(position?.attributes?.motionStatus),
         rotation: position.course,
         dynamicDirection: position?.attributes?.motionStatus === 'moving',
         isSelected,
       };
     },
-    [deviceMap, selectedDeviceId, titleField],
+    [devices, selectedDeviceId, showStatus, titleField],
   );
 
   const onMouseEnter = useCallback(() => {
@@ -104,7 +112,8 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, titleField, isRepl
   const onMapClickCallback = useCallback(
     (event) => {
       if (!event.defaultPrevented && onMapClick) {
-        onMapClick(event.lngLat.lat, event.lngLat.lng);
+        const [longitude, latitude] = fromMapCoordinates(event.lngLat.lng, event.lngLat.lat);
+        onMapClick(latitude, longitude);
       }
     },
     [onMapClick],
@@ -112,6 +121,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, titleField, isRepl
 
   const onMarkerClickCallback = useCallback(
     (event) => {
+      if (disabledRef.current) return;
       event.preventDefault();
       const feature = event.features[0];
       if (onMarkerClick) {
@@ -123,6 +133,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, titleField, isRepl
 
   const onClusterClick = useCatchCallback(
     async (event) => {
+      if (disabledRef.current) return;
       event.preventDefault();
       const features = map.queryRenderedFeatures(event.point, {
         layers: [clusters],
@@ -134,7 +145,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, titleField, isRepl
         zoom,
       });
     },
-    [clusters],
+    [clusters, id],
   );
 
   useEffect(() => {
@@ -166,21 +177,13 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, titleField, isRepl
           'icon-size': [
             'case',
             ['==', ['get', 'isSelected'], true],
-            iconScale * 1.35, // bigger when selected
+            iconScale * 1.35,
             iconScale,
           ],
           'icon-allow-overlap': true,
-          /*'icon-rotate': [
-            'case',
-            ['==', ['get', 'dynamicDirection'], true],
-            ['get', 'rotation'],
-            0
-          ],*/
-
           'text-field': Replay ? '' : ['get', 'name'],
           'text-allow-overlap': true,
           'text-anchor': 'bottom',
-
           'text-offset': [0, -2 * iconScale],
           'text-font': findFonts(map),
           'text-size': 15,
@@ -199,15 +202,14 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, titleField, isRepl
         filter: [
           'all',
           ['!has', 'point_count'],
-          //['==', 'direction', true],
-          ['==', 'dynamicDirection', true], // do not show direction for the dynamic category
+          ['==', 'dynamicDirection', true],
         ],
         layout: {
           'icon-image': 'direction',
           'icon-size': [
             'case',
             ['==', ['get', 'isSelected'], true],
-            iconScale * 1.5, // bigger when selected
+            iconScale * 1.5,
             iconScale * 1.15,
           ],
           'icon-allow-overlap': true,
@@ -228,7 +230,6 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, titleField, isRepl
       layout: {
         'icon-image': 'backclust',
         'icon-size': iconScale * 0.65,
-        //'icon-allow-overlap': false,
         'text-field': '{point_count_abbreviated}',
         'text-font': findFonts(map),
         'text-size': 16,
@@ -298,11 +299,17 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, titleField, isRepl
     const selectedFeatures = [];
 
     for (const position of positions) {
-      const device = deviceMap[position.deviceId];
+      const device = devices[position.deviceId];
       if (!device) continue;
 
       const prevPos = prev[position.deviceId];
-      const cacheKey = getFeatureCacheKey(position, device, selectedDeviceId, titleField);
+      const cacheKey = getFeatureCacheKey(
+        position,
+        device,
+        selectedDeviceId,
+        titleField,
+        showStatus,
+      );
       const changed = prevPos?.cacheKey !== cacheKey;
 
       const properties = changed ? createFeature(position) : prevPos?.properties;
@@ -313,7 +320,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, titleField, isRepl
         type: 'Feature',
         geometry: {
           type: 'Point',
-          coordinates: [position.longitude, position.latitude],
+          coordinates: toMapCoordinates(position.longitude, position.latitude),
         },
         properties,
       };
@@ -342,24 +349,7 @@ const MapPositions = ({ positions, onMapClick, onMarkerClick, titleField, isRepl
     });
 
     prevPositionsRef.current = next;
-  }, [
-    Replay,
-    clusters,
-    createFeature,
-    deviceMap,
-    iconScale,
-    id,
-    mapCluster,
-    onClusterClick,
-    onMapClickCallback,
-    onMarkerClickCallback,
-    onMouseEnter,
-    onMouseLeave,
-    positions,
-    selected,
-    selectedDeviceId,
-    titleField,
-  ]);
+  }, [createFeature, devices, id, positions, selected, selectedDeviceId, showStatus, titleField]);
 
   return null;
 };

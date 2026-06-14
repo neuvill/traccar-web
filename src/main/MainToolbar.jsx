@@ -1,28 +1,34 @@
 import { useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import {
-  Toolbar,
-  IconButton,
-  OutlinedInput,
-  InputAdornment,
-  Popover,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  FormGroup,
-  FormControlLabel,
-  Checkbox,
   Badge,
+  Checkbox,
+  FormControl,
+  FormControlLabel,
+  FormGroup,
+  IconButton,
+  InputAdornment,
+  InputLabel,
   ListItemButton,
   ListItemText,
+  MenuItem,
+  OutlinedInput,
+  Popover,
+  Select,
+  Toolbar,
+  Tooltip,
 } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import { useTheme } from '@mui/material/styles';
+import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
-import TuneIcon from '@mui/icons-material/Tune';
+import DnsIcon from '@mui/icons-material/Dns';
+import MapIcon from '@mui/icons-material/Map';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import TuneIcon from '@mui/icons-material/Tune';
 import { useTranslation } from '../common/components/LocalizationProvider';
+import { useDeviceReadonly } from '../common/util/permissions';
 import DeviceRow from './DeviceRow';
 
 const useStyles = makeStyles()((theme) => ({
@@ -58,10 +64,13 @@ const MainToolbar = ({
 }) => {
   const { classes } = useStyles();
   const theme = useTheme();
+  const navigate = useNavigate();
   const t = useTranslation();
+  const deviceReadonly = useDeviceReadonly();
 
   const groups = useSelector((state) => state.groups.items);
   const devices = useSelector((state) => state.devices.items);
+  const geofences = useSelector((state) => state.geofences.items);
   const positions = useSelector((state) => state.session.positions);
 
   const toolbarRef = useRef();
@@ -72,6 +81,7 @@ const MainToolbar = ({
 
   const filterStatuses = filter?.statuses || [];
   const filterGroups = filter?.groups || [];
+  const filterGeofences = filter?.geofences || [];
   const filterMotionStatuses = filter?.motionStatuses || [];
 
   const deviceStatusCounts = useMemo(
@@ -97,6 +107,9 @@ const MainToolbar = ({
 
   return (
     <Toolbar ref={toolbarRef} className={classes.toolbar}>
+      <IconButton edge="start" onClick={() => setDevicesOpen(!devicesOpen)}>
+        {devicesOpen ? <MapIcon /> : <DnsIcon />}
+      </IconButton>
       <OutlinedInput
         ref={inputRef}
         placeholder={t('sharedSearchDevices')}
@@ -113,7 +126,10 @@ const MainToolbar = ({
             size="small"
             onClick={onResetFilters}
             disabled={
-              !filterStatuses.length && !filterGroups.length && !filterMotionStatuses.length
+              !filterStatuses.length
+              && !filterGroups.length
+              && !filterGeofences.length
+              && !filterMotionStatuses.length
             }
             title="Reset filters"
           >
@@ -143,7 +159,10 @@ const MainToolbar = ({
                 color="info"
                 variant="dot"
                 invisible={
-                  !filterStatuses.length && !filterGroups.length && !filterMotionStatuses.length
+                  !filterStatuses.length
+                  && !filterGroups.length
+                  && !filterGeofences.length
+                  && !filterMotionStatuses.length
                 }
               >
                 <TuneIcon fontSize="small" />
@@ -182,12 +201,7 @@ const MainToolbar = ({
           />
         ))}
         {filteredDevices.length > 3 && (
-          <ListItemButton
-            alignItems="center"
-            onClick={() => {
-              setDevicesOpen(true);
-            }}
-          >
+          <ListItemButton alignItems="center" onClick={() => setDevicesOpen(true)}>
             <ListItemText primary={t('notificationAlways')} style={{ textAlign: 'center' }} />
           </ListItemButton>
         )}
@@ -228,7 +242,6 @@ const MainToolbar = ({
               <MenuItem value="parked">{`${t('motionStatusParked')} (${motionStatusCounts.parked || 0})`}</MenuItem>
             </Select>
           </FormControl>
-
           <FormControl>
             <InputLabel>{t('settingsGroups')}</InputLabel>
             <Select
@@ -242,6 +255,23 @@ const MainToolbar = ({
                 .map((group) => (
                   <MenuItem key={group.id} value={group.id}>
                     {group.name}
+                  </MenuItem>
+                ))}
+            </Select>
+          </FormControl>
+          <FormControl>
+            <InputLabel>{t('sharedGeofences')}</InputLabel>
+            <Select
+              label={t('sharedGeofences')}
+              value={filterGeofences}
+              onChange={(e) => setFilter({ ...filter, geofences: e.target.value })}
+              multiple
+            >
+              {Object.values(geofences)
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((geofence) => (
+                  <MenuItem key={geofence.id} value={geofence.id}>
+                    {geofence.name}
                   </MenuItem>
                 ))}
             </Select>
@@ -269,6 +299,15 @@ const MainToolbar = ({
           </FormGroup>
         </div>
       </Popover>
+      <IconButton edge="end" onClick={() => navigate('/settings/device')} disabled={deviceReadonly}>
+        <Tooltip
+          open={!deviceReadonly && Object.keys(devices).length === 0}
+          title={t('deviceRegisterFirst')}
+          arrow
+        >
+          <AddIcon />
+        </Tooltip>
+      </IconButton>
     </Toolbar>
   );
 };
