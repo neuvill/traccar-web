@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 import MapView from '../map/core/MapView';
 import MapSelectedDevice from '../map/main/MapSelectedDevice';
@@ -45,7 +45,6 @@ const MainMap = ({
 
   const desktop = useMediaQuery(theme.breakpoints.up('md'));
 
-  const user = useSelector((state) => state.session.user);
   const classes = useStyles();
   const features = useFeatures();
 
@@ -90,11 +89,9 @@ const MainMap = ({
         <MapNotification enabled={notificationEnabled} onClick={onEventsClick} />
       )}
       <MapDashboard onClick={onBoardClick} />
-      {user?.administrator && (
-        <AssistantWidget
-          renderTrigger={({ onOpen, title }) => <MapAssistant title={title} onClick={onOpen} />}
-        />
-      )}
+      <AssistantWidget
+        renderTrigger={({ onOpen, title }) => <MapAssistant title={title} onClick={onOpen} />}
+      />
       {desktop && (
         <MapPadding
           start={
