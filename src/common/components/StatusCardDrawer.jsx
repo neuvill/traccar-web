@@ -51,8 +51,8 @@ const useStyles = makeStyles()((theme) => ({
   drawerPaper: {
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    minHeight: '35vh',
-    maxHeight: '80vh',
+    height: '45vh',
+    maxHeight: '45vh',
     display: 'flex',
     flexDirection: 'column',
   },
