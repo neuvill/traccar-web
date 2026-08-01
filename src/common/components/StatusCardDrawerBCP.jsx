@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 
 import {
-
     Typography,
     CardActions,
     IconButton,
@@ -21,49 +20,32 @@ import {
     CardMedia,
 } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
-//import CloseIcon from '@mui/icons-material/Close';
-import ReplayIcon from '@mui/icons-material/Replay';
+import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
 import PublishIcon from '@mui/icons-material/Publish';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
-//import DeleteIcon from '@mui/icons-material/Delete';
 import PendingIcon from '@mui/icons-material/Pending';
 import HistoryIcon from '@mui/icons-material/History';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
+import RouteIcon from '@mui/icons-material/Route';
+import SpeedIcon from '@mui/icons-material/Speed';
 import { useTranslation } from './LocalizationProvider';
 import RemoveDialog from './RemoveDialog';
 import PositionValue from './PositionValue';
-import { useDeviceReadonly } from '../util/permissions';
+import { useDeviceReadonly, useRestriction } from '../util/permissions';
 import usePositionAttributes from '../attributes/usePositionAttributes';
 import { devicesActions } from '../../store';
 import { useCatch, useCatchCallback } from '../../reactHelper';
+import { getDeviceMotionStatus } from '../util/deviceStatus';
 import { useAttributePreference } from '../util/preferences';
-import { useTheme } from '@mui/material/styles';
+import fetchOrThrow from '../util/fetchOrThrow';
 
-//const theme = useTheme();
-
-const useStyles = makeStyles()((theme, { desktopPadding }) => ({
-
-
-    mediaButton: {
-        color: theme.palette.primary.contrastText,
-        mixBlendMode: 'difference',
-    },
-    header: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: theme.spacing(2),
-    },
+const useStyles = makeStyles()((theme) => ({
     content: {
         paddingTop: theme.spacing(1),
         paddingBottom: theme.spacing(1),
         maxHeight: theme.dimensions.cardContentMaxHeight,
         overflow: 'auto',
-    },
-    icon: {
-        width: '25px',
-        height: '25px',
-        filter: 'brightness(0) invert(1)',
     },
     drawerPaper: {
         borderTopLeftRadius: 16,
@@ -73,6 +55,12 @@ const useStyles = makeStyles()((theme, { desktopPadding }) => ({
         maxHeight: '80vh',
         overflowY: 'auto',
     },
+    statusLine: {
+        height: 4,
+        margin: theme.spacing(-2, -2, 1.5),
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+    },
     table: {
         '& .MuiTableCell-sizeSmall': {
             paddingLeft: 0,
@@ -81,6 +69,17 @@ const useStyles = makeStyles()((theme, { desktopPadding }) => ({
     },
     cell: {
         borderBottom: 'none',
+    },
+    iconCell: {
+        width: theme.spacing(4),
+        textAlign: 'center',
+        color: theme.palette.text.secondary,
+    },
+    positionIcon: {
+        fontSize: 20,
+        stroke: 'currentColor',
+        strokeWidth: 0.6,
+        verticalAlign: 'middle',
     },
     actions: {
         justifyContent: 'space-between',
@@ -97,44 +96,72 @@ const useStyles = makeStyles()((theme, { desktopPadding }) => ({
         right: 8,
         zIndex: 2,
     },
-    /*root: ({ desktopPadding }) => ({
-        pointerEvents: 'none',
-        position: 'fixed',
-        zIndex: 5,
-        left: '50%',
-        [theme.breakpoints.up('md')]: {
-            left: `calc(50% + ${desktopPadding} / 2)`,
-            bottom: theme.spacing(3),
-        },
-        [theme.breakpoints.down('md')]: {
-            left: '50%',
-            bottom: `calc(${theme.spacing(3)} + ${theme.dimensions.bottomBarHeight}px)`,
-        },
-        transform: 'translateX(-50%)',
-    }),*/
 }));
 
-const StatusRow = ({ name, content }) => {
-    const { classes } = useStyles({ desktopPadding: 0 });
+const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);
+
+const STATUS_COLORS = {
+    moving: '#27cb46',
+    idling: '#00b5e2',
+    parked: '#ed2736',
+    still: '#ffcc00',
+    default: '#9e9e9e',
+};
+
+const getDeviceStatusColor = (device, position) => {
+    const status = getDeviceMotionStatus(device, position);
+    return STATUS_COLORS[status] || STATUS_COLORS.default;
+};
+
+const getPositionIcon = (key, label, classes) => {
+    const iconProps = {
+        className: classes.positionIcon,
+        fontSize: 'small',
+    };
+    const icons = {
+        fixTime: <AccessTimeRoundedIcon {...iconProps} />,
+        deviceTime: <AccessTimeRoundedIcon {...iconProps} />,
+        serverTime: <AccessTimeRoundedIcon {...iconProps} />,
+        address: <LocationOnOutlinedIcon {...iconProps} />,
+        speed: <SpeedIcon {...iconProps} />,
+        totalDistance: <RouteIcon {...iconProps} />,
+    };
+
+    if (!icons[key]) {
+        return null;
+    }
+
+    return (
+        <Tooltip title={label}>
+            <span aria-label={label}>{icons[key]}</span>
+        </Tooltip>
+    );
+};
+
+const StatusRow = ({ name, icon, content }) => {
+    const { classes } = useStyles();
 
     return (
         <TableRow>
-            <TableCell className={classes.cell}>
-                <Typography variant="body2">{name}</Typography>
+            <TableCell className={`${classes.cell} ${icon ? classes.iconCell : ''}`}>
+                {icon || <Typography variant="body2">{name}</Typography>}
             </TableCell>
             <TableCell className={classes.cell}>
-                <Typography variant="body2" color="textSecondary">{content}</Typography>
+                <Typography variant="body2" color="textSecondary">
+                    {content}
+                </Typography>
             </TableCell>
         </TableRow>
     );
 };
 
-const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableActions, desktopPadding = 0 }) => {
-    const { classes } = useStyles({ desktopPadding });
+const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableActions }) => {
+    const { classes } = useStyles();
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const t = useTranslation();
 
+    const readonly = useRestriction('readonly');
     const deviceReadonly = useDeviceReadonly();
 
     const shareDisabled = useSelector((state) => state.session.server.attributes.disableShare);
@@ -142,9 +169,13 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
     const device = useSelector((state) => state.devices.items[deviceId]);
 
     const deviceImage = device?.attributes?.deviceImage;
+    const statusColor = getDeviceStatusColor(device, position);
 
     const positionAttributes = usePositionAttributes(t);
-    const positionItems = useAttributePreference('positionItems', 'fixTime,address,speed,totalDistance');
+    const positionItems = useAttributePreference(
+        'positionItems',
+        'fixTime,address,speed,totalDistance',
+    );
 
     const navigationAppLink = useAttributePreference('navigationAppLink');
     const navigationAppTitle = useAttributePreference('navigationAppTitle');
@@ -155,12 +186,8 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
 
     const handleRemove = useCatch(async (removed) => {
         if (removed) {
-            const response = await fetch('/api/devices');
-            if (response.ok) {
-                dispatch(devicesActions.refresh(await response.json()));
-            } else {
-                throw Error(await response.text());
-            }
+            const response = await fetchOrThrow('/api/devices');
+            dispatch(devicesActions.refresh(await response.json()));
         }
         setRemoving(false);
     });
@@ -170,66 +197,53 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
             name: t('sharedGeofence'),
             area: `CIRCLE (${position.latitude} ${position.longitude}, 50)`,
         };
-        const response = await fetch('/api/geofences', {
+        const response = await fetchOrThrow('/api/geofences', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newItem),
         });
-        if (response.ok) {
-            const item = await response.json();
-            const permissionResponse = await fetch('/api/permissions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ deviceId: position.deviceId, geofenceId: item.id }),
-            });
-            if (!permissionResponse.ok) {
-                throw Error(await permissionResponse.text());
-            }
-            navigate(`/settings/geofence/${item.id}`);
-        } else {
-            throw Error(await response.text());
-        }
+        const item = await response.json();
+        await fetchOrThrow('/api/permissions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ deviceId: position.deviceId, geofenceId: item.id }),
+        });
+        navigate(`/settings/geofence/${item.id}`);
     }, [navigate, position]);
 
     return (
         <>
-
             {device && (
                 <SwipeableDrawer
-                    //handle={`.${classes.media}, .${classes.header}`}
                     anchor="bottom"
                     open={open}
                     onClose={onClose}
                     onOpen={() => { }}
-                    hideBackdrop // ← This disables the blur/dark overlay
+                    hideBackdrop
                     disableSwipeToOpen
                     disableBackdropTransition
                     ModalProps={{
                         BackdropProps: {
                             invisible: true,
                             sx: {
-                                pointerEvents: 'none', // Important
+                                pointerEvents: 'none',
                             },
                         },
                         sx: {
-                            pointerEvents: 'none', // Also important for the modal layer
+                            pointerEvents: 'none',
                         },
                     }}
                     slotProps={{
                         paper: {
                             className: classes.drawerPaper,
                             sx: {
-                                pointerEvents: 'auto', // Only the drawer itself should handle interaction
-
+                                pointerEvents: 'auto',
                             },
                         },
                     }}
                 >
-                    <IconButton
-                        className={classes.closeButton}
-                        onClick={onClose}
-                        size="small"
-                    >
+                    <div className={classes.statusLine} style={{ backgroundColor: statusColor }} />
+                    <IconButton className={classes.closeButton} onClick={onClose} size="small">
                         <CloseIcon />
                     </IconButton>
                     {deviceImage ? (
@@ -258,49 +272,49 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
                             }}
                         />
                     )}
-                    <Box
-
-                    /*sx={{
-                        borderTopLeftRadius: '16px', // Adjust the value for the desired roundness
-                        borderTopRightRadius: '16px', // Adjust the value for the desired roundness
-                        borderBottomLeftRadius: '16px', // Adjust the value for the desired roundness
-                        borderBottomRightRadius: '16px', // Adjust the value for the desired roundness
-                        boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.4)',
-                    }}*/
-
-                    >
-
-                        <box >
-                            <Typography sx={{ color: '#2b4e75', fontWeight: 'bold' }} variant="body2" color="textSecondary">
+                    <Box>
+                        <Box>
+                            <Typography
+                                sx={{ color: '#2b4e75', fontWeight: 'bold' }}
+                                variant="body2"
+                                color="textSecondary"
+                            >
                                 {device.name}
                             </Typography>
-
-                        </box>
+                        </Box>
 
                         {position && (
                             <Box className={classes.content}>
                                 <Table size="small" classes={{ root: classes.table }}>
                                     <TableBody>
-                                        {positionItems.split(',').filter((key) => position.hasOwnProperty(key) || position.attributes.hasOwnProperty(key)).map((key) => (
-                                            <StatusRow
-                                                key={key}
-                                                name={positionAttributes[key]?.name || key}
-                                                content={(
-                                                    <PositionValue
-                                                        position={position}
-                                                        property={position.hasOwnProperty(key) ? key : null}
-                                                        attribute={position.hasOwnProperty(key) ? null : key}
+                                        {positionItems
+                                            .split(',')
+                                            .filter((key) => hasOwn(position, key) || hasOwn(position.attributes, key))
+                                            .map((key) => {
+                                                const name = positionAttributes[key]?.name || key;
+                                                return (
+                                                    <StatusRow
+                                                        key={key}
+                                                        name={name}
+                                                        icon={getPositionIcon(key, name, classes)}
+                                                        content={
+                                                            <PositionValue
+                                                                position={position}
+                                                                property={hasOwn(position, key) ? key : null}
+                                                                attribute={hasOwn(position, key) ? null : key}
+                                                            />
+                                                        }
                                                     />
-                                                )}
-                                            />
-                                        ))}
-
+                                                );
+                                            })}
                                     </TableBody>
                                     <TableFooter>
                                         <TableRow>
                                             <TableCell colSpan={2} className={classes.cell}>
                                                 <Typography variant="body2">
-                                                    <Link component={RouterLink} to={`/position/${position.id}`}>{t('sharedShowDetails')}</Link>
+                                                    <Link component={RouterLink} to={`/position/${position.id}`}>
+                                                        {t('sharedShowDetails')}
+                                                    </Link>
                                                 </Typography>
                                             </TableCell>
                                         </TableRow>
@@ -318,17 +332,12 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
                                     <PendingIcon />
                                 </IconButton>
                             </Tooltip>
-                            {/*<Tooltip title={t('reportReplay')}>
-                                <IconButton
-                                    onClick={() => navigate(`/replay?deviceId=${deviceId}`)}
-                                    disabled={disableActions || !position}
-                                >
-                                    <ReplayIcon />
-                                </IconButton>
-                            </Tooltip>*/}
                             <Tooltip title={t('reportReplay')}>
-                                <IconButton color='primary'
-                                    onClick={() => navigate(`/qreplay?deviceId=${deviceId}`, { state: { isQuick: true } })}
+                                <IconButton
+                                    color="primary"
+                                    onClick={() =>
+                                        navigate(`/qreplay?deviceId=${deviceId}`, { state: { isQuick: true } })
+                                    }
                                     disabled={disableActions || !position}
                                 >
                                     <HistoryIcon />
@@ -350,7 +359,6 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
                                     <EditIcon />
                                 </IconButton>
                             </Tooltip>
-
                         </CardActions>
                     </Box>
                 </SwipeableDrawer>
@@ -358,13 +366,43 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
 
             {position && (
                 <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
-                    <MenuItem onClick={handleGeofence}>{t('sharedCreateGeofence')}</MenuItem>
-                    <MenuItem component="a" target="_blank" href={`https://www.google.com/maps/search/?api=1&query=${position.latitude}%2C${position.longitude}`}>{t('linkGoogleMaps')}</MenuItem>
-                    <MenuItem component="a" target="_blank" href={`http://maps.apple.com/?ll=${position.latitude},${position.longitude}`}>{t('linkAppleMaps')}</MenuItem>
-                    <MenuItem component="a" target="_blank" href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${position.latitude}%2C${position.longitude}&heading=${position.course}`}>{t('linkStreetView')}</MenuItem>
-                    {navigationAppTitle && <MenuItem component="a" target="_blank" href={navigationAppLink.replace('{latitude}', position.latitude).replace('{longitude}', position.longitude)}>{navigationAppTitle}</MenuItem>}
+                    {!readonly && <MenuItem onClick={handleGeofence}>{t('sharedCreateGeofence')}</MenuItem>}
+                    <MenuItem
+                        component="a"
+                        target="_blank"
+                        href={`https://www.google.com/maps/search/?api=1&query=${position.latitude}%2C${position.longitude}`}
+                    >
+                        {t('linkGoogleMaps')}
+                    </MenuItem>
+                    <MenuItem
+                        component="a"
+                        target="_blank"
+                        href={`http://maps.apple.com/?ll=${position.latitude},${position.longitude}`}
+                    >
+                        {t('linkAppleMaps')}
+                    </MenuItem>
+                    <MenuItem
+                        component="a"
+                        target="_blank"
+                        href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${position.latitude}%2C${position.longitude}&heading=${position.course}`}
+                    >
+                        {t('linkStreetView')}
+                    </MenuItem>
+                    {navigationAppTitle && (
+                        <MenuItem
+                            component="a"
+                            target="_blank"
+                            href={navigationAppLink
+                                .replace('{latitude}', position.latitude)
+                                .replace('{longitude}', position.longitude)}
+                        >
+                            {navigationAppTitle}
+                        </MenuItem>
+                    )}
                     {!shareDisabled && !user.temporary && (
-                        <MenuItem onClick={() => navigate(`/settings/device/${deviceId}/share`)}><Typography color="secondary">{t('deviceShare')}</Typography></MenuItem>
+                        <MenuItem onClick={() => navigate(`/settings/device/${deviceId}/share`)}>
+                            <Typography color="secondary">{t('sharedShare')}</Typography>
+                        </MenuItem>
                     )}
                 </Menu>
             )}

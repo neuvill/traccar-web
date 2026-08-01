@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import dayjs from 'dayjs';
 import {
   Card,
   Typography,
@@ -14,6 +13,7 @@ import {
   Tabs,
   Tab,
   CircularProgress,
+  Dialog,
 } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import { PieChart } from '@mui/x-charts/PieChart';
@@ -36,6 +36,8 @@ import RemoveDialog from './RemoveDialog';
 import PositionValue from './PositionValue';
 import FuelGauge from './FuelGauge';
 import DashboardLoading from './DashboardLoading';
+import useDeviceEventCounts from './useDeviceEventCounts';
+import useDeviceDashboardSummary from './useDeviceDashboardSummary';
 import { useDeviceReadonly, useRestriction } from '../util/permissions';
 import usePositionAttributes from '../attributes/usePositionAttributes';
 import { devicesActions } from '../../store';
@@ -43,7 +45,7 @@ import { useCatch, useCatchCallback } from '../../reactHelper';
 import { getDeviceMotionStatus } from '../util/deviceStatus';
 import { useAttributePreference } from '../util/preferences';
 import { prefixString } from '../util/stringUtils';
-import { formatDistance, formatSpeed, formatVolume, formatNumericHours } from '../util/formatter';
+import { formatNumericHours } from '../util/formatter';
 import fetchOrThrow from '../util/fetchOrThrow';
 
 const useStyles = makeStyles()((theme, { desktopPadding }) => ({
@@ -113,6 +115,22 @@ const useStyles = makeStyles()((theme, { desktopPadding }) => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+  },
+  deviceAvatar: {
+    cursor: 'pointer',
+  },
+  imagePreview: {
+    position: 'relative',
+  },
+  imagePreviewImg: {
+    display: 'block',
+    maxWidth: '80vw',
+    maxHeight: '80vh',
+  },
+  imagePreviewClose: {
+    position: 'absolute',
+    top: theme.spacing(1),
+    right: theme.spacing(1),
   },
   stats: {
     flex: 1,
@@ -184,7 +202,6 @@ const useStyles = makeStyles()((theme, { desktopPadding }) => ({
 
 const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);
 
-const REPORT_EVENT_TYPES = ['alarm', 'deviceOverspeed', 'ignitionOff', 'ignitionOn'];
 const EVENT_COLORS = {
   alarm: '#d32f2f',
   deviceOverspeed: '#ed6c02',
@@ -246,6 +263,7 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
   const device = useSelector((state) => state.devices.items[deviceId]);
 
   const deviceImage = device?.attributes?.deviceImage;
+  const deviceImageUrl = deviceImage ? `/api/media/${device.uniqueId}/${deviceImage}` : undefined;
   const statusColor = getDeviceStatusColor(device, position);
 
   const positionAttributes = usePositionAttributes(t);
@@ -265,106 +283,16 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
 
   const [removing, setRemoving] = useState(false);
 
+  const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
+
   const [tab, setTab] = useState(0);
 
-  const [eventCounts, setEventCounts] = useState(null);
-  const [eventsLoading, setEventsLoading] = useState(false);
-
-  const loadEventCounts = useCatchCallback(async () => {
-    setEventsLoading(true);
-    try {
-      const to = dayjs();
-      const from = to.startOf('day');
-      const query = new URLSearchParams({ from: from.toISOString(), to: to.toISOString() });
-      query.append('deviceId', deviceId);
-      REPORT_EVENT_TYPES.forEach((type) => query.append('type', type));
-      const response = await fetchOrThrow(`/api/reports/events?${query.toString()}`, {
-        headers: { Accept: 'application/json' },
-      });
-      const events = await response.json();
-      setEventCounts(
-        events.reduce((counts, event) => {
-          counts[event.type] = (counts[event.type] || 0) + 1;
-          return counts;
-        }, {}),
-      );
-    } finally {
-      setEventsLoading(false);
-    }
-  }, [deviceId]);
-
-  useEffect(() => {
-    if (tab === 1 && deviceId) {
-      loadEventCounts();
-    }
-  }, [tab, deviceId, loadEventCounts]);
-
-  const [dashboardReport, setDashboardReport] = useState(null);
-  const [dashboardLoading, setDashboardLoading] = useState(false);
-
-  const loadDashboard = useCatchCallback(async () => {
-    setDashboardLoading(true);
-    try {
-      const to = dayjs();
-      const from = to.startOf('day');
-      const query = new URLSearchParams({ from: from.toISOString(), to: to.toISOString() });
-      query.append('deviceId', deviceId);
-      const summaryQuery = new URLSearchParams(query);
-      summaryQuery.append('daily', false);
-      const [summaryResponse, tripsResponse, stopsResponse] = await Promise.all([
-        fetchOrThrow(`/api/reports/summary?${summaryQuery.toString()}`, {
-          headers: { Accept: 'application/json' },
-        }),
-        fetchOrThrow(`/api/reports/trips?${query.toString()}`, {
-          headers: { Accept: 'application/json' },
-        }),
-        fetchOrThrow(`/api/reports/stops?${query.toString()}`, {
-          headers: { Accept: 'application/json' },
-        }),
-      ]);
-      const [summary, trips, stops] = await Promise.all([
-        summaryResponse.json(),
-        tripsResponse.json(),
-        stopsResponse.json(),
-      ]);
-      setDashboardReport({ summary: summary[0] || null, trips, stops });
-    } finally {
-      setDashboardLoading(false);
-    }
-  }, [deviceId]);
-
-  useEffect(() => {
-    if (tab === 2 && deviceId) {
-      loadDashboard();
-    }
-  }, [tab, deviceId, loadDashboard]);
-
-  const dashboardStats = useMemo(() => {
-    if (!dashboardReport) {
-      return null;
-    }
-    const { summary, trips, stops } = dashboardReport;
-    const movingMs = trips.reduce((sum, trip) => sum + (trip.duration || 0), 0);
-    const idlingMs = stops.reduce((sum, stop) => sum + (stop.engineHours || 0), 0);
-    const parkedMs = stops.reduce(
-      (sum, stop) => sum + Math.max((stop.duration || 0) - (stop.engineHours || 0), 0),
-      0,
-    );
-    return {
-      distance: summary ? formatDistance(summary.distance, distanceUnit, t) : null,
-      averageSpeed:
-        summary?.averageSpeed > 0 ? formatSpeed(summary.averageSpeed, speedUnit, t) : null,
-      maxSpeed: summary?.maxSpeed > 0 ? formatSpeed(summary.maxSpeed, speedUnit, t) : null,
-      spentFuel: summary?.spentFuel > 0 ? formatVolume(summary.spentFuel, volumeUnit, t) : null,
-      trips: trips.length,
-      stops: stops.length,
-      motionPieData: [
-        { id: 'moving', label: t('motionStatusMoving'), value: movingMs, color: '#27cb46' },
-        { id: 'idling', label: t('motionStatusIdle'), value: idlingMs, color: '#00b5e2' },
-        { id: 'parked', label: t('motionStatusParked'), value: parkedMs, color: '#ed2736' },
-      ].filter((entry) => entry.value > 0),
-    };
-  }, [dashboardReport, distanceUnit, speedUnit, volumeUnit, t]);
+  const { eventCounts, loading: eventsLoading } = useDeviceEventCounts(deviceId, tab === 1);
+  const { stats: dashboardStats, loading: dashboardLoading } = useDeviceDashboardSummary(
+    deviceId,
+    tab === 2,
+    { distanceUnit, speedUnit, volumeUnit, t },
+  );
 
   const handleRemove = useCatch(async (removed) => {
     if (removed) {
@@ -403,8 +331,10 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
               <div className={classes.deviceSection}>
                 <Avatar
                   variant="rounded"
-                  src={deviceImage ? `/api/media/${device.uniqueId}/${deviceImage}` : undefined}
+                  src={deviceImageUrl}
                   sx={{ bgcolor: statusColor }}
+                  className={deviceImage ? classes.deviceAvatar : undefined}
+                  onClick={deviceImage ? () => setImagePreviewOpen(true) : undefined}
                 >
                   {device.name?.[0]?.toUpperCase()}
                 </Avatar>
@@ -692,6 +622,20 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
         itemId={deviceId}
         onResult={(removed) => handleRemove(removed)}
       />
+      {deviceImage && (
+        <Dialog open={imagePreviewOpen} onClose={() => setImagePreviewOpen(false)} maxWidth={false}>
+          <div className={classes.imagePreview}>
+            <IconButton
+              size="small"
+              onClick={() => setImagePreviewOpen(false)}
+              className={`${classes.closeButton} ${classes.imagePreviewClose}`}
+            >
+              <CloseIcon sx={{ fontSize: 14 }} />
+            </IconButton>
+            <img src={deviceImageUrl} alt={device?.name} className={classes.imagePreviewImg} />
+          </div>
+        </Dialog>
+      )}
     </>
   );
 };

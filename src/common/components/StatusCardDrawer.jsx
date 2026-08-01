@@ -1,78 +1,151 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 
 import {
   Typography,
-  CardActions,
   IconButton,
-  Table,
-  TableBody,
-  TableRow,
-  TableCell,
   Menu,
   MenuItem,
-  TableFooter,
   Link,
   Tooltip,
   SwipeableDrawer,
   Box,
-  CardMedia,
+  Avatar,
+  CircularProgress,
+  Dialog,
 } from '@mui/material';
+import { PieChart } from '@mui/x-charts/PieChart';
 import { makeStyles } from 'tss-react/mui';
 import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
+import CloseIcon from '@mui/icons-material/Close';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import PublishIcon from '@mui/icons-material/Publish';
 import EditIcon from '@mui/icons-material/Edit';
-import CloseIcon from '@mui/icons-material/Close';
-import PendingIcon from '@mui/icons-material/Pending';
 import HistoryIcon from '@mui/icons-material/History';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import LocalGasStationIcon from '@mui/icons-material/LocalGasStation';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import PendingIcon from '@mui/icons-material/Pending';
 import RouteIcon from '@mui/icons-material/Route';
 import SpeedIcon from '@mui/icons-material/Speed';
 import { useTranslation } from './LocalizationProvider';
 import RemoveDialog from './RemoveDialog';
 import PositionValue from './PositionValue';
+import FuelGauge from './FuelGauge';
+import DashboardLoading from './DashboardLoading';
+import useDeviceEventCounts from './useDeviceEventCounts';
+import useDeviceDashboardSummary from './useDeviceDashboardSummary';
 import { useDeviceReadonly, useRestriction } from '../util/permissions';
 import usePositionAttributes from '../attributes/usePositionAttributes';
 import { devicesActions } from '../../store';
 import { useCatch, useCatchCallback } from '../../reactHelper';
 import { getDeviceMotionStatus } from '../util/deviceStatus';
 import { useAttributePreference } from '../util/preferences';
+import { prefixString } from '../util/stringUtils';
+import { formatNumericHours } from '../util/formatter';
 import fetchOrThrow from '../util/fetchOrThrow';
 
 const useStyles = makeStyles()((theme) => ({
-  content: {
-    paddingTop: theme.spacing(1),
-    paddingBottom: theme.spacing(1),
-    maxHeight: theme.dimensions.cardContentMaxHeight,
-    overflow: 'auto',
-  },
   drawerPaper: {
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    padding: theme.spacing(2),
-    minHeight: '30vh',
+    minHeight: '35vh',
     maxHeight: '80vh',
-    overflowY: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
   },
   statusLine: {
     height: 4,
-    margin: theme.spacing(-2, -2, 1.5),
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
   },
-  table: {
-    '& .MuiTableCell-sizeSmall': {
-      paddingLeft: 0,
-      paddingRight: 0,
+  closeButton: {
+    position: 'absolute',
+    top: theme.spacing(1),
+    right: theme.spacing(1),
+    width: 22,
+    height: 22,
+    padding: 0,
+    zIndex: 2,
+    backgroundColor: theme.palette.error.main,
+    color: theme.palette.error.contrastText,
+    '&:hover': {
+      backgroundColor: theme.palette.error.dark,
     },
   },
-  cell: {
-    borderBottom: 'none',
+  handle: {
+    width: 40,
+    height: 5,
+    backgroundColor: theme.palette.divider,
+    borderRadius: 3,
+    margin: theme.spacing(1, 'auto'),
   },
-  iconCell: {
-    width: theme.spacing(4),
-    textAlign: 'center',
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(1.5),
+    padding: theme.spacing(0, 2, 1),
+  },
+  deviceAvatar: {
+    cursor: 'pointer',
+  },
+  deviceName: {
+    fontWeight: 600,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  indicator: {
+    display: 'flex',
+    gap: theme.spacing(1),
+    padding: theme.spacing(0, 2, 1),
+  },
+  indicatorItem: {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing(0.5),
+    padding: theme.spacing(0.5, 0),
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: 600,
+    color: theme.palette.text.secondary,
+    backgroundColor: 'transparent',
+    border: 'none',
+  },
+  indicatorItemActive: {
+    color: theme.palette.primary.contrastText,
+    backgroundColor: theme.palette.primary.main,
+  },
+  slides: {
+    display: 'flex',
+    overflowX: 'auto',
+    scrollSnapType: 'x mandatory',
+    WebkitOverflowScrolling: 'touch',
+    scrollbarWidth: 'none',
+    flex: 1,
+    minHeight: 0,
+    '&::-webkit-scrollbar': {
+      display: 'none',
+    },
+  },
+  slide: {
+    flex: '0 0 100%',
+    width: '100%',
+    minWidth: '100%',
+    scrollSnapAlign: 'start',
+    boxSizing: 'border-box',
+    padding: theme.spacing(0, 2),
+    overflowY: 'auto',
+  },
+  statItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(1),
+    padding: theme.spacing(0.75, 0),
     color: theme.palette.text.secondary,
   },
   positionIcon: {
@@ -81,20 +154,42 @@ const useStyles = makeStyles()((theme) => ({
     strokeWidth: 0.6,
     verticalAlign: 'middle',
   },
-  actions: {
-    justifyContent: 'space-between',
-  },
-  media: {
-    height: theme.dimensions.popupImageHeight,
+  tiles: {
     display: 'flex',
-    justifyContent: 'flex-end',
-    alignItems: 'flex-start',
+    flexWrap: 'wrap',
+    gap: theme.spacing(1),
+    marginBottom: theme.spacing(1.5),
   },
-  closeButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    zIndex: 2,
+  tile: {
+    minWidth: '30%',
+    flex: '1 0 30%',
+    padding: theme.spacing(0.75, 1.5),
+    borderRadius: theme.shape.borderRadius,
+    backgroundColor: theme.palette.action.hover,
+  },
+  tileLabel: {
+    display: 'block',
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    color: theme.palette.text.secondary,
+  },
+  tileValue: {
+    fontWeight: 600,
+    lineHeight: 1.4,
+  },
+  actions: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: theme.spacing(0.5, 1, 1),
+  },
+  imagePreview: {
+    position: 'relative',
+  },
+  imagePreviewImg: {
+    display: 'block',
+    maxWidth: '85vw',
+    maxHeight: '80vh',
   },
 }));
 
@@ -107,6 +202,14 @@ const STATUS_COLORS = {
   still: '#ffcc00',
   default: '#9e9e9e',
 };
+
+const EVENT_COLORS = {
+  alarm: '#d32f2f',
+  deviceOverspeed: '#ed6c02',
+  ignitionOn: '#2e7d32',
+  ignitionOff: '#616161',
+};
+const DEFAULT_EVENT_COLOR = '#9e9e9e';
 
 const getDeviceStatusColor = (device, position) => {
   const status = getDeviceMotionStatus(device, position);
@@ -125,6 +228,7 @@ const getPositionIcon = (key, label, classes) => {
     address: <LocationOnOutlinedIcon {...iconProps} />,
     speed: <SpeedIcon {...iconProps} />,
     totalDistance: <RouteIcon {...iconProps} />,
+    fuel: <LocalGasStationIcon {...iconProps} />,
   };
 
   if (!icons[key]) {
@@ -135,23 +239,6 @@ const getPositionIcon = (key, label, classes) => {
     <Tooltip title={label}>
       <span aria-label={label}>{icons[key]}</span>
     </Tooltip>
-  );
-};
-
-const StatusRow = ({ name, icon, content }) => {
-  const { classes } = useStyles();
-
-  return (
-    <TableRow>
-      <TableCell className={`${classes.cell} ${icon ? classes.iconCell : ''}`}>
-        {icon || <Typography variant="body2">{name}</Typography>}
-      </TableCell>
-      <TableCell className={classes.cell}>
-        <Typography variant="body2" color="textSecondary">
-          {content}
-        </Typography>
-      </TableCell>
-    </TableRow>
   );
 };
 
@@ -169,6 +256,7 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
   const device = useSelector((state) => state.devices.items[deviceId]);
 
   const deviceImage = device?.attributes?.deviceImage;
+  const deviceImageUrl = deviceImage ? `/api/media/${device.uniqueId}/${deviceImage}` : undefined;
   const statusColor = getDeviceStatusColor(device, position);
 
   const positionAttributes = usePositionAttributes(t);
@@ -180,9 +268,43 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
   const navigationAppLink = useAttributePreference('navigationAppLink');
   const navigationAppTitle = useAttributePreference('navigationAppTitle');
 
-  const [anchorEl, setAnchorEl] = useState(null);
+  const distanceUnit = useAttributePreference('distanceUnit');
+  const speedUnit = useAttributePreference('speedUnit');
+  const volumeUnit = useAttributePreference('volumeUnit');
 
+  const [anchorEl, setAnchorEl] = useState(null);
   const [removing, setRemoving] = useState(false);
+  const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
+
+  const [slide, setSlide] = useState(0);
+  const slidesRef = useRef(null);
+
+  const scrollToSlide = (index) => {
+    const el = slidesRef.current;
+    if (!el) {
+      return;
+    }
+    el.scrollTo({ left: index * el.clientWidth, behavior: 'smooth' });
+    setSlide(index);
+  };
+
+  const handleSlidesScroll = () => {
+    const el = slidesRef.current;
+    if (!el || el.clientWidth === 0) {
+      return;
+    }
+    const index = Math.round(el.scrollLeft / el.clientWidth);
+    if (index !== slide) {
+      setSlide(index);
+    }
+  };
+
+  const { eventCounts, loading: eventsLoading } = useDeviceEventCounts(deviceId, slide === 1);
+  const { stats: dashboardStats, loading: dashboardLoading } = useDeviceDashboardSummary(
+    deviceId,
+    slide === 2,
+    { distanceUnit, speedUnit, volumeUnit, t },
+  );
 
   const handleRemove = useCatch(async (removed) => {
     if (removed) {
@@ -211,6 +333,12 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
     navigate(`/settings/geofence/${item.id}`);
   }, [navigate, position]);
 
+  const slideDefs = [
+    { icon: <InfoOutlinedIcon fontSize="small" />, label: t('positionStatus') },
+    { icon: <NotificationsIcon fontSize="small" />, label: t('reportEvents') },
+    { icon: <DashboardIcon fontSize="small" />, label: t('dashboardTitle') },
+  ];
+
   return (
     <>
       {device && (
@@ -225,147 +353,259 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
           ModalProps={{
             BackdropProps: {
               invisible: true,
-              sx: {
-                pointerEvents: 'none',
-              },
+              sx: { pointerEvents: 'none' },
             },
-            sx: {
-              pointerEvents: 'none',
-            },
+            sx: { pointerEvents: 'none' },
           }}
           slotProps={{
             paper: {
               className: classes.drawerPaper,
-              sx: {
-                pointerEvents: 'auto',
-              },
+              sx: { pointerEvents: 'auto' },
             },
           }}
         >
           <div className={classes.statusLine} style={{ backgroundColor: statusColor }} />
           <IconButton className={classes.closeButton} onClick={onClose} size="small">
-            <CloseIcon />
+            <CloseIcon sx={{ fontSize: 14 }} />
           </IconButton>
-          {deviceImage ? (
-            <CardMedia
-              className={classes.media}
-              image={`/api/media/${device.uniqueId}/${deviceImage}`}
-            >
-              <div
-                style={{
-                  width: 40,
-                  height: 5,
-                  backgroundColor: '#ccc',
-                  borderRadius: 3,
-                  margin: '5px auto',
-                }}
-              />
-            </CardMedia>
-          ) : (
-            <div
-              style={{
-                width: 40,
-                height: 5,
-                backgroundColor: '#ccc',
-                borderRadius: 3,
-                margin: '5px auto',
-              }}
-            />
-          )}
-          <Box>
-            <Box>
-              <Typography
-                sx={{ color: '#2b4e75', fontWeight: 'bold' }}
-                variant="body2"
-                color="textSecondary"
-              >
-                {device.name}
-              </Typography>
-            </Box>
+          <div className={classes.handle} />
 
-            {position && (
-              <Box className={classes.content}>
-                <Table size="small" classes={{ root: classes.table }}>
-                  <TableBody>
-                    {positionItems
-                      .split(',')
-                      .filter((key) => hasOwn(position, key) || hasOwn(position.attributes, key))
-                      .map((key) => {
-                        const name = positionAttributes[key]?.name || key;
-                        return (
-                          <StatusRow
-                            key={key}
-                            name={name}
-                            icon={getPositionIcon(key, name, classes)}
-                            content={
-                              <PositionValue
-                                position={position}
-                                property={hasOwn(position, key) ? key : null}
-                                attribute={hasOwn(position, key) ? null : key}
-                              />
-                            }
+          <div className={classes.header}>
+            <Avatar
+              variant="rounded"
+              src={deviceImageUrl}
+              sx={{ bgcolor: statusColor }}
+              className={deviceImage ? classes.deviceAvatar : undefined}
+              onClick={deviceImage ? () => setImagePreviewOpen(true) : undefined}
+            >
+              {device.name?.[0]?.toUpperCase()}
+            </Avatar>
+            <Typography variant="subtitle2" className={classes.deviceName} title={device.name}>
+              {device.name}
+            </Typography>
+          </div>
+
+          <div className={classes.indicator}>
+            {slideDefs.map((def, index) => (
+              <button
+                key={def.label}
+                type="button"
+                className={`${classes.indicatorItem} ${
+                  index === slide ? classes.indicatorItemActive : ''
+                }`}
+                onClick={() => scrollToSlide(index)}
+              >
+                {def.icon}
+                {def.label}
+              </button>
+            ))}
+          </div>
+
+          <div className={classes.slides} ref={slidesRef} onScroll={handleSlidesScroll}>
+            <div className={classes.slide}>
+              {position ? (
+                <>
+                  <div className={classes.statItem}>
+                    {getPositionIcon('fuel', positionAttributes.fuel?.name, classes)}
+                    <FuelGauge
+                      value={position.attributes.fuel}
+                      label={positionAttributes.fuel?.name}
+                    />
+                  </div>
+                  {positionItems
+                    .split(',')
+                    .filter((key) => key !== 'fuel')
+                    .filter((key) => hasOwn(position, key) || hasOwn(position.attributes, key))
+                    .map((key) => {
+                      const name = positionAttributes[key]?.name || key;
+                      return (
+                        <div key={key} className={classes.statItem}>
+                          {getPositionIcon(key, name, classes)}
+                          <Typography variant="body2">
+                            <PositionValue
+                              position={position}
+                              property={hasOwn(position, key) ? key : null}
+                              attribute={hasOwn(position, key) ? null : key}
+                            />
+                          </Typography>
+                        </div>
+                      );
+                    })}
+                  <Link component={RouterLink} to={`/position/${position.id}`} variant="body2">
+                    {t('sharedShowDetails')}
+                  </Link>
+                </>
+              ) : (
+                <Typography variant="body2" color="textSecondary">
+                  {t('sharedNoData')}
+                </Typography>
+              )}
+            </div>
+
+            <div className={classes.slide}>
+              {eventsLoading && (
+                <div className={classes.statItem}>
+                  <CircularProgress size={16} />
+                  <Typography variant="body2" color="textSecondary">
+                    {t('sharedLoading')}
+                  </Typography>
+                </div>
+              )}
+              {!eventsLoading &&
+                (eventCounts && Object.keys(eventCounts).length > 0 ? (
+                  Object.entries(eventCounts)
+                    .sort(([, a], [, b]) => b - a)
+                    .map(([type, count]) => {
+                      const eventColor = EVENT_COLORS[type] || DEFAULT_EVENT_COLOR;
+                      return (
+                        <div key={type} className={classes.statItem}>
+                          <NotificationsIcon
+                            className={classes.positionIcon}
+                            fontSize="small"
+                            sx={{ color: eventColor }}
                           />
-                        );
-                      })}
-                  </TableBody>
-                  <TableFooter>
-                    <TableRow>
-                      <TableCell colSpan={2} className={classes.cell}>
-                        <Typography variant="body2">
-                          <Link component={RouterLink} to={`/position/${position.id}`}>
-                            {t('sharedShowDetails')}
-                          </Link>
+                          <Typography variant="body2" sx={{ color: eventColor, fontWeight: 600 }}>
+                            {`${t(prefixString('event', type))}: ${count}`}
+                          </Typography>
+                        </div>
+                      );
+                    })
+                ) : (
+                  <Typography variant="body2" color="textSecondary">
+                    {t('sharedNoData')}
+                  </Typography>
+                ))}
+            </div>
+
+            <div className={classes.slide}>
+              {dashboardLoading && <DashboardLoading text={t('sharedLoading')} />}
+              {!dashboardLoading && dashboardStats && (
+                <>
+                  <div className={classes.tiles}>
+                    <div className={classes.tile}>
+                      <Typography className={classes.tileLabel}>{t('sharedDistance')}</Typography>
+                      <Typography className={classes.tileValue}>
+                        {dashboardStats.distance ?? '-'}
+                      </Typography>
+                    </div>
+                    <div className={classes.tile}>
+                      <Typography className={classes.tileLabel}>
+                        {t('reportAverageSpeed')}
+                      </Typography>
+                      <Typography className={classes.tileValue}>
+                        {dashboardStats.averageSpeed ?? '-'}
+                      </Typography>
+                    </div>
+                    <div className={classes.tile}>
+                      <Typography className={classes.tileLabel}>
+                        {t('reportMaximumSpeed')}
+                      </Typography>
+                      <Typography className={classes.tileValue}>
+                        {dashboardStats.maxSpeed ?? '-'}
+                      </Typography>
+                    </div>
+                    <div className={classes.tile}>
+                      <Typography className={classes.tileLabel}>{t('reportTrips')}</Typography>
+                      <Typography className={classes.tileValue}>{dashboardStats.trips}</Typography>
+                    </div>
+                    <div className={classes.tile}>
+                      <Typography className={classes.tileLabel}>{t('reportStops')}</Typography>
+                      <Typography className={classes.tileValue}>{dashboardStats.stops}</Typography>
+                    </div>
+                    {dashboardStats.spentFuel && (
+                      <div className={classes.tile}>
+                        <Typography className={classes.tileLabel}>
+                          {t('reportSpentFuel')}
                         </Typography>
-                      </TableCell>
-                    </TableRow>
-                  </TableFooter>
-                </Table>
-              </Box>
-            )}
-            <CardActions classes={{ root: classes.actions }} disableSpacing>
-              <Tooltip title={t('sharedExtra')}>
-                <IconButton
-                  color="secondary"
-                  onClick={(e) => setAnchorEl(e.currentTarget)}
-                  disabled={!position}
-                >
-                  <PendingIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title={t('reportReplay')}>
-                <IconButton
-                  color="primary"
-                  onClick={() =>
-                    navigate(`/qreplay?deviceId=${deviceId}`, { state: { isQuick: true } })
-                  }
-                  disabled={disableActions || !position}
-                >
-                  <HistoryIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title={t('commandTitle')}>
-                <IconButton
-                  onClick={() => navigate(`/settings/device/${deviceId}/command`)}
-                  disabled={disableActions}
-                >
-                  <PublishIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title={t('sharedEdit')}>
-                <IconButton
-                  onClick={() => navigate(`/settings/device/${deviceId}`)}
-                  disabled={disableActions || deviceReadonly}
-                >
-                  <EditIcon />
-                </IconButton>
-              </Tooltip>
-            </CardActions>
-          </Box>
+                        <Typography className={classes.tileValue}>
+                          {dashboardStats.spentFuel}
+                        </Typography>
+                      </div>
+                    )}
+                  </div>
+                  {dashboardStats.motionPieData.length > 0 && (
+                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                      <PieChart
+                        width={220}
+                        height={180}
+                        series={[
+                          {
+                            data: dashboardStats.motionPieData,
+                            innerRadius: 30,
+                            arcLabel: (item) => formatNumericHours(item.value, t),
+                            arcLabelMinAngle: 25,
+                            valueFormatter: (item) => formatNumericHours(item.value, t),
+                          },
+                        ]}
+                        slotProps={{ legend: { direction: 'horizontal' } }}
+                        sx={{
+                          '& .MuiPieArcLabel-root': {
+                            fill: '#fff',
+                            fontSize: 10,
+                          },
+                        }}
+                      />
+                    </Box>
+                  )}
+                </>
+              )}
+              {!dashboardLoading && !dashboardStats && (
+                <Typography variant="body2" color="textSecondary">
+                  {t('sharedNoData')}
+                </Typography>
+              )}
+            </div>
+          </div>
+
+          <div className={classes.actions}>
+            <Tooltip title={t('sharedExtra')}>
+              <IconButton
+                color="secondary"
+                onClick={(e) => setAnchorEl(e.currentTarget)}
+                disabled={!position}
+              >
+                <PendingIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={t('reportReplay')}>
+              <IconButton
+                color="primary"
+                onClick={() =>
+                  navigate(`/qreplay?deviceId=${deviceId}`, { state: { isQuick: true } })
+                }
+                disabled={disableActions || !position}
+              >
+                <HistoryIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={t('commandTitle')}>
+              <IconButton
+                onClick={() => navigate(`/settings/device/${deviceId}/command`)}
+                disabled={disableActions}
+              >
+                <PublishIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={t('sharedEdit')}>
+              <IconButton
+                onClick={() => navigate(`/settings/device/${deviceId}`)}
+                disabled={disableActions || deviceReadonly}
+              >
+                <EditIcon />
+              </IconButton>
+            </Tooltip>
+          </div>
         </SwipeableDrawer>
       )}
 
       {position && (
         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
+          <MenuItem
+            onClick={() => navigate(`/stream?deviceId=${deviceId}`)}
+            disabled={position.protocol !== 'jt808'}
+          >
+            {t('linkLiveVideo')}
+          </MenuItem>
           {!readonly && <MenuItem onClick={handleGeofence}>{t('sharedCreateGeofence')}</MenuItem>}
           <MenuItem
             component="a"
@@ -412,6 +652,20 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
         itemId={deviceId}
         onResult={(removed) => handleRemove(removed)}
       />
+      {deviceImage && (
+        <Dialog open={imagePreviewOpen} onClose={() => setImagePreviewOpen(false)} maxWidth={false}>
+          <div className={classes.imagePreview}>
+            <IconButton
+              size="small"
+              onClick={() => setImagePreviewOpen(false)}
+              className={classes.closeButton}
+            >
+              <CloseIcon sx={{ fontSize: 14 }} />
+            </IconButton>
+            <img src={deviceImageUrl} alt={device?.name} className={classes.imagePreviewImg} />
+          </div>
+        </Dialog>
+      )}
     </>
   );
 };
