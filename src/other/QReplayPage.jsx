@@ -32,7 +32,12 @@ import MapPositions from '../map/MapPositions';
 import MapStopsPoints from '../map/MapStopsPoints';
 import MapEventsPoints from '../map/MapEventsPoints';
 import MapMarkers from '../map/MapMarkers';
-import { formatSpeed, formatTime, formatDistance } from '../common/util/formatter';
+import {
+  formatAdaptiveDuration,
+  formatSpeed,
+  formatTime,
+  formatDistance,
+} from '../common/util/formatter';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import MapCamera from '../map/MapCamera';
 import MapGeofence from '../map/MapGeofence';
@@ -55,7 +60,7 @@ import SpeedIcon from '@mui/icons-material/Speed';
 const PLAYBACK_SPEED = 1;
 const PLAYBACK_TICK_MS = 100;
 const MAX_CHART_POINTS = 4000;
-const REPORT_EVENT_TYPES = ['alarm', 'deviceOverspeed', 'ignitionOff', 'ignitionOn'];
+const REPORT_EVENT_TYPES = ['alarm', 'deviceOverspeed', 'ignitionOff', 'ignitionOn', 'deviceIdle'];
 const TRIP_COLOR = '#1976d2';
 const TRIP_LIST_BORDER_COLOR = '#27cb46';
 const EVENT_COLORS = {
@@ -63,6 +68,7 @@ const EVENT_COLORS = {
   deviceOverspeed: '#ed6c02',
   ignitionOn: '#2e7d32',
   ignitionOff: '#616161',
+  deviceIdle: '#00b5e2',
 };
 const DEFAULT_EVENT_COLOR = '#9e9e9e';
 const STOP_COLOR = '#78909c';
@@ -335,6 +341,10 @@ const QReplayPage = () => {
         case 'deviceOverspeed':
           return event.attributes?.speed != null
             ? formatSpeed(event.attributes.speed, speedUnit, t)
+            : null;
+        case 'deviceIdle':
+          return event.attributes?.duration != null
+            ? formatAdaptiveDuration(event.attributes.duration, t)
             : null;
         default:
           return null;

@@ -207,6 +207,7 @@ const EVENT_COLORS = {
   deviceOverspeed: '#ed6c02',
   ignitionOn: '#2e7d32',
   ignitionOff: '#616161',
+  deviceIdle: '#00b5e2',
 };
 const DEFAULT_EVENT_COLOR = '#9e9e9e';
 

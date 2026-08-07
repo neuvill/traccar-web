@@ -87,6 +87,7 @@ const useStyles = makeStyles()((theme) => ({
     alignItems: 'center',
     gap: theme.spacing(1.5),
     padding: theme.spacing(0, 2, 1),
+    flexShrink: 0,
   },
   deviceAvatar: {
     cursor: 'pointer',
@@ -101,6 +102,7 @@ const useStyles = makeStyles()((theme) => ({
     display: 'flex',
     gap: theme.spacing(1),
     padding: theme.spacing(0, 2, 1),
+    flexShrink: 0,
   },
   indicatorItem: {
     flex: 1,
@@ -125,6 +127,7 @@ const useStyles = makeStyles()((theme) => ({
     overflowX: 'auto',
     scrollSnapType: 'x mandatory',
     WebkitOverflowScrolling: 'touch',
+    touchAction: 'pan-x',
     scrollbarWidth: 'none',
     flex: 1,
     minHeight: 0,
@@ -140,6 +143,7 @@ const useStyles = makeStyles()((theme) => ({
     boxSizing: 'border-box',
     padding: theme.spacing(0, 2),
     overflowY: 'auto',
+    overflowX: 'hidden',
   },
   statItem: {
     display: 'flex',
@@ -182,6 +186,9 @@ const useStyles = makeStyles()((theme) => ({
     display: 'flex',
     justifyContent: 'space-between',
     padding: theme.spacing(0.5, 1, 1),
+    flexShrink: 0,
+    position: 'relative',
+    zIndex: 1,
   },
   imagePreview: {
     position: 'relative',
@@ -208,6 +215,7 @@ const EVENT_COLORS = {
   deviceOverspeed: '#ed6c02',
   ignitionOn: '#2e7d32',
   ignitionOff: '#616161',
+  deviceIdle: '#00b5e2',
 };
 const DEFAULT_EVENT_COLOR = '#9e9e9e';
 
@@ -524,10 +532,10 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
                     )}
                   </div>
                   {dashboardStats.motionPieData.length > 0 && (
-                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', maxWidth: '100%' }}>
                       <PieChart
-                        width={220}
-                        height={180}
+                        width={200}
+                        height={170}
                         series={[
                           {
                             data: dashboardStats.motionPieData,

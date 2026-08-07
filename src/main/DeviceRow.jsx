@@ -199,8 +199,19 @@ const DeviceRow = ({ item, position, setDeviceSheetOpen, now, style }) => {
     dispatch(devicesActions.selectId(item.id));
   };
 
-  const motionDuration =
-    !isStale && motionStatusChanged ? getTimeDiff(motionStatusChanged, position?.deviceTime) : '-';
+  const getMotionDuration = () => {
+    if (isStale) {
+      return '-';
+    }
+    if (attributes.motionStatusDuration != null && position?.deviceTime) {
+      const elapsedSinceFix = Math.max(dayjs(now).diff(dayjs(position.deviceTime)), 0);
+      return formatAdaptiveDuration(attributes.motionStatusDuration + elapsedSinceFix, t);
+    }
+    if (motionStatusChanged) {
+      return getTimeDiff(motionStatusChanged, position?.deviceTime);
+    }
+    return '-';
+  };
 
   return (
     <div
@@ -265,7 +276,7 @@ const DeviceRow = ({ item, position, setDeviceSheetOpen, now, style }) => {
                 fontWeight: 'bold',
               }}
             >
-              {motionDuration}
+              {getMotionDuration()}
             </Typography>
           </div>
         </ListItemAvatar>

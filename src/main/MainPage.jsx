@@ -265,6 +265,7 @@ const MainPage = () => {
             keyword={keyword}
             setKeyword={setKeyword}
             onResetFilters={handleResetFilters}
+            disableDiscovery={Boolean(selectedDeviceId)}
           />
         </div>
       )}

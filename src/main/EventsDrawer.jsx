@@ -6,6 +6,7 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  Avatar,
   CircularProgress,
   Drawer,
   FormControlLabel,
@@ -21,18 +22,24 @@ import {
 } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
-import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SpeedIcon from '@mui/icons-material/Speed';
-import { formatNotificationTitle, formatSpeed, formatTime } from '../common/util/formatter';
+import {
+  formatAdaptiveDuration,
+  formatNotificationTitle,
+  formatSpeed,
+  formatTime,
+} from '../common/util/formatter';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import fetchOrThrow from '../common/util/fetchOrThrow';
 import { useCatchCallback } from '../reactHelper';
 import { useAttributePreference } from '../common/util/preferences';
+import { mapIconKey, mapIcons } from '../map/core/preloadImages';
 
-const eventTypes = ['deviceOverspeed', 'alarm'];
+const eventTypes = ['deviceOverspeed', 'alarm', 'deviceIdle'];
 const defaultRange = '1h';
 const timeRanges = [
   { value: '1h', labelKey: 'eventRangeLastHour' },
@@ -43,14 +50,17 @@ const timeRanges = [
 const eventTypeLabels = {
   deviceOverspeed: 'eventDeviceOverspeed',
   alarm: 'eventAlarm',
+  deviceIdle: 'eventDeviceIdle',
 };
 const eventColors = {
   alarm: '#d32f2f',
   deviceOverspeed: '#ed6c02',
+  deviceIdle: '#00b5e2',
 };
 const eventIcons = {
   alarm: NotificationsActiveIcon,
   deviceOverspeed: SpeedIcon,
+  deviceIdle: HourglassBottomIcon,
 };
 const defaultEventColor = '#9e9e9e';
 
@@ -89,6 +99,9 @@ const getDeviceColor = (deviceGroup) => {
 const formatEventDetails = (event, speedUnit, t) => {
   if (event.type === 'deviceOverspeed' && event.attributes?.speed != null) {
     return formatSpeed(event.attributes.speed, speedUnit, t);
+  }
+  if (event.type === 'deviceIdle' && event.attributes?.duration != null) {
+    return formatAdaptiveDuration(event.attributes.duration, t);
   }
   return null;
 };
@@ -234,10 +247,17 @@ const useStyles = makeStyles()((theme) => ({
     minWidth: 0,
     fontWeight: 600,
   },
-  deviceIcon: {
-    color: theme.palette.text.secondary,
+  deviceAvatar: {
+    width: 28,
+    height: 28,
+    backgroundColor: theme.palette.grey[50],
+    border: `2px solid ${theme.palette.grey[600]}`,
     marginRight: theme.spacing(0.75),
     flexShrink: 0,
+  },
+  deviceAvatarImg: {
+    width: 18,
+    height: 18,
   },
   countPill: {
     borderRadius: 6,
@@ -465,7 +485,13 @@ const EventsDrawer = ({ open, onClose }) => {
                 sx={{ borderLeft: `4px solid ${getDeviceColor(deviceGroup)}` }}
               >
                 <div className={classes.summaryText}>
-                  <DirectionsCarIcon className={classes.deviceIcon} fontSize="small" />
+                  <Avatar className={classes.deviceAvatar}>
+                    <img
+                      className={classes.deviceAvatarImg}
+                      src={mapIcons[mapIconKey(devices[deviceGroup.deviceId]?.category)]}
+                      alt=""
+                    />
+                  </Avatar>
                   <Typography variant="subtitle2" className={classes.summaryLabel} noWrap>
                     {formatDeviceTitle(deviceGroup.deviceId)}
                   </Typography>

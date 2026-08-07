@@ -14,6 +14,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import DashboardLoading from '../common/components/DashboardLoading';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import { formatDistance } from '../common/util/formatter';
@@ -33,6 +34,9 @@ const useStyles = makeStyles()((theme) => ({
   },
   title: {
     flexGrow: 1,
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(1),
   },
 }));
 
@@ -223,6 +227,7 @@ const DashboardDrawer = ({ open, onClose, onMotionFilter, onStatusFilter, onShow
     >
       <Toolbar className={classes.toolbar} disableGutters>
         <Typography variant="h6" className={classes.title}>
+          <DashboardIcon />
           {t('dashboardTitle')}
         </Typography>
       </Toolbar>

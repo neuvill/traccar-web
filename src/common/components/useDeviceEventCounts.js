@@ -3,7 +3,13 @@ import dayjs from 'dayjs';
 import { useCatchCallback } from '../../reactHelper';
 import fetchOrThrow from '../util/fetchOrThrow';
 
-export const REPORT_EVENT_TYPES = ['alarm', 'deviceOverspeed', 'ignitionOff', 'ignitionOn'];
+export const REPORT_EVENT_TYPES = [
+  'alarm',
+  'deviceOverspeed',
+  'ignitionOff',
+  'ignitionOn',
+  'deviceIdle',
+];
 
 const useDeviceEventCounts = (deviceId, active) => {
   const [eventCounts, setEventCounts] = useState(null);

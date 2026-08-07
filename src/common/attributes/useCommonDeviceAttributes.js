@@ -8,6 +8,10 @@ export default (t) =>
         type: 'number',
         dataType: 'speed',
       },
+      'event.idle.minimalDuration': {
+        name: t('attributeEventIdleMinimalDuration'),
+        type: 'number',
+      },
       proximityEnterDistance: {
         name: t('attributeProximityEnterDistance'),
         type: 'number',
