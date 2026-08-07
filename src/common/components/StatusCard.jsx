@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
@@ -45,8 +45,9 @@ import { useCatch, useCatchCallback } from '../../reactHelper';
 import { getDeviceMotionStatus } from '../util/deviceStatus';
 import { useAttributePreference } from '../util/preferences';
 import { prefixString } from '../util/stringUtils';
-import { formatNumericHours } from '../util/formatter';
+import { formatMotionStatusDuration, formatNumericHours } from '../util/formatter';
 import fetchOrThrow from '../util/fetchOrThrow';
+import { mapIconKey, mapIcons } from '../../map/core/preloadImages';
 
 const useStyles = makeStyles()((theme, { desktopPadding }) => ({
   root: {
@@ -118,6 +119,23 @@ const useStyles = makeStyles()((theme, { desktopPadding }) => ({
   },
   deviceAvatar: {
     cursor: 'pointer',
+  },
+  avatarBorder: {
+    backgroundColor: theme.palette.background.paper,
+    border: '2px solid',
+  },
+  categoryIcon: {
+    width: 22,
+    height: 22,
+  },
+  nameColumn: {
+    display: 'flex',
+    flexDirection: 'column',
+    minWidth: 0,
+  },
+  motionDuration: {
+    color: theme.palette.grey[500],
+    fontWeight: 500,
   },
   imagePreview: {
     position: 'relative',
@@ -265,6 +283,7 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
 
   const deviceImage = device?.attributes?.deviceImage;
   const deviceImageUrl = deviceImage ? `/api/media/${device.uniqueId}/${deviceImage}` : undefined;
+  const deviceIconKey = mapIconKey(device?.category);
   const statusColor = getDeviceStatusColor(device, position);
 
   const positionAttributes = usePositionAttributes(t);
@@ -279,6 +298,12 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
   const distanceUnit = useAttributePreference('distanceUnit');
   const speedUnit = useAttributePreference('speedUnit');
   const volumeUnit = useAttributePreference('volumeUnit');
+
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -333,15 +358,24 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                 <Avatar
                   variant="rounded"
                   src={deviceImageUrl}
-                  sx={{ bgcolor: statusColor }}
-                  className={deviceImage ? classes.deviceAvatar : undefined}
+                  sx={{ borderColor: statusColor }}
+                  className={`${classes.avatarBorder} ${deviceImage ? classes.deviceAvatar : ''}`}
                   onClick={deviceImage ? () => setImagePreviewOpen(true) : undefined}
                 >
-                  {device.name?.[0]?.toUpperCase()}
+                  <img className={classes.categoryIcon} src={mapIcons[deviceIconKey]} alt="" />
                 </Avatar>
-                <Typography variant="subtitle2" className={classes.deviceName} title={device.name}>
-                  {device.name}
-                </Typography>
+                <div className={classes.nameColumn}>
+                  <Typography
+                    variant="subtitle2"
+                    className={classes.deviceName}
+                    title={device.name}
+                  >
+                    {device.name}
+                  </Typography>
+                  <Typography variant="caption" className={classes.motionDuration}>
+                    {formatMotionStatusDuration(device, position, now, t)}
+                  </Typography>
+                </div>
               </div>
 
               <Tabs

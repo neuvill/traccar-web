@@ -1,4 +1,5 @@
 import {
+  Avatar,
   Box,
   Divider,
   Drawer,
@@ -9,6 +10,7 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
+import { grey } from '@mui/material/colors';
 import { PieChart } from '@mui/x-charts/PieChart';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +22,7 @@ import { useTranslation } from '../common/components/LocalizationProvider';
 import { formatDistance } from '../common/util/formatter';
 import fetchOrThrow from '../common/util/fetchOrThrow';
 import { useAttributePreference } from '../common/util/preferences';
+import { mapIconKey, mapIcons } from '../map/core/preloadImages';
 
 const useStyles = makeStyles()((theme) => ({
   drawer: {
@@ -315,29 +318,44 @@ const DashboardDrawer = ({ open, onClose, onMotionFilter, onStatusFilter, onShow
             <DashboardLoading />
           ) : (
             <List dense>
-              {summary.map((item) => (
-                <div key={item.deviceId}>
-                  <ListItemButton onClick={() => navigate(`/qreplay?deviceId=${item.deviceId}`)}>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        width: '100%',
-                        alignItems: 'center',
-                        py: 1,
-                      }}
-                    >
-                      <Typography variant="body2" fontWeight={500}>
-                        {getDeviceName(devicesById, item)}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {formatDistance(item.distance, distanceUnit, t)}
-                      </Typography>
-                    </Box>
-                  </ListItemButton>
-                  <Divider />
-                </div>
-              ))}
+              {summary.map((item) => {
+                const iconKey = mapIconKey(devicesById[item.deviceId]?.category);
+                return (
+                  <div key={item.deviceId}>
+                    <ListItemButton onClick={() => navigate(`/qreplay?deviceId=${item.deviceId}`)}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          width: '100%',
+                          alignItems: 'center',
+                          py: 1,
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <Avatar
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              bgcolor: grey[50],
+                              border: `1px solid ${grey[400]}`,
+                            }}
+                          >
+                            <img src={mapIcons[iconKey]} alt="" width={20} height={20} />
+                          </Avatar>
+                          <Typography variant="body2" fontWeight={500}>
+                            {getDeviceName(devicesById, item)}
+                          </Typography>
+                        </Box>
+                        <Typography variant="body2" color="text.secondary">
+                          {formatDistance(item.distance, distanceUnit, t)}
+                        </Typography>
+                      </Box>
+                    </ListItemButton>
+                    <Divider />
+                  </div>
+                );
+              })}
             </List>
           ))}
       </Box>

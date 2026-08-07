@@ -34,9 +34,7 @@ const useStyles = makeStyles(() => ({
 const MainMap = ({
   filteredPositions,
   notificationEnabled,
-  selectedPosition,
   onEventsClick,
-  selectedDevices,
   setDeviceSheetOpen,
   onBoardClick,
 }) => {
@@ -67,8 +65,6 @@ const MainMap = ({
         <MapPositions
           positions={filteredPositions}
           onMarkerClick={onMarkerClick}
-          selectedDevices={selectedDevices}
-          selectedPosition={selectedPosition}
           showStatus
           disabled={rulerActive}
         />

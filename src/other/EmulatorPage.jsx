@@ -19,7 +19,7 @@ import MapGeocoder from '../map/control/MapGeocoder';
 import SelectField from '../common/components/SelectField';
 import { devicesActions } from '../store';
 import MapPositions from '../map/MapPositions';
-import { useCatch } from '../reactHelper';
+import { useCatchCallback } from '../reactHelper';
 import MapScale from '../map/MapScale';
 import BackIcon from '../common/components/BackIcon';
 import fetchOrThrow from '../common/util/fetchOrThrow';
@@ -76,32 +76,35 @@ const EmulatorPage = () => {
   const deviceId = useSelector((state) => state.devices.selectedId);
   const positions = useSelector((state) => state.session.positions);
 
-  const handleClick = useCatch(async (latitude, longitude) => {
-    if (deviceId) {
-      if (window.location.protocol === 'https:') {
-        const params = new URLSearchParams();
-        params.append('id', devices[deviceId].uniqueId);
-        params.append('lat', latitude);
-        params.append('lon', longitude);
-        await fetchOrThrow(window.location.origin, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: params.toString(),
-        });
-      } else {
-        const params = new URLSearchParams();
-        params.append('id', devices[deviceId].uniqueId);
-        params.append('lat', latitude);
-        params.append('lon', longitude);
-        await fetchOrThrow(`http://${window.location.hostname}:5055?${params.toString()}`, {
-          method: 'POST',
-          mode: 'no-cors',
-        });
+  const handleClick = useCatchCallback(
+    async (latitude, longitude) => {
+      if (deviceId) {
+        if (window.location.protocol === 'https:') {
+          const params = new URLSearchParams();
+          params.append('id', devices[deviceId].uniqueId);
+          params.append('lat', latitude);
+          params.append('lon', longitude);
+          await fetchOrThrow(window.location.origin, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: params.toString(),
+          });
+        } else {
+          const params = new URLSearchParams();
+          params.append('id', devices[deviceId].uniqueId);
+          params.append('lat', latitude);
+          params.append('lon', longitude);
+          await fetchOrThrow(`http://${window.location.hostname}:5055?${params.toString()}`, {
+            method: 'POST',
+            mode: 'no-cors',
+          });
+        }
       }
-    }
-  });
+    },
+    [deviceId, devices],
+  );
 
   return (
     <div className={classes.root}>

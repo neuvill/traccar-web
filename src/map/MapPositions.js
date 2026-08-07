@@ -10,6 +10,20 @@ import { useAttributePreference } from '../common/util/preferences';
 import { useCatchCallback } from '../reactHelper';
 import { findFonts, fromMapCoordinates, toMapCoordinates } from './core/mapUtil';
 
+// background.svg is a 48px icon whose outer ring sits at radius 4.55 within its 0-10 viewBox.
+const MARKER_NATIVE_SIZE = 48;
+const MARKER_EDGE_RADIUS_RATIO = 4.55 / 5;
+const MARKER_ICON_SCALE = { default: 1, selected: 1.35 };
+// direction.svg is rasterized at 100px (10x its viewBox) for sharpness at large
+// icon-size values, so these are 10x smaller than the intended apparent scale.
+const DIRECTION_ICON_SCALE = { default: 0.33, selected: 0.4 };
+
+// Pixel offset (in the direction icon's own icon-size units) that lands the
+// arrow's anchor on the marker's outer ring, independent of iconScale.
+const markerEdgeOffset = (state) =>
+  (MARKER_EDGE_RADIUS_RATIO * (MARKER_NATIVE_SIZE / 2) * MARKER_ICON_SCALE[state]) /
+  DIRECTION_ICON_SCALE[state];
+
 const isDeviceStale = (device) => {
   if (!device.lastUpdate) {
     return false;
@@ -53,7 +67,6 @@ const MapPositions = ({
   onMapClick,
   onMarkerClick,
   showStatus,
-  selectedPosition,
   titleField,
   isReplay,
   disabled,
@@ -209,8 +222,14 @@ const MapPositions = ({
           'icon-size': [
             'case',
             ['==', ['get', 'isSelected'], true],
-            iconScale * 1.5,
-            iconScale * 1.15,
+            iconScale * DIRECTION_ICON_SCALE.selected,
+            iconScale * DIRECTION_ICON_SCALE.default,
+          ],
+          'icon-offset': [
+            'case',
+            ['==', ['get', 'isSelected'], true],
+            ['literal', [0, -markerEdgeOffset('selected')]],
+            ['literal', [0, -markerEdgeOffset('default')]],
           ],
           'icon-allow-overlap': true,
           'icon-rotate': ['get', 'rotation'],

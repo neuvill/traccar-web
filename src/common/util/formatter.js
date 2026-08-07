@@ -14,6 +14,7 @@ import {
   volumeUnitString,
 } from './converter';
 import { prefixString } from './stringUtils';
+import { getDeviceFreshness } from './deviceStatus';
 
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
@@ -125,7 +126,22 @@ export const formatAdaptiveDuration = (value, t) => {
   return `${totalDays} ${t('sharedDayAbbreviation')}`;
 };
 
-
+export const formatMotionStatusDuration = (device, position, now, t) => {
+  const { isStale } = getDeviceFreshness(device, position, now);
+  if (isStale) {
+    return '-';
+  }
+  const attributes = position?.attributes || {};
+  if (attributes.motionStatusDuration != null && position?.deviceTime) {
+    const elapsedSinceFix = Math.max(dayjs(now).diff(dayjs(position.deviceTime)), 0);
+    return formatAdaptiveDuration(attributes.motionStatusDuration + elapsedSinceFix, t);
+  }
+  if (attributes.motionStatusChanged) {
+    const duration = dayjs(position?.deviceTime).diff(dayjs(attributes.motionStatusChanged));
+    return formatAdaptiveDuration(Number.isFinite(duration) && duration >= 0 ? duration : 0, t);
+  }
+  return '-';
+};
 
 export const formatCoordinate = (key, value, unit) => {
   let hemisphere;

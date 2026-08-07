@@ -1,14 +1,4 @@
-<!--?xml version="1.0" encoding="UTF-8"?>
-<svg width="56" height="56" version="1.1" viewBox="0 0 11.667 11.667" xmlns="http://www.w3.org/2000/svg">
- <path transform="rotate(45)" d="m4.6303-3.6193v1.2838a4.3079 4.3079 0 0 1 0.57314-0.71067 4.3079 4.3079 0 0 1 0.7101-0.57314h-1.2832z" fill="#27cb46"/>
-</svg-->
-
-<svg viewBox="0 0 10 8" xmlns="http://www.w3.org/2000/svg">
-  <!-- Arrow pointing upward (default heading = 0°) -->
-  <g id="direction-arrow">
-    <polygon
-      points="5,2.3 4.6,3 5.4,3"
-      fill="#27cb46"
-    />
-  </g>
+<svg width="100" height="100" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
+  <!-- Arrow pointing upward (default heading = 0°); rotated via icon-rotate to match device course -->
+  <polygon points="5,1.5 7.5,7.5 5,6 2.5,7.5" fill="#27cb46"/>
 </svg>

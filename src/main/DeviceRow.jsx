@@ -27,9 +27,9 @@ import { useTranslation } from '../common/components/LocalizationProvider';
 import DriverValue from '../common/components/DriverValue';
 import GeofencesValue from '../common/components/GeofencesValue';
 import {
-  formatAdaptiveDuration,
   formatAlarm,
   formatBoolean,
+  formatMotionStatusDuration,
   formatPercentage,
   formatSpeed,
   formatStatus,
@@ -113,7 +113,7 @@ const DeviceRow = ({ item, position, setDeviceSheetOpen, now, style }) => {
   const speedUnit = useAttributePreference('speedUnit');
 
   const attributes = position?.attributes || {};
-  const { alarm, batteryLevel, charge, driverUniqueId, ignition, motionStatusChanged } = attributes;
+  const { alarm, batteryLevel, charge, driverUniqueId, ignition } = attributes;
 
   const { isStale, staleReferenceTime } = getDeviceFreshness(item, position, now);
   const dynamicStatus = getDeviceMotionStatus(item, position, now);
@@ -140,13 +140,6 @@ const DeviceRow = ({ item, position, setDeviceSheetOpen, now, style }) => {
     }
 
     return item[field];
-  };
-
-  const getTimeDiff = (startIso, endIso) => {
-    const duration = dayjs(endIso).diff(dayjs(startIso));
-    return Number.isFinite(duration) && duration >= 0
-      ? formatAdaptiveDuration(duration, t)
-      : formatAdaptiveDuration(0, t);
   };
 
   const getStatusText = () => {
@@ -197,20 +190,6 @@ const DeviceRow = ({ item, position, setDeviceSheetOpen, now, style }) => {
       setDeviceSheetOpen(false);
     }
     dispatch(devicesActions.selectId(item.id));
-  };
-
-  const getMotionDuration = () => {
-    if (isStale) {
-      return '-';
-    }
-    if (attributes.motionStatusDuration != null && position?.deviceTime) {
-      const elapsedSinceFix = Math.max(dayjs(now).diff(dayjs(position.deviceTime)), 0);
-      return formatAdaptiveDuration(attributes.motionStatusDuration + elapsedSinceFix, t);
-    }
-    if (motionStatusChanged) {
-      return getTimeDiff(motionStatusChanged, position?.deviceTime);
-    }
-    return '-';
   };
 
   return (
@@ -276,7 +255,7 @@ const DeviceRow = ({ item, position, setDeviceSheetOpen, now, style }) => {
                 fontWeight: 'bold',
               }}
             >
-              {getMotionDuration()}
+              {formatMotionStatusDuration(item, position, now, t)}
             </Typography>
           </div>
         </ListItemAvatar>

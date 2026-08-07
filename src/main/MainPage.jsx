@@ -167,7 +167,6 @@ const MainPage = () => {
           <MainMap
             filteredPositions={filteredPositions}
             notificationEnabled={notificationEnabled}
-            selectedPosition={selectedPosition}
             onEventsClick={onEventsClick}
             onBoardClick={onBoardClick}
           />
@@ -207,8 +206,6 @@ const MainPage = () => {
                 <MainMap
                   filteredPositions={filteredPositions}
                   notificationEnabled={notificationEnabled}
-                  selectedPosition={selectedPosition}
-                  selectedDevices={filteredDevices}
                   onEventsClick={onEventsClick}
                   onBoardClick={onBoardClick}
                   setDeviceSheetOpen={setDeviceSheetOpen}
