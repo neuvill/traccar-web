@@ -399,6 +399,7 @@
     "serverDisableShare": "Désactiver le partage d'appareils",
     "serverReboot": "Redémarrer",
     "mapTitle": "Carte",
+    "fleetManagementTitle": "Gestion de flotte",
     "mapActive": "Cartes actives",
     "mapOverlay": "Superposition de cartes",
     "mapOverlayCustom": "Superposition personnalisée",

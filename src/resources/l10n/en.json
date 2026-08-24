@@ -400,6 +400,7 @@
     "serverDisableShare": "Disable Device Sharing",
     "serverReboot": "Reboot",
     "mapTitle": "Map",
+    "fleetManagementTitle": "Fleet Management",
     "mapActive": "Active Maps",
     "mapOverlay": "Map Overlay",
     "mapOverlayCustom": "Custom Overlay",

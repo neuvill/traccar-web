@@ -16,11 +16,14 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import MapIcon from '@mui/icons-material/Map';
 import PersonIcon from '@mui/icons-material/Person';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 
 import { sessionActions } from '../../store';
 import { useTranslation } from './LocalizationProvider';
-import { useRestriction } from '../util/permissions';
+import { useAdministrator, useRestriction } from '../util/permissions';
 import { nativePostMessage } from './NativeInterface';
+
+const FLEET_MANAGEMENT_URL = 'https://fleet.hmglobtech.com';
 
 const BottomMenu = () => {
   const navigate = useNavigate();
@@ -28,6 +31,7 @@ const BottomMenu = () => {
   const dispatch = useDispatch();
   const t = useTranslation();
 
+  const admin = useAdministrator();
   const readonly = useRestriction('readonly');
   const disableReports = useRestriction('disableReports');
   const devices = useSelector((state) => state.devices.items);
@@ -149,6 +153,15 @@ const BottomMenu = () => {
             label={t('settingsTitle')}
             icon={<SettingsIcon />}
             value="settings"
+          />
+        )}
+        {admin && (
+          <BottomNavigationAction
+            component="a"
+            href={FLEET_MANAGEMENT_URL}
+            label={t('fleetManagementTitle')}
+            icon={<LocalShippingIcon />}
+            value="fleet"
           />
         )}
         {readonly ? (

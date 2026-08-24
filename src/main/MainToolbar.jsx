@@ -107,9 +107,9 @@ const MainToolbar = ({
 
   return (
     <Toolbar ref={toolbarRef} className={classes.toolbar}>
-      <IconButton edge="start" onClick={() => setDevicesOpen(!devicesOpen)}>
+      {/*<IconButton edge="start" onClick={() => setDevicesOpen(!devicesOpen)}>
         {devicesOpen ? <MapIcon /> : <DnsIcon />}
-      </IconButton>
+      </IconButton>*/}
       <OutlinedInput
         ref={inputRef}
         placeholder={t('sharedSearchDevices')}
@@ -299,7 +299,7 @@ const MainToolbar = ({
           </FormGroup>
         </div>
       </Popover>
-      <IconButton edge="end" onClick={() => navigate('/settings/device')} disabled={deviceReadonly}>
+      {/*<IconButton edge="end" onClick={() => navigate('/settings/device')} disabled={deviceReadonly}>
         <Tooltip
           open={!deviceReadonly && Object.keys(devices).length === 0}
           title={t('deviceRegisterFirst')}
@@ -307,7 +307,7 @@ const MainToolbar = ({
         >
           <AddIcon />
         </Tooltip>
-      </IconButton>
+      </IconButton>*/}
     </Toolbar>
   );
 };
