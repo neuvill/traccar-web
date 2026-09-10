@@ -70,6 +70,7 @@ const MainToolbar = ({
 
   const groups = useSelector((state) => state.groups.items);
   const devices = useSelector((state) => state.devices.items);
+  const devicesLoaded = useSelector((state) => state.devices.loaded);
   const geofences = useSelector((state) => state.geofences.items);
   const positions = useSelector((state) => state.session.positions);
 
@@ -282,7 +283,6 @@ const MainToolbar = ({
               label={t('sharedSortBy')}
               value={filterSort}
               onChange={(e) => setFilterSort(e.target.value)}
-              displayEmpty
             >
               <MenuItem value="">{'\u00a0'}</MenuItem>
               <MenuItem value="name">{t('sharedName')}</MenuItem>
@@ -301,7 +301,7 @@ const MainToolbar = ({
       </Popover>
       {/*<IconButton edge="end" onClick={() => navigate('/settings/device')} disabled={deviceReadonly}>
         <Tooltip
-          open={!deviceReadonly && Object.keys(devices).length === 0}
+          open={!deviceReadonly && devicesLoaded && Object.keys(devices).length === 0}
           title={t('deviceRegisterFirst')}
           arrow
         >

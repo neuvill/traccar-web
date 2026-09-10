@@ -62,6 +62,7 @@ const MainMap = ({
         <MapGeofence />
         <MapAccuracy positions={filteredPositions} />
         <MapLiveRoutes deviceIds={filteredPositions.map((p) => p.deviceId)} />
+        <PoiMap />
         <MapPositions
           positions={filteredPositions}
           onMarkerClick={onMarkerClick}
@@ -70,7 +71,6 @@ const MainMap = ({
         />
         <MapDefaultCamera filteredPositions={filteredPositions} />
         <MapSelectedDevice />
-        <PoiMap />
         <MapRuler positions={filteredPositions} onActiveChange={setRulerActive} />
         {!desktop && location.pathname !== '/replay' && (
           <div className={classes.menu}>

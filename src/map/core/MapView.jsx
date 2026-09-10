@@ -1,5 +1,6 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import { googleProtocol } from 'maplibre-google-maps';
 import { Protocol } from 'pmtiles';
 import { useRef, useLayoutEffect, useEffect, useState, useMemo } from 'react';
@@ -16,6 +17,7 @@ element.style.width = '100%';
 element.style.height = '100%';
 element.style.boxSizing = 'initial';
 
+maplibregl.setWorkerUrl(maplibreWorkerUrl);
 maplibregl.addProtocol('google', googleProtocol);
 maplibregl.addProtocol('pmtiles', new Protocol().tile);
 
@@ -41,6 +43,20 @@ const updateReadyValue = (value) => {
   readyListeners.forEach((listener) => listener(value));
 };
 
+export const useMapReady = () => {
+  const [mapReady, setMapReady] = useState(false);
+
+  useEffect(() => {
+    const listener = (value) => setMapReady(value);
+    addReadyListener(listener);
+    return () => {
+      removeReadyListener(listener);
+    };
+  }, []);
+
+  return mapReady;
+};
+
 const initMap = async () => {
   if (ready) return;
   if (!map.hasImage('background')) {
@@ -57,7 +73,7 @@ const MapView = ({ children }) => {
 
   const containerRef = useRef(null);
 
-  const [mapReady, setMapReady] = useState(false);
+  const mapReady = useMapReady();
 
   const mapStyles = useMapStyles();
   const activeMapStyles = useAttributePreference(
@@ -68,7 +84,6 @@ const MapView = ({ children }) => {
     'selectedMapStyle',
     usePreference('map', 'locationIqStreets'),
   );
-  const mapboxAccessToken = useAttributePreference('mapboxAccessToken');
   const maxZoom = useAttributePreference('web.maxZoom');
 
   const styles = useMemo(() => {
@@ -100,10 +115,6 @@ const MapView = ({ children }) => {
   }, [maxZoom]);
 
   useEffect(() => {
-    maplibregl.accessToken = mapboxAccessToken;
-  }, [mapboxAccessToken]);
-
-  useEffect(() => {
     const style = styles.find((s) => s.id === selectedStyleId);
     if (!style) {
       setSelectedStyleId(styles[0].id);
@@ -125,14 +136,6 @@ const MapView = ({ children }) => {
     map.once('styledata', waiting);
     return () => clearTimeout(timeoutId);
   }, [styles, selectedStyleId, setSelectedStyleId]);
-
-  useEffect(() => {
-    const listener = (ready) => setMapReady(ready);
-    addReadyListener(listener);
-    return () => {
-      removeReadyListener(listener);
-    };
-  }, []);
 
   useLayoutEffect(() => {
     const currentEl = containerRef.current;

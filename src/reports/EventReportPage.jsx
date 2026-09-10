@@ -1,17 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Table, TableHead, TableRow, TableCell, TableBody, Link, IconButton } from '@mui/material';
+import { Table, TableHead, TableRow, TableCell, TableBody, IconButton } from '@mui/material';
 import GpsFixedIcon from '@mui/icons-material/GpsFixed';
 import LocationSearchingIcon from '@mui/icons-material/LocationSearching';
 import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
-import {
-  formatAddress,
-  formatAdaptiveDuration,
-  formatNumber,
-  formatSpeed,
-  formatTime,
-} from '../common/util/formatter';
+import { formatAddress, formatAdaptiveDuration, formatTime } from '../common/util/formatter';
 import ReportFilter, { updateReportParams } from './components/ReportFilter';
 import { prefixString, unprefixString } from '../common/util/stringUtils';
 import { useTranslation, useTranslationKeys } from '../common/components/LocalizationProvider';
@@ -26,7 +20,7 @@ import TableShimmer from '../common/components/TableShimmer';
 import { useAttributePreference, usePreference } from '../common/util/preferences';
 import MapView from '../map/core/MapView';
 import MapGeofence from '../map/MapGeofence';
-import MapPositions from '../map/MapPositions';
+import MapMarkers from '../map/MapMarkers';
 import MapCamera from '../map/MapCamera';
 import scheduleReport from './common/scheduleReport';
 import MapScale from '../map/MapScale';
@@ -34,6 +28,8 @@ import SelectField from '../common/components/SelectField';
 import fetchOrThrow from '../common/util/fetchOrThrow';
 import exportExcel from '../common/util/exportExcel';
 import AddressValue from '../common/components/AddressValue';
+import formatEventData from './common/formatEventData';
+import { eventIconKey } from '../map/core/preloadImages';
 import { deviceEquality } from '../common/util/deviceEquality';
 
 const columnsArray = [
@@ -59,6 +55,7 @@ const EventReportPage = () => {
     deviceEquality(['id', 'name', 'uniqueId']),
   );
   const geofences = useSelector((state) => state.geofences.items);
+  const maintenances = useSelector((state) => state.maintenances.items);
 
   const speedUnit = useAttributePreference('speedUnit');
   const coordinateFormat = usePreference('coordinateFormat');
@@ -195,7 +192,11 @@ const EventReportPage = () => {
         }
         return null;
       case 'maintenanceId':
-        return value > 0 ? value : null;
+        if (value > 0) {
+          const maintenance = maintenances[value];
+          return maintenance && maintenance.name;
+        }
+        return null;
       case 'address': {
         const position = positions[item.positionId];
         if (position) {
@@ -210,32 +211,14 @@ const EventReportPage = () => {
         return '';
       }
       case 'attributes':
-        switch (item.type) {
-          case 'alarm':
-            return t(prefixString('alarm', item.attributes.alarm));
-          case 'deviceOverspeed':
-            return formatSpeed(item.attributes.speed, speedUnit, t);
-          case 'deviceIdle':
-            return formatAdaptiveDuration(item.attributes.duration, t);
-          case 'driverChanged':
-            return item.attributes.driverUniqueId;
-          case 'deviceFuelDrop':
-          case 'deviceFuelIncrease':
-            return formatNumber(Math.abs(item.attributes.after - item.attributes.before));
-          case 'media':
-            return (
-              <Link
-                href={`/api/media/${devices[item.deviceId]?.uniqueId}/${item.attributes.file}`}
-                target="_blank"
-              >
-                {item.attributes.file}
-              </Link>
-            );
-          case 'commandResult':
-            return item.attributes.result;
-          default:
-            return '';
+        if (item.type === 'deviceIdle') {
+          return formatAdaptiveDuration(item.attributes.duration, t);
         }
+        return formatEventData(item, {
+          deviceUniqueId: devices[item.deviceId]?.uniqueId,
+          speedUnit,
+          t,
+        });
       default:
         return value;
     }
@@ -249,7 +232,19 @@ const EventReportPage = () => {
             <div className={classes.containerMap}>
               <MapView>
                 <MapGeofence />
-                {position && <MapPositions positions={[position]} titleField="fixTime" />}
+                {position && selectedItem && (
+                  <MapMarkers
+                    markers={[
+                      {
+                        latitude: position.latitude,
+                        longitude: position.longitude,
+                        image: eventIconKey(selectedItem.type),
+                        title: formatTime(position.fixTime, 'seconds'),
+                      },
+                    ]}
+                    showTitles
+                  />
+                )}
               </MapView>
               <MapScale />
               {position && (
