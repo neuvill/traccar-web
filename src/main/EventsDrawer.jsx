@@ -23,6 +23,7 @@ import {
 import { makeStyles } from 'tss-react/mui';
 import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import FenceIcon from '@mui/icons-material/Fence';
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -39,7 +40,7 @@ import { useCatchCallback } from '../reactHelper';
 import { useAttributePreference } from '../common/util/preferences';
 import { mapIconKey, mapIcons } from '../map/core/preloadImages';
 
-const eventTypes = ['deviceOverspeed', 'alarm', 'deviceIdle'];
+const eventTypes = ['deviceOverspeed', 'alarm', 'deviceIdle', 'geofenceEnter', 'geofenceExit'];
 const defaultRange = '1h';
 const timeRanges = [
   { value: '1h', labelKey: 'eventRangeLastHour' },
@@ -51,16 +52,22 @@ const eventTypeLabels = {
   deviceOverspeed: 'eventDeviceOverspeed',
   alarm: 'eventAlarm',
   deviceIdle: 'eventDeviceIdle',
+  geofenceEnter: 'eventGeofenceEnter',
+  geofenceExit: 'eventGeofenceExit',
 };
 const eventColors = {
   alarm: '#d32f2f',
   deviceOverspeed: '#ed6c02',
   deviceIdle: '#00b5e2',
+  geofenceEnter: '#2e7d32',
+  geofenceExit: '#7b1fa2',
 };
 const eventIcons = {
   alarm: NotificationsActiveIcon,
   deviceOverspeed: SpeedIcon,
   deviceIdle: HourglassBottomIcon,
+  geofenceEnter: FenceIcon,
+  geofenceExit: FenceIcon,
 };
 const defaultEventColor = '#9e9e9e';
 
@@ -96,12 +103,15 @@ const getDeviceColor = (deviceGroup) => {
   return defaultEventColor;
 };
 
-const formatEventDetails = (event, speedUnit, t) => {
+const formatEventDetails = (event, speedUnit, t, geofences) => {
   if (event.type === 'deviceOverspeed' && event.attributes?.speed != null) {
     return formatSpeed(event.attributes.speed, speedUnit, t);
   }
   if (event.type === 'deviceIdle' && event.attributes?.duration != null) {
     return formatAdaptiveDuration(event.attributes.duration, t);
+  }
+  if ((event.type === 'geofenceEnter' || event.type === 'geofenceExit') && event.geofenceId > 0) {
+    return geofences[event.geofenceId]?.name;
   }
   return null;
 };
@@ -304,6 +314,7 @@ const EventsDrawer = ({ open, onClose }) => {
   const speedUnit = useAttributePreference('speedUnit');
 
   const devices = useSelector((state) => state.devices.items);
+  const geofences = useSelector((state) => state.geofences.items);
 
   const events = useSelector((state) => state.events.items);
   const [reportEvents, setReportEvents] = useState([]);
@@ -554,7 +565,7 @@ const EventsDrawer = ({ open, onClose }) => {
                           {typeEvents.map((event) => {
                             const eventColor = eventColors[event.type] || defaultEventColor;
                             const EventIcon = eventIcons[event.type] || NotificationsActiveIcon;
-                            const details = formatEventDetails(event, speedUnit, t);
+                            const details = formatEventDetails(event, speedUnit, t, geofences);
 
                             return (
                               <ListItemButton

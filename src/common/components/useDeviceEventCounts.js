@@ -9,6 +9,8 @@ export const REPORT_EVENT_TYPES = [
   'ignitionOff',
   'ignitionOn',
   'deviceIdle',
+  'geofenceEnter',
+  'geofenceExit',
 ];
 
 const useDeviceEventCounts = (deviceId, active) => {

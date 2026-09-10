@@ -9,6 +9,9 @@ import {
   Grid,
   Tabs,
   Tab,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import TuneIcon from '@mui/icons-material/Tune';
@@ -23,6 +26,7 @@ import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import StopRoundedIcon from '@mui/icons-material/StopRounded';
 import PlaceIcon from '@mui/icons-material/Place';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import MapView from '../map/core/MapView';
@@ -56,11 +60,20 @@ import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import Loader from '../common/components/Loader';
 import SpeedIcon from '@mui/icons-material/Speed';
+import FenceIcon from '@mui/icons-material/Fence';
 
 const PLAYBACK_SPEED = 1;
 const PLAYBACK_TICK_MS = 100;
 const MAX_CHART_POINTS = 4000;
-const REPORT_EVENT_TYPES = ['alarm', 'deviceOverspeed', 'ignitionOff', 'ignitionOn', 'deviceIdle'];
+const REPORT_EVENT_TYPES = [
+  'alarm',
+  'deviceOverspeed',
+  'ignitionOff',
+  'ignitionOn',
+  'deviceIdle',
+  'geofenceEnter',
+  'geofenceExit',
+];
 const TRIP_COLOR = '#1976d2';
 const TRIP_LIST_BORDER_COLOR = '#27cb46';
 const EVENT_COLORS = {
@@ -69,6 +82,8 @@ const EVENT_COLORS = {
   ignitionOn: '#2e7d32',
   ignitionOff: '#616161',
   deviceIdle: '#00b5e2',
+  geofenceEnter: '#2e7d32',
+  geofenceExit: '#7b1fa2',
 };
 const DEFAULT_EVENT_COLOR = '#9e9e9e';
 const STOP_COLOR = '#78909c';
@@ -209,6 +224,7 @@ const QReplayPage = () => {
   const [searchParams] = useSearchParams();
 
   const defaultDeviceId = useSelector((state) => state.devices.selectedId);
+  const geofences = useSelector((state) => state.geofences.items);
 
   const [positions, setPositions] = useState([]);
   const [summary, setSummary] = useState([]);
@@ -346,14 +362,33 @@ const QReplayPage = () => {
           return event.attributes?.duration != null
             ? formatAdaptiveDuration(event.attributes.duration, t)
             : null;
+        case 'geofenceEnter':
+        case 'geofenceExit':
+          return event.geofenceId > 0 ? geofences[event.geofenceId]?.name : null;
         default:
           return null;
       }
     },
-    [speedUnit, t],
+    [geofences, speedUnit, t],
   );
 
   const formatEventAddress = useCallback((event) => event.position?.address || null, []);
+
+  const groupedReportEvents = useMemo(() => {
+    const groups = new Map();
+    reportEvents.forEach((event) => {
+      const type = event.type || 'unknown';
+      if (!groups.has(type)) {
+        groups.set(type, []);
+      }
+      groups.get(type).push(event);
+    });
+    const orderedTypes = [
+      ...REPORT_EVENT_TYPES.filter((type) => groups.has(type)),
+      ...[...groups.keys()].filter((type) => !REPORT_EVENT_TYPES.includes(type)),
+    ];
+    return orderedTypes.map((type) => [type, groups.get(type)]);
+  }, [reportEvents]);
 
   const openMapItem = useCallback((item) => {
     setSelectedMapItem(item);
@@ -1194,94 +1229,149 @@ const QReplayPage = () => {
                 {eventsLoading ? (
                   <Loader />
                 ) : reportEvents.length ? (
-                  reportEvents.map((event) => {
-                    const details = formatEventDetails(event);
-                    const address = formatEventAddress(event);
-                    const eventColor = EVENT_COLORS[event.type] || DEFAULT_EVENT_COLOR;
+                  groupedReportEvents.map(([type, events]) => {
+                    const groupColor = EVENT_COLORS[type] || DEFAULT_EVENT_COLOR;
 
                     return (
-                      <ListItemButton
-                        key={event.id}
-                        disabled={
-                          !hasCoordinates(event.position?.latitude, event.position?.longitude)
-                        }
+                      <Accordion
+                        key={type}
+                        disableGutters
+                        square
                         sx={{
+                          borderLeft: `4px solid ${groupColor}`,
                           borderBottom: '1px solid #d4d4d4ff',
-                          borderLeft: `4px solid ${eventColor}`,
-                          paddingLeft: 1.5,
+                          boxShadow: 'none',
+                          '&:before': { display: 'none' },
                         }}
-                        onClick={() => handleEventClick(event)}
                       >
-                        <div
-                          style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 4,
-                            width: '100%',
-                          }}
+                        <AccordionSummary
+                          expandIcon={<ExpandMoreIcon />}
+                          sx={{ paddingLeft: 1.5, minHeight: 48 }}
                         >
-                          <div
-                            style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              width: '100%',
-                            }}
+                          <Typography
+                            variant="subtitle1"
+                            sx={{ color: groupColor, fontWeight: 600, flexGrow: 1 }}
                           >
-                            <Typography
-                              variant="subtitle1"
-                              align="left"
-                              sx={{ color: eventColor, fontWeight: 600 }}
-                            >
-                              {formatEventType(event)}
-                            </Typography>
-                            <Typography
-                              variant="subtitle1"
-                              align="right"
-                              sx={{
-                                color: '#607d8b',
-                                display: 'flex',
-                                alignItems: 'center',
-                                fontWeight: 500,
-                              }}
-                            >
-                              <AccessTimeRoundedIcon
-                                sx={{ mr: 0.5, color: '#607d8b' }}
-                                fontSize="small"
-                              />
-                              {formatTime(event.eventTime, 'seconds')}
-                            </Typography>
-                          </div>
-                          {details && (
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                color: 'text.secondary',
-                                display: 'flex',
-                                alignItems: 'center',
-                              }}
-                            >
-                              {event.type === 'deviceOverspeed' && (
-                                <SpeedIcon sx={{ mr: 0.5, color: eventColor }} fontSize="small" />
-                              )}
-                              {details}
-                            </Typography>
-                          )}
-                          {address && (
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                color: 'text.secondary',
-                                display: 'flex',
-                                alignItems: 'center',
-                              }}
-                            >
-                              <PlaceIcon sx={{ mr: 0.5, color: '#78909c' }} fontSize="small" />
-                              {address}
-                            </Typography>
-                          )}
-                        </div>
-                      </ListItemButton>
+                            {t(prefixString('event', type))}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{ color: 'text.secondary', marginRight: 1 }}
+                          >
+                            {events.length}
+                          </Typography>
+                        </AccordionSummary>
+                        <AccordionDetails sx={{ padding: 0 }}>
+                          <List sx={{ padding: '0px' }}>
+                            {events.map((event) => {
+                              const details = formatEventDetails(event);
+                              const address = formatEventAddress(event);
+                              const eventColor = EVENT_COLORS[event.type] || DEFAULT_EVENT_COLOR;
+
+                              return (
+                                <ListItemButton
+                                  key={event.id}
+                                  disabled={
+                                    !hasCoordinates(
+                                      event.position?.latitude,
+                                      event.position?.longitude,
+                                    )
+                                  }
+                                  sx={{
+                                    borderBottom: '1px solid #d4d4d4ff',
+                                    borderLeft: `4px solid ${eventColor}`,
+                                    paddingLeft: 1.5,
+                                  }}
+                                  onClick={() => handleEventClick(event)}
+                                >
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      gap: 4,
+                                      width: '100%',
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        width: '100%',
+                                      }}
+                                    >
+                                      <Typography
+                                        variant="subtitle1"
+                                        align="left"
+                                        sx={{ color: eventColor, fontWeight: 600 }}
+                                      >
+                                        {formatEventType(event)}
+                                      </Typography>
+                                      <Typography
+                                        variant="subtitle1"
+                                        align="right"
+                                        sx={{
+                                          color: '#607d8b',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          fontWeight: 500,
+                                        }}
+                                      >
+                                        <AccessTimeRoundedIcon
+                                          sx={{ mr: 0.5, color: '#607d8b' }}
+                                          fontSize="small"
+                                        />
+                                        {formatTime(event.eventTime, 'seconds')}
+                                      </Typography>
+                                    </div>
+                                    {details && (
+                                      <Typography
+                                        variant="body2"
+                                        sx={{
+                                          color: 'text.secondary',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                        }}
+                                      >
+                                        {event.type === 'deviceOverspeed' && (
+                                          <SpeedIcon
+                                            sx={{ mr: 0.5, color: eventColor }}
+                                            fontSize="small"
+                                          />
+                                        )}
+                                        {(event.type === 'geofenceEnter' ||
+                                          event.type === 'geofenceExit') && (
+                                          <FenceIcon
+                                            sx={{ mr: 0.5, color: eventColor }}
+                                            fontSize="small"
+                                          />
+                                        )}
+                                        {details}
+                                      </Typography>
+                                    )}
+                                    {address && (
+                                      <Typography
+                                        variant="body2"
+                                        sx={{
+                                          color: 'text.secondary',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                        }}
+                                      >
+                                        <PlaceIcon
+                                          sx={{ mr: 0.5, color: '#78909c' }}
+                                          fontSize="small"
+                                        />
+                                        {address}
+                                      </Typography>
+                                    )}
+                                  </div>
+                                </ListItemButton>
+                              );
+                            })}
+                          </List>
+                        </AccordionDetails>
+                      </Accordion>
                     );
                   })
                 ) : (
