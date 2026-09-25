@@ -138,6 +138,7 @@
     "attributeFuelIncreaseThreshold": "Fuel Increase Threshold",
     "attributePolylineDistance": "Polyline Distance",
     "attributeReportIgnoreOdometer": "Report: Ignore Odometer",
+    "attributeGeocoderGeofenceAddress": "Geocoder: Geofence Address",
     "attributeWebReportColor": "Web: Report Color",
     "attributeDevicePassword": "Device Password",
     "attributeDeviceImage": "Device Image",

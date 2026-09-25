@@ -138,6 +138,7 @@
     "attributeFuelIncreaseThreshold": "Seuil ajout de carburant",
     "attributePolylineDistance": "Distance polyligne",
     "attributeReportIgnoreOdometer": "Rapport: Ignorer l'odomètre",
+    "attributeGeocoderGeofenceAddress": "Géocodage: adresse du périmètre virtuel",
     "attributeWebReportColor": "Web: couleur du rapport",
     "attributeDevicePassword": "Mot de passe de l'appareil",
     "attributeDeviceImage": "Image de l'appareil",

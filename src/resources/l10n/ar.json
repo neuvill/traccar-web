@@ -138,6 +138,7 @@
     "attributeFuelIncreaseThreshold": "عتبة زيادة الوقود",
     "attributePolylineDistance": "مسافة متعددة الخطوط",
     "attributeReportIgnoreOdometer": "تقرير: إهمال عداد المسافة",
+    "attributeGeocoderGeofenceAddress": "Geocoder: عنوان السياج الجغرافي",
     "attributeWebReportColor": "الويب: لون التقرير",
     "attributeDevicePassword": "الرقم السري للجهاز",
     "attributeDeviceImage": "صورة الجهاز",

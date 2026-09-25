@@ -39,6 +39,10 @@ export default (t) =>
         name: t('attributeReportIgnoreOdometer'),
         type: 'boolean',
       },
+      'geocoder.geofenceAddress': {
+        name: t('attributeGeocoderGeofenceAddress'),
+        type: 'boolean',
+      },
       deviceInactivityStart: {
         name: t('attributeDeviceInactivityStart'),
         type: 'number',
