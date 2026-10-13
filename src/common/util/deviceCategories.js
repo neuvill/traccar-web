@@ -20,4 +20,17 @@ export default [
   'van',
   'scooter',
   'dynamic', //adding dynamic category
+  'citroen',
+  'dacia',
+  'fiat',
+  'higer',
+  'hyundai',
+  'mercedes',
+  'nissan',
+  'peugeot',
+  'renault',
+  'suzuki',
+  'swm',
+  'toyota',
+  'yutong',
 ];

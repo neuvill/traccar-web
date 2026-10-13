@@ -11,6 +11,19 @@ import idlingSvg from '../../resources/images/icon/idling.svg';
 import stillSvg from '../../resources/images/icon/still.svg';
 import stopmapSvg from '../../resources/images/icon/stopmap.svg';
 import mapEventSvg from '../../resources/images/icon/event.svg';
+import citroenSvg from '../../resources/images/icon/brands/citroen.svg';
+import daciaSvg from '../../resources/images/icon/brands/dacia.svg';
+import fiatSvg from '../../resources/images/icon/brands/fiat.svg';
+import higerSvg from '../../resources/images/icon/brands/higer.svg';
+import hyundaiSvg from '../../resources/images/icon/brands/hyundai.svg';
+import mercedesSvg from '../../resources/images/icon/brands/mercedes.svg';
+import nissanSvg from '../../resources/images/icon/brands/nissan.svg';
+import peugeotSvg from '../../resources/images/icon/brands/peugeot.svg';
+import renaultSvg from '../../resources/images/icon/brands/renault.svg';
+import suzukiSvg from '../../resources/images/icon/brands/suzuki.svg';
+import swmSvg from '../../resources/images/icon/brands/swm.svg';
+import toyotaSvg from '../../resources/images/icon/brands/toyota.svg';
+import yutongSvg from '../../resources/images/icon/brands/yutong.svg';
 import animalSvg from '@material-symbols/svg-600/outlined/pets.svg';
 import bicycleSvg from '@material-symbols/svg-600/outlined/directions_bike.svg';
 import boatSvg from '@material-symbols/svg-600/outlined/sailing.svg';
@@ -80,6 +93,20 @@ export const mapIcons = {
   still: stillSvg,
   stopmap: stopmapSvg,
   mapEvent: mapEventSvg,
+  // brand logos (Simple Icons, CC0; mercedes/higer/yutong/swm custom)
+  citroen: citroenSvg,
+  dacia: daciaSvg,
+  fiat: fiatSvg,
+  higer: higerSvg,
+  hyundai: hyundaiSvg,
+  mercedes: mercedesSvg,
+  nissan: nissanSvg,
+  peugeot: peugeotSvg,
+  renault: renaultSvg,
+  suzuki: suzukiSvg,
+  swm: swmSvg,
+  toyota: toyotaSvg,
+  yutong: yutongSvg,
 };
 
 export const mapIconKey = (category) => {
@@ -89,6 +116,11 @@ export const mapIconKey = (category) => {
       return 'car';
     case 'trolleybus':
       return 'bus';
+    case 'duster':
+    case 'sandero':
+      return 'dacia';
+    case 'swift':
+      return 'suzuki';
     default:
       return mapIcons.hasOwnProperty(category) ? category : 'default';
   }
