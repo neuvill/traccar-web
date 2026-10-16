@@ -96,7 +96,7 @@ export const mapIcons = {
   still: stillSvg,
   stopmap: stopmapSvg,
   mapEvent: mapEventSvg,
-  // brand logos (Simple Icons, CC0; mercedes/higer/yutong/swm/geely custom)
+  // brand logos (Simple Icons, CC0; mercedes/higer/yutong/swm/geely custom/provided)
   citroen: citroenSvg,
   dacia: daciaSvg,
   fiat: fiatSvg,
