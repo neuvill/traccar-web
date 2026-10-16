@@ -31,6 +31,7 @@ export default [
   'nissan',
   'peugeot',
   'renault',
+  'seat',
   'skoda',
   'suzuki',
   'swm',

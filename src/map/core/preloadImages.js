@@ -22,6 +22,7 @@ import mercedesSvg from '../../resources/images/icon/brands/mercedes.svg';
 import nissanSvg from '../../resources/images/icon/brands/nissan.svg';
 import peugeotSvg from '../../resources/images/icon/brands/peugeot.svg';
 import renaultSvg from '../../resources/images/icon/brands/renault.svg';
+import seatSvg from '../../resources/images/icon/brands/seat.svg';
 import skodaSvg from '../../resources/images/icon/brands/skoda.svg';
 import suzukiSvg from '../../resources/images/icon/brands/suzuki.svg';
 import swmSvg from '../../resources/images/icon/brands/swm.svg';
@@ -108,6 +109,7 @@ export const mapIcons = {
   nissan: nissanSvg,
   peugeot: peugeotSvg,
   renault: renaultSvg,
+  seat: seatSvg,
   skoda: skodaSvg,
   suzuki: suzukiSvg,
   swm: swmSvg,
@@ -129,6 +131,8 @@ export const mapIconKey = (category) => {
       return 'suzuki';
     case 'coolray':
       return 'geely';
+    case 'ibiza':
+      return 'seat';
     default:
       return mapIcons.hasOwnProperty(category) ? category : 'default';
   }
