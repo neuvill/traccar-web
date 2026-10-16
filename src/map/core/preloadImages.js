@@ -14,12 +14,15 @@ import mapEventSvg from '../../resources/images/icon/event.svg';
 import citroenSvg from '../../resources/images/icon/brands/citroen.svg';
 import daciaSvg from '../../resources/images/icon/brands/dacia.svg';
 import fiatSvg from '../../resources/images/icon/brands/fiat.svg';
+import geelySvg from '../../resources/images/icon/brands/geely.svg';
 import higerSvg from '../../resources/images/icon/brands/higer.svg';
 import hyundaiSvg from '../../resources/images/icon/brands/hyundai.svg';
+import kiaSvg from '../../resources/images/icon/brands/kia.svg';
 import mercedesSvg from '../../resources/images/icon/brands/mercedes.svg';
 import nissanSvg from '../../resources/images/icon/brands/nissan.svg';
 import peugeotSvg from '../../resources/images/icon/brands/peugeot.svg';
 import renaultSvg from '../../resources/images/icon/brands/renault.svg';
+import skodaSvg from '../../resources/images/icon/brands/skoda.svg';
 import suzukiSvg from '../../resources/images/icon/brands/suzuki.svg';
 import swmSvg from '../../resources/images/icon/brands/swm.svg';
 import toyotaSvg from '../../resources/images/icon/brands/toyota.svg';
@@ -93,16 +96,19 @@ export const mapIcons = {
   still: stillSvg,
   stopmap: stopmapSvg,
   mapEvent: mapEventSvg,
-  // brand logos (Simple Icons, CC0; mercedes/higer/yutong/swm custom)
+  // brand logos (Simple Icons, CC0; mercedes/higer/yutong/swm/geely custom)
   citroen: citroenSvg,
   dacia: daciaSvg,
   fiat: fiatSvg,
+  geely: geelySvg,
   higer: higerSvg,
   hyundai: hyundaiSvg,
+  kia: kiaSvg,
   mercedes: mercedesSvg,
   nissan: nissanSvg,
   peugeot: peugeotSvg,
   renault: renaultSvg,
+  skoda: skodaSvg,
   suzuki: suzukiSvg,
   swm: swmSvg,
   toyota: toyotaSvg,
@@ -121,6 +127,8 @@ export const mapIconKey = (category) => {
       return 'dacia';
     case 'swift':
       return 'suzuki';
+    case 'coolray':
+      return 'geely';
     default:
       return mapIcons.hasOwnProperty(category) ? category : 'default';
   }
