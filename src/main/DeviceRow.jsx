@@ -26,6 +26,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import DriverValue from '../common/components/DriverValue';
 import GeofencesValue from '../common/components/GeofencesValue';
+import OverspeedValue from '../common/components/OverspeedValue';
 import {
   formatAlarm,
   formatBoolean,
@@ -38,6 +39,7 @@ import {
 import { getDeviceFreshness, getDeviceMotionStatus } from '../common/util/deviceStatus';
 import { useAdministrator } from '../common/util/permissions';
 import { useAttributePreference } from '../common/util/preferences';
+import { isOverspeed, useSpeedLimit } from '../common/util/speedLimit';
 import { mapIconKey, mapIcons } from '../map/core/preloadImages';
 import EngineIcon from '../resources/images/data/engine.svg?react';
 import { devicesActions } from '../store';
@@ -111,6 +113,7 @@ const DeviceRow = ({ item, position, setDeviceSheetOpen, now, style }) => {
   const devicePrimary = useAttributePreference('devicePrimary', 'name');
   const deviceSecondary = useAttributePreference('deviceSecondary', '');
   const speedUnit = useAttributePreference('speedUnit');
+  const speedLimit = useSpeedLimit(item);
 
   const attributes = position?.attributes || {};
   const { alarm, batteryLevel, charge, driverUniqueId, ignition } = attributes;
@@ -152,7 +155,12 @@ const DeviceRow = ({ item, position, setDeviceSheetOpen, now, style }) => {
         return (
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <SpeedIcon sx={{ fontSize: 16 }} />
-            {formatSpeed(position.speed, speedUnit, t)}
+            <OverspeedValue
+              active={isOverspeed(position.speed, speedLimit)}
+              speedLimit={speedLimit}
+            >
+              {formatSpeed(position.speed, speedUnit, t)}
+            </OverspeedValue>
           </span>
         );
       }

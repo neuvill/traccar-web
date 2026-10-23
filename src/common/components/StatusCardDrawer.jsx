@@ -33,6 +33,7 @@ import SpeedIcon from '@mui/icons-material/Speed';
 import { useTranslation } from './LocalizationProvider';
 import RemoveDialog from './RemoveDialog';
 import PositionValue from './PositionValue';
+import OverspeedValue from './OverspeedValue';
 import FuelGauge from './FuelGauge';
 import DashboardLoading from './DashboardLoading';
 import useDeviceEventCounts from './useDeviceEventCounts';
@@ -43,6 +44,7 @@ import { devicesActions } from '../../store';
 import { useCatch, useCatchCallback } from '../../reactHelper';
 import { getDeviceMotionStatus } from '../util/deviceStatus';
 import { useAttributePreference } from '../util/preferences';
+import { isOverspeed, useSpeedLimit } from '../util/speedLimit';
 import { prefixString } from '../util/stringUtils';
 import { formatMotionStatusDuration, formatNumericHours } from '../util/formatter';
 import fetchOrThrow from '../util/fetchOrThrow';
@@ -286,6 +288,7 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
   const deviceImageUrl = deviceImage ? `/api/media/${device.uniqueId}/${deviceImage}` : undefined;
   const deviceIconKey = mapIconKey(device?.category);
   const statusColor = getDeviceStatusColor(device, position);
+  const speedLimit = useSpeedLimit(device);
 
   const positionAttributes = usePositionAttributes(t);
   const positionItems = useAttributePreference(
@@ -461,11 +464,16 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
                         <div key={key} className={classes.statItem}>
                           {getPositionIcon(key, name, classes)}
                           <Typography variant="body2">
-                            <PositionValue
-                              position={position}
-                              property={hasOwn(position, key) ? key : null}
-                              attribute={hasOwn(position, key) ? null : key}
-                            />
+                            <OverspeedValue
+                              active={key === 'speed' && isOverspeed(position.speed, speedLimit)}
+                              speedLimit={speedLimit}
+                            >
+                              <PositionValue
+                                position={position}
+                                property={hasOwn(position, key) ? key : null}
+                                attribute={hasOwn(position, key) ? null : key}
+                              />
+                            </OverspeedValue>
                           </Typography>
                         </div>
                       );
