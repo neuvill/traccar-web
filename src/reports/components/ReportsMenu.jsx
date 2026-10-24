@@ -9,6 +9,7 @@ import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import RouteIcon from '@mui/icons-material/Route';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 import NotesIcon from '@mui/icons-material/Notes';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
@@ -71,6 +72,12 @@ const ReportsMenu = () => {
           link={buildLink('/reports/trips')}
           icon={<PlayCircleFilledIcon />}
           selected={location.pathname === '/reports/trips'}
+        />
+        <MenuItem
+          title={t('reportTripsV2')}
+          link={buildLink('/reports/trips-v2')}
+          icon={<PictureAsPdfIcon />}
+          selected={location.pathname === '/reports/trips-v2'}
         />
         <MenuItem
           title={t('reportStops')}

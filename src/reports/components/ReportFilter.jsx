@@ -39,7 +39,16 @@ export const updateReportParams = (searchParams, setSearchParams, key, values) =
   setSearchParams(newParams, { replace: true });
 };
 
-const ReportFilter = ({ children, onShow, onExport, onSchedule, deviceType, loading, formats }) => {
+const ReportFilter = ({
+  children,
+  onShow,
+  onExport,
+  onSchedule,
+  deviceType,
+  loading,
+  formats,
+  showTitle = 'reportShow',
+}) => {
   const { classes } = useReportStyles();
   const t = useTranslation();
 
@@ -97,7 +106,7 @@ const ReportFilter = ({ children, onShow, onExport, onSchedule, deviceType, load
 
   const evaluateOptions = () => {
     const result = {
-      json: t('reportShow'),
+      json: t(showTitle),
     };
     if (onExport && loaded) {
       formats.forEach((format) => {
@@ -331,7 +340,7 @@ const ReportFilter = ({ children, onShow, onExport, onSchedule, deviceType, load
             onClick={onClick}
           >
             <Typography variant="button" noWrap>
-              {t(loading ? 'sharedLoading' : 'reportShow')}
+              {t(loading ? 'sharedLoading' : showTitle)}
             </Typography>
           </Button>
         ) : (
