@@ -681,5 +681,6 @@
     "motionStatusMoving": "الحركة",
     "motionStatusParked": "متوقف",
     "motionStatusIdle": "غير نشط",
-    "dashboardTitle": "لوحة القيادة"
+    "dashboardTitle": "لوحة القيادة",
+    "dashboardDailyRoute": "مسار اليوم"
 }

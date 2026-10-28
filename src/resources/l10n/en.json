@@ -723,5 +723,6 @@
     "motionStatusMoving": "Moving",
     "motionStatusParked": "Parked",
     "motionStatusIdle": "Idle",
-    "dashboardTitle": "Dashboard"
+    "dashboardTitle": "Dashboard",
+    "dashboardDailyRoute": "Today's Route"
 }

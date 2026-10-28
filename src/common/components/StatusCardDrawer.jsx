@@ -36,8 +36,10 @@ import PositionValue from './PositionValue';
 import OverspeedValue from './OverspeedValue';
 import FuelGauge from './FuelGauge';
 import DashboardLoading from './DashboardLoading';
+import DailyRouteMap from './DailyRouteMap';
 import useDeviceEventCounts from './useDeviceEventCounts';
 import useDeviceDashboardSummary from './useDeviceDashboardSummary';
+import useDeviceDailyRoute from './useDeviceDailyRoute';
 import { useDeviceReadonly, useRestriction } from '../util/permissions';
 import usePositionAttributes from '../attributes/usePositionAttributes';
 import { devicesActions } from '../../store';
@@ -342,6 +344,10 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
     slide === 2,
     { distanceUnit, speedUnit, volumeUnit, t },
   );
+  const { positions: routePositions, loading: routeLoading } = useDeviceDailyRoute(
+    deviceId,
+    slide === 3,
+  );
 
   const handleRemove = useCatch(async (removed) => {
     if (removed) {
@@ -374,6 +380,7 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
     { icon: <InfoOutlinedIcon fontSize="small" />, label: t('positionStatus') },
     { icon: <NotificationsIcon fontSize="small" />, label: t('reportEvents') },
     { icon: <DashboardIcon fontSize="small" />, label: t('dashboardTitle') },
+    { icon: <RouteIcon fontSize="small" />, label: t('dashboardDailyRoute') },
   ];
 
   return (
@@ -601,6 +608,12 @@ const StatusCardDrawer = ({ deviceId, position, onClose, open = true, disableAct
                   {t('sharedNoData')}
                 </Typography>
               )}
+            </div>
+
+            <div className={classes.slide}>
+              <Box sx={{ height: '100%', pb: 2, boxSizing: 'border-box' }}>
+                <DailyRouteMap positions={routePositions} loading={routeLoading} height="100%" />
+              </Box>
             </div>
           </div>
 

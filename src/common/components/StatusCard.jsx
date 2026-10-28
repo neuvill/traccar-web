@@ -37,8 +37,10 @@ import PositionValue from './PositionValue';
 import OverspeedValue from './OverspeedValue';
 import FuelGauge from './FuelGauge';
 import DashboardLoading from './DashboardLoading';
+import DailyRouteMap from './DailyRouteMap';
 import useDeviceEventCounts from './useDeviceEventCounts';
 import useDeviceDashboardSummary from './useDeviceDashboardSummary';
+import useDeviceDailyRoute from './useDeviceDailyRoute';
 import { useDeviceReadonly, useRestriction } from '../util/permissions';
 import usePositionAttributes from '../attributes/usePositionAttributes';
 import { devicesActions } from '../../store';
@@ -322,6 +324,10 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
     tab === 2,
     { distanceUnit, speedUnit, volumeUnit, t },
   );
+  const { positions: routePositions, loading: routeLoading } = useDeviceDailyRoute(
+    deviceId,
+    tab === 3,
+  );
 
   const handleRemove = useCatch(async (removed) => {
     if (removed) {
@@ -402,6 +408,11 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                   icon={<DashboardIcon fontSize="small" />}
                   iconPosition="start"
                   label={t('dashboardTitle')}
+                />
+                <Tab
+                  icon={<RouteIcon fontSize="small" />}
+                  iconPosition="start"
+                  label={t('dashboardDailyRoute')}
                 />
               </Tabs>
 
@@ -606,6 +617,9 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                 <Typography variant="body2" color="textSecondary">
                   {t('sharedNoData')}
                 </Typography>
+              )}
+              {tab === 3 && (
+                <DailyRouteMap positions={routePositions} loading={routeLoading} height={220} />
               )}
             </div>
           </Card>

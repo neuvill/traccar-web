@@ -723,5 +723,6 @@
     "motionStatusMoving": "En mouvement",
     "motionStatusParked": "Stationné",
     "motionStatusIdle": "En pause",
-    "dashboardTitle": "Tableau de bord"
+    "dashboardTitle": "Tableau de bord",
+    "dashboardDailyRoute": "Trajets du jour"
 }
