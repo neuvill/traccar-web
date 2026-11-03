@@ -16,6 +16,9 @@ import fetchOrThrow from './common/util/fetchOrThrow';
 
 const logoutCode = 4000;
 
+// Retry quickly after a drop (network change, server restart), backing off if it keeps failing
+const reconnectDelaysMs = [1000, 2000, 5000, 10000, 30000];
+
 let alarmAudio;
 const playAlarm = () => {
   if (!alarmAudio) {
@@ -34,6 +37,7 @@ const SocketController = () => {
 
   const socketRef = useRef();
   const reconnectTimeoutRef = useRef();
+  const reconnectAttemptRef = useRef(0);
 
   const clearReconnectTimeout = useCallback(() => {
     if (reconnectTimeoutRef.current) {
@@ -94,6 +98,7 @@ const SocketController = () => {
     socketRef.current = socket;
 
     socket.onopen = () => {
+      reconnectAttemptRef.current = 0;
       dispatch(sessionActions.updateSocket(true));
       socket.send(JSON.stringify({ logs: includeLogsRef.current }));
     };
@@ -120,10 +125,15 @@ const SocketController = () => {
       }
       if (socketRef.current !== socket) return;
       clearReconnectTimeout();
-      reconnectTimeoutRef.current = setTimeout(() => {
-        reconnectTimeoutRef.current = null;
-        connectSocketRef.current?.();
-      }, 60000);
+      const attempt = reconnectAttemptRef.current;
+      reconnectAttemptRef.current = attempt + 1;
+      reconnectTimeoutRef.current = setTimeout(
+        () => {
+          reconnectTimeoutRef.current = null;
+          connectSocketRef.current?.();
+        },
+        reconnectDelaysMs[Math.min(attempt, reconnectDelaysMs.length - 1)],
+      );
     };
 
     socket.onmessage = (event) => {
