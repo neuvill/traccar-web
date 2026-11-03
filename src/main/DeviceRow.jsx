@@ -36,7 +36,7 @@ import {
   formatStatus,
   getStatusColor,
 } from '../common/util/formatter';
-import { getDeviceFreshness, getDeviceMotionStatus } from '../common/util/deviceStatus';
+import { getDeviceFreshness } from '../common/util/deviceStatus';
 import { useAdministrator } from '../common/util/permissions';
 import { useAttributePreference } from '../common/util/preferences';
 import { isOverspeed, useSpeedLimit } from '../common/util/speedLimit';
@@ -82,6 +82,25 @@ const getBatteryIcon = (batteryLevel, charge, classes) => {
 };
 
 const useStyles = makeStyles()((theme) => ({
+  row: {
+    borderBottom: `1px solid ${theme.palette.divider}`,
+  },
+  statusBar: {
+    position: 'absolute',
+    insetInlineStart: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    pointerEvents: 'none',
+  },
+  badge: {
+    '& .MuiBadge-badge': {
+      width: 13,
+      height: 13,
+      borderRadius: '50%',
+      border: '2px solid white',
+    },
+  },
   icon: {
     width: '25px',
     height: '25px',
@@ -109,7 +128,8 @@ const DeviceRow = ({ item, position, setDeviceSheetOpen, now, style }) => {
   const t = useTranslation();
 
   const admin = useAdministrator();
-  const selectedDeviceId = useSelector((state) => state.devices.selectedId);
+  // Boolean so only the previously and newly selected rows re-render on selection change
+  const selected = useSelector((state) => state.devices.selectedId === item.id);
   const devicePrimary = useAttributePreference('devicePrimary', 'name');
   const deviceSecondary = useAttributePreference('deviceSecondary', '');
   const speedUnit = useAttributePreference('speedUnit');
@@ -119,7 +139,7 @@ const DeviceRow = ({ item, position, setDeviceSheetOpen, now, style }) => {
   const { alarm, batteryLevel, charge, driverUniqueId, ignition } = attributes;
 
   const { isStale, staleReferenceTime } = getDeviceFreshness(item, position, now);
-  const dynamicStatus = getDeviceMotionStatus(item, position, now);
+  const dynamicStatus = isStale ? 'still' : attributes.motionStatus || 'default';
   const motionStatus = dynamicStatus === 'still' ? null : attributes.motionStatus;
   const badgeColor = STATUS_COLORS[dynamicStatus] || STATUS_COLORS.default;
   const iconKey = mapIconKey(item.category);
@@ -181,7 +201,7 @@ const DeviceRow = ({ item, position, setDeviceSheetOpen, now, style }) => {
     <>
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
         <LocationOnOutlinedIcon sx={{ fontSize: 16 }} />
-        {position?.address ? position.address.slice(0, 35) : ''}
+        {position?.address || ''}
       </span>
       <br />
       <span
@@ -201,29 +221,13 @@ const DeviceRow = ({ item, position, setDeviceSheetOpen, now, style }) => {
   };
 
   return (
-    <div
-      style={{
-        ...style,
-        position: style?.position || 'relative',
-        borderBottom: '1px solid #e0e0e0',
-      }}
-    >
-      <span
-        style={{
-          position: 'absolute',
-          insetInlineStart: 0,
-          top: 0,
-          bottom: 0,
-          width: 4,
-          backgroundColor: badgeColor,
-          pointerEvents: 'none',
-        }}
-      />
+    <div className={classes.row} style={{ ...style, position: style?.position || 'relative' }}>
+      <span className={classes.statusBar} style={{ backgroundColor: badgeColor }} />
       <ListItemButton
         onClick={handleClick}
         disabled={!admin && item.disabled}
-        selected={selectedDeviceId === item.id}
-        className={selectedDeviceId === item.id ? classes.selected : null}
+        selected={selected}
+        className={selected ? classes.selected : null}
       >
         <ListItemAvatar>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -231,16 +235,8 @@ const DeviceRow = ({ item, position, setDeviceSheetOpen, now, style }) => {
               overlap="circular"
               anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
               variant="dot"
-              sx={{
-                '& .MuiBadge-badge': {
-                  backgroundColor: badgeColor,
-                  color: badgeColor,
-                  width: 13,
-                  height: 13,
-                  borderRadius: '50%',
-                  border: '2px solid white',
-                },
-              }}
+              className={classes.badge}
+              slotProps={{ badge: { style: { backgroundColor: badgeColor, color: badgeColor } } }}
             >
               <Avatar
                 style={{

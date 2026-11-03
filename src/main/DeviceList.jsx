@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 import { List } from 'react-window';
@@ -14,7 +14,7 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-const Row = ({ index, style, devices, setDeviceSheetOpen, now }) => {
+const RowContent = ({ index, style, devices, setDeviceSheetOpen, now }) => {
   const item = devices[index];
 
   const position = useSelector((state) => state.session.positions[item.id]);
@@ -29,6 +29,18 @@ const Row = ({ index, style, devices, setDeviceSheetOpen, now }) => {
     />
   );
 };
+
+// react-window passes a new style object and the whole filtered list on every render, so
+// compare what this row actually shows; its position updates via its own selector
+const Row = memo(
+  RowContent,
+  (prev, next) =>
+    prev.devices[prev.index] === next.devices[next.index] &&
+    prev.now === next.now &&
+    prev.setDeviceSheetOpen === next.setDeviceSheetOpen &&
+    prev.style.transform === next.style.transform &&
+    prev.style.height === next.style.height,
+);
 
 const DeviceList = ({ devices, setDeviceSheetOpen }) => {
   const { classes } = useStyles();
@@ -49,17 +61,18 @@ const DeviceList = ({ devices, setDeviceSheetOpen }) => {
     [dispatch],
   );
 
+  const rowProps = useMemo(
+    () => ({ devices, now, setDeviceSheetOpen }),
+    [devices, now, setDeviceSheetOpen],
+  );
+
   return (
     <List
       className={classes.list}
       rowComponent={Row}
       rowCount={devices.length}
       rowHeight={90}
-      rowProps={{
-        devices,
-        now,
-        setDeviceSheetOpen,
-      }}
+      rowProps={rowProps}
       overscanCount={5}
     />
   );
