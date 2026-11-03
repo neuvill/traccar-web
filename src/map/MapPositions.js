@@ -1,10 +1,8 @@
-import { useId, useCallback, useEffect, useRef } from 'react';
+import { useId, useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useMediaQuery } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import dayjs from 'dayjs';
 import { map } from './core/MapView';
 import { formatTime, getIconStatusColor } from '../common/util/formatter';
+import { getDeviceFreshness } from '../common/util/deviceStatus';
 import { mapIconKey } from './core/preloadImages';
 import { useAttributePreference } from '../common/util/preferences';
 import { useCatchCallback } from '../reactHelper';
@@ -24,13 +22,8 @@ const markerEdgeOffset = (state) =>
   (MARKER_EDGE_RADIUS_RATIO * (MARKER_NATIVE_SIZE / 2) * MARKER_ICON_SCALE[state]) /
   DIRECTION_ICON_SCALE[state];
 
-const isDeviceStale = (device) => {
-  if (!device.lastUpdate) {
-    return false;
-  }
-
-  return dayjs().diff(dayjs(device.lastUpdate), 'hour', true) > 3;
-};
+// Devices can go stale without sending anything, so re-check freshness periodically
+const STALE_CHECK_INTERVAL_MS = 60 * 1000;
 
 const formatFeatureTitle = (position, device, titleField) => {
   if (!titleField) {
@@ -45,18 +38,14 @@ const formatFeatureTitle = (position, device, titleField) => {
   return titleField === 'fixTime' ? formatTime(value, 'seconds') : value;
 };
 
-const getFeatureCacheKey = (position, device, selectedDeviceId, titleField, showStatus) =>
+const getFeatureCacheKey = (position, device, isStale, titleField, showStatus) =>
   [
     position.id,
-    position.latitude,
-    position.longitude,
     position.course,
-    position.fixTime,
     position.attributes?.motionStatus,
-    selectedDeviceId,
+    isStale,
     device.name,
     device.category,
-    device.lastUpdate,
     titleField,
     titleField ? position[titleField] : null,
     showStatus,
@@ -77,41 +66,35 @@ const MapPositions = ({
   const Replay = isReplay || false;
   const prevPositionsRef = useRef({});
 
-  const theme = useTheme();
-  const desktop = useMediaQuery(theme.breakpoints.up('md'));
-  const iconScale = useAttributePreference('iconScale', desktop ? 0.75 : 0.75);
+  const iconScale = useAttributePreference('iconScale', 0.75);
 
   const devices = useSelector((state) => state.devices.items);
   const selectedDeviceId = useSelector((state) => state.devices.selectedId);
 
   const mapCluster = useAttributePreference('mapCluster', true);
 
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    if (!showStatus) return undefined;
+    const interval = setInterval(() => setNow(Date.now()), STALE_CHECK_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [showStatus]);
+
   const disabledRef = useRef(disabled);
   disabledRef.current = disabled;
 
   const createFeature = useCallback(
-    (position) => {
-      const device = devices[position.deviceId];
-      if (!device) return null;
-
-      const isSelected = position.deviceId === selectedDeviceId;
-
-      return {
-        id: position.id,
-        deviceId: position.deviceId,
-        name: formatFeatureTitle(position, device, titleField),
-        fixTime: formatTime(position.fixTime, 'seconds'),
-        category: mapIconKey(device.category),
-        color:
-          !showStatus || isDeviceStale(device)
-            ? 'neutral'
-            : getIconStatusColor(position?.attributes?.motionStatus),
-        rotation: position.course,
-        dynamicDirection: position?.attributes?.motionStatus === 'moving',
-        isSelected,
-      };
-    },
-    [devices, selectedDeviceId, showStatus, titleField],
+    (position, device, isStale) => ({
+      id: position.id,
+      deviceId: position.deviceId,
+      name: formatFeatureTitle(position, device, titleField),
+      category: mapIconKey(device.category),
+      color:
+        !showStatus || isStale ? 'neutral' : getIconStatusColor(position.attributes?.motionStatus),
+      rotation: position.course,
+      dynamicDirection: position.attributes?.motionStatus === 'moving',
+    }),
+    [showStatus, titleField],
   );
 
   const onMouseEnter = useCallback(() => {
@@ -179,7 +162,10 @@ const MapPositions = ({
         features: [],
       },
     });
+    const fonts = findFonts(map);
     [id, selected].forEach((source) => {
+      // Selected device lives in its own source, so its size is fixed per layer
+      const state = source === selected ? 'selected' : 'default';
       map.addLayer({
         id: source,
         type: 'symbol',
@@ -187,18 +173,13 @@ const MapPositions = ({
         filter: ['!has', 'point_count'],
         layout: {
           'icon-image': '{category}-{color}',
-          'icon-size': [
-            'case',
-            ['==', ['get', 'isSelected'], true],
-            iconScale * 1.35,
-            iconScale,
-          ],
+          'icon-size': iconScale * MARKER_ICON_SCALE[state],
           'icon-allow-overlap': true,
           'text-field': Replay ? '' : ['get', 'name'],
           'text-allow-overlap': true,
           'text-anchor': 'bottom',
           'text-offset': [0, -2 * iconScale],
-          'text-font': findFonts(map),
+          'text-font': fonts,
           'text-size': 15,
           'symbol-sort-key': ['get', 'id'],
         },
@@ -212,25 +193,11 @@ const MapPositions = ({
         id: `direction-${source}`,
         type: 'symbol',
         source,
-        filter: [
-          'all',
-          ['!has', 'point_count'],
-          ['==', 'dynamicDirection', true],
-        ],
+        filter: ['all', ['!has', 'point_count'], ['==', 'dynamicDirection', true]],
         layout: {
           'icon-image': 'direction',
-          'icon-size': [
-            'case',
-            ['==', ['get', 'isSelected'], true],
-            iconScale * DIRECTION_ICON_SCALE.selected,
-            iconScale * DIRECTION_ICON_SCALE.default,
-          ],
-          'icon-offset': [
-            'case',
-            ['==', ['get', 'isSelected'], true],
-            ['literal', [0, -markerEdgeOffset('selected')]],
-            ['literal', [0, -markerEdgeOffset('default')]],
-          ],
+          'icon-size': iconScale * DIRECTION_ICON_SCALE[state],
+          'icon-offset': [0, -markerEdgeOffset(state)],
           'icon-allow-overlap': true,
           'icon-rotate': ['get', 'rotation'],
           'icon-rotation-alignment': 'map',
@@ -250,7 +217,7 @@ const MapPositions = ({
         'icon-image': 'backclust',
         'icon-size': iconScale * 0.65,
         'text-field': '{point_count_abbreviated}',
-        'text-font': findFonts(map),
+        'text-font': fonts,
         'text-size': 16,
       },
       paint: {
@@ -321,19 +288,13 @@ const MapPositions = ({
       const device = devices[position.deviceId];
       if (!device) continue;
 
+      const { isStale } = getDeviceFreshness(device, position, now);
       const prevPos = prev[position.deviceId];
-      const cacheKey = getFeatureCacheKey(
-        position,
-        device,
-        selectedDeviceId,
-        titleField,
-        showStatus,
-      );
-      const changed = prevPos?.cacheKey !== cacheKey;
-
-      const properties = changed ? createFeature(position) : prevPos?.properties;
-
-      if (!properties) continue;
+      const cacheKey = getFeatureCacheKey(position, device, isStale, titleField, showStatus);
+      const properties =
+        prevPos?.cacheKey === cacheKey
+          ? prevPos.properties
+          : createFeature(position, device, isStale);
 
       const feature = {
         type: 'Feature',
@@ -350,11 +311,7 @@ const MapPositions = ({
         mainFeatures.push(feature);
       }
 
-      next[position.deviceId] = {
-        ...position,
-        cacheKey,
-        properties,
-      };
+      next[position.deviceId] = { cacheKey, properties };
     }
 
     sourceMain.setData({
@@ -368,7 +325,17 @@ const MapPositions = ({
     });
 
     prevPositionsRef.current = next;
-  }, [createFeature, devices, id, positions, selected, selectedDeviceId, showStatus, titleField]);
+  }, [
+    createFeature,
+    devices,
+    id,
+    now,
+    positions,
+    selected,
+    selectedDeviceId,
+    showStatus,
+    titleField,
+  ]);
 
   return null;
 };

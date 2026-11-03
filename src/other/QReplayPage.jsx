@@ -55,12 +55,32 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
-import * as echarts from 'echarts';
+import * as echarts from 'echarts/core';
+import { LineChart } from 'echarts/charts';
+import {
+  DataZoomInsideComponent,
+  DataZoomSliderComponent,
+  GridComponent,
+  MarkLineComponent,
+  TooltipComponent,
+} from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import Loader from '../common/components/Loader';
 import SpeedIcon from '@mui/icons-material/Speed';
 import FenceIcon from '@mui/icons-material/Fence';
+
+// Register only what the speed chart uses instead of bundling all of echarts
+echarts.use([
+  LineChart,
+  GridComponent,
+  TooltipComponent,
+  DataZoomInsideComponent,
+  DataZoomSliderComponent,
+  MarkLineComponent,
+  CanvasRenderer,
+]);
 
 const PLAYBACK_SPEED = 1;
 const PLAYBACK_TICK_MS = 100;
